@@ -1,0 +1,505 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- Заголовок -->
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h2 class="mb-1">
+            <i class="bi bi-folder-fill" style="color: #f59e0b;"></i>
+            {{ project.name }}
+        </h2>
+        <p class="text-muted">{{ project.description or 'Нет описания' }}</p>
+    </div>
+    {% if user_role in ['admin', 'manager'] or user.role == 'admin' %}
+    <a href="{{ url_for('project_settings', project_id=project.id) }}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-gear"></i> Управление
+    </a>
+    {% endif %}
+</div>
+
+<!-- Статистика проекта -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #e0e7ff; color: #4f46e5;">
+                <i class="bi bi-list-task"></i>
+            </div>
+            <div class="stat-number">{{ tasks|length }}</div>
+            <div class="stat-label">Всего задач</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #d1fae5; color: #10b981;">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <div class="stat-number">{{ tasks|selectattr('status', 'equalto', 'completed')|list|length }}</div>
+            <div class="stat-label">Завершено</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #fef3c7; color: #f59e0b;">
+                <i class="bi bi-clock-fill"></i>
+            </div>
+            <div class="stat-number">{{ tasks|selectattr('status', 'equalto', 'in_progress')|list|length }}</div>
+            <div class="stat-label">В работе</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #fce4ec; color: #ef4444;">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="stat-number">{{ members|length }}</div>
+            <div class="stat-label">Участников</div>
+        </div>
+    </div>
+</div>
+
+<!-- Прогресс -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="fw-bold">Прогресс проекта</span>
+            <span class="fw-bold">{{ project.completion_percentage }}%</span>
+        </div>
+        <div class="progress" style="height: 12px;">
+            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" 
+                 style="width: {{ project.completion_percentage }}%;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Вкладки -->
+<ul class="nav nav-tabs mb-4" id="projectTabs" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link active" id="tasks-tab" data-bs-toggle="tab" href="#tasks" role="tab">
+            <i class="bi bi-list-task"></i> Задачи <span class="badge bg-secondary">{{ tasks|length }}</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="files-tab" data-bs-toggle="tab" href="#files" role="tab">
+            <i class="bi bi-folder"></i> Файлы 
+            <span class="badge bg-secondary">
+                {% set total_files = files|length %}
+                {% for folder in folders %}
+                    {% set total_files = total_files + folder.files|length %}
+                {% endfor %}
+                {{ total_files }}
+            </span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="chat-tab" data-bs-toggle="tab" href="#chat" role="tab">
+            <i class="bi bi-chat-dots"></i> Чат <span class="badge bg-secondary">{{ messages|length }}</span>
+        </a>
+    </li>
+</ul>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="tab-content">
+            <!-- Вкладка ЗАДАЧИ -->
+            <div class="tab-pane fade show active" id="tasks" role="tabpanel">
+                <!-- Форма создания задачи -->
+                {% if user_role in ['admin', 'manager'] or user.role == 'admin' %}
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <i class="bi bi-plus-circle"></i> Новая задача
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('create_task', project_id=project.id) }}">
+                            <div class="row g-2">
+                                <div class="col-md-5">
+                                    <input type="text" class="form-control" name="title" placeholder="Название задачи" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" name="assigned_to">
+                                        <option value="">Назначить...</option>
+                                        {% for u in all_users %}
+                                            <option value="{{ u.id }}">{{ u.first_name }} {{ u.last_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="date" class="form-control" name="due_date">
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="bi bi-plus"></i> Создать
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-12">
+                                    <input type="text" class="form-control" name="description" placeholder="Описание (опционально)">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Фильтр задач -->
+                <div class="btn-group btn-group-sm mb-3" role="group">
+                    <button type="button" class="btn btn-outline-secondary active" data-filter="all">Все</button>
+                    <button type="button" class="btn btn-outline-secondary" data-filter="new">🆕 Новые</button>
+                    <button type="button" class="btn btn-outline-secondary" data-filter="in_progress">🔄 В работе</button>
+                    <button type="button" class="btn btn-outline-secondary" data-filter="completed">✅ Завершены</button>
+                </div>
+
+                <!-- Список задач -->
+                {% if tasks %}
+                    {% for task in tasks %}
+                    <div class="card task-card mb-3 {% if task.status == 'completed' %}completed{% elif task.status == 'in_progress' %}in_progress{% endif %}" data-status="{{ task.status }}">
+                        <div class="card-body">
+                            <div class="row align-items-start">
+                                <div class="col-md-6">
+                                    <a href="{{ url_for('view_task', task_id=task.id) }}" class="text-decoration-none text-dark">
+                                        <strong>{{ task.title }}</strong>
+                                    </a>
+                                    <br>
+                                    <small class="text-muted">{{ task.description or '' }}</small>
+                                    {% if task.assigned_to %}
+                                        <br><small><i class="bi bi-person"></i> {{ task.assignee.first_name }} {{ task.assignee.last_name }}</small>
+                                    {% endif %}
+                                    {% if task.subtasks %}
+                                        <br><small><i class="bi bi-diagram-3"></i> {{ task.subtasks|length }} подзадач</small>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-3">
+                                    <small>
+                                        <i class="bi bi-calendar"></i> Начало: {{ task.start_date.strftime('%d.%m') }}
+                                        {% if task.due_date %}
+                                            <br><i class="bi bi-calendar-check"></i> Дедлайн: {{ task.due_date.strftime('%d.%m.%Y') }}
+                                            {% if task.due_date < now and task.status != 'completed' %}
+                                                <span class="badge bg-danger">Просрочена</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <div class="col-md-3">
+                                    <form method="POST" action="{{ url_for('update_task_status', task_id=task.id) }}" class="d-inline">
+                                        <select name="status" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
+                                            <option value="new" {% if task.status == 'new' %}selected{% endif %}>🆕 Новая</option>
+                                            <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>🔄 В работе</option>
+                                            <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>✅ Завершена</option>
+                                        </select>
+                                    </form>
+                                    <div class="mt-1">
+                                        {% if user_role in ['admin', 'manager'] or user.role == 'admin' %}
+                                        <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить задачу?')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                        <a href="{{ url_for('view_task', task_id=task.id) }}" class="btn btn-sm btn-outline-info">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Прогресс задачи (подзадачи) -->
+                            {% if task.subtasks %}
+                            <div class="mt-2">
+                                {% set completed_subtasks = task.subtasks|selectattr('status', 'equalto', 'completed')|list|length %}
+                                {% set total_subtasks = task.subtasks|length %}
+                                {% set subtask_percentage = (completed_subtasks / total_subtasks * 100)|int %}
+                                <div class="d-flex justify-content-between small">
+                                    <span>Прогресс задачи</span>
+                                    <span>{{ subtask_percentage }}% ({{ completed_subtasks }}/{{ total_subtasks }})</span>
+                                </div>
+                                <div class="progress" style="height: 4px;">
+                                    <div class="progress-bar bg-info" style="width: {{ subtask_percentage }}%;"></div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-secondary text-center">
+                        <i class="bi bi-inbox" style="font-size: 32px; display: block;"></i>
+                        Задач пока нет
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Вкладка ФАЙЛЫ -->
+            <div class="tab-pane fade" id="files" role="tabpanel">
+                <h5><i class="bi bi-folder"></i> Папки и файлы</h5>
+                
+                <!-- Форма создания папки -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('create_folder', project_id=project.id) }}" class="row g-2">
+                            <div class="col-md-8">
+                                <input type="text" class="form-control" name="name" placeholder="Название папки" required>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-folder-plus"></i> Создать
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Загрузка файла -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('upload_file', project_id=project.id) }}" enctype="multipart/form-data" class="row g-2">
+                            <div class="col-md-8">
+                                <input type="file" class="form-control" name="file" required>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="bi bi-cloud-upload"></i> Загрузить
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Список папок -->
+                {% if folders %}
+                <h6 class="mt-3"><i class="bi bi-folder"></i> Папки</h6>
+                <div class="list-group mb-3">
+                    {% for folder in folders %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('view_folder', folder_id=folder.id) }}" class="text-decoration-none flex-grow-1">
+                            <i class="bi bi-folder-fill text-warning"></i> {{ folder.name }}
+                            <span class="badge bg-secondary">
+                                <i class="bi bi-file"></i> {{ folder.files|length }}
+                            </span>
+                        </a>
+                        <div>
+                            <a href="{{ url_for('view_folder', folder_id=folder.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-folder-open"></i>
+                            </a>
+                            {% if user_role in ['admin', 'manager'] or user.role == 'admin' %}
+                            <form method="POST" action="{{ url_for('delete_folder', folder_id=folder.id) }}" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить папку и всё её содержимое?')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Список файлов -->
+                {% if files %}
+                <h6 class="mt-3"><i class="bi bi-file"></i> Файлы</h6>
+                <div class="list-group">
+                    {% for file in files %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-file-earmark"></i>
+                            <a href="{{ url_for('download_file', file_id=file.id) }}" class="text-decoration-none">
+                                {{ file.original_name }}
+                            </a>
+                            <small class="text-muted ms-2">
+                                ({{ (file.file_size / 1024)|round(1) }} KB)
+                            </small>
+                            <br>
+                            <small class="text-muted">
+                                Загрузил: {{ file.uploader.first_name }} {{ file.uploader.last_name }}
+                            </small>
+                        </div>
+                        <div>
+                            <a href="{{ url_for('download_file', file_id=file.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-download"></i>
+                            </a>
+                            <form method="POST" action="{{ url_for('delete_file', file_id=file.id) }}" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить файл?')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if not folders and not files %}
+                <div class="alert alert-secondary text-center">
+                    <i class="bi bi-folder" style="font-size: 32px; display: block;"></i>
+                    Нет файлов и папок
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Вкладка ЧАТ -->
+            <div class="tab-pane fade" id="chat" role="tabpanel">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <i class="bi bi-chat-dots"></i> Чат проекта
+                    </div>
+                    <div class="card-body">
+                        <div id="chatBox" class="chat-box mb-3" style="height: 400px;">
+                            {% for msg in messages %}
+                                <div class="message">
+                                    <span class="author">{{ msg.author.first_name }} {{ msg.author.last_name }}</span>
+                                    <span class="time">{{ msg.created_at.strftime('%H:%M %d.%m.%Y') }}</span>
+                                    <br>
+                                    {{ msg.text }}
+                                </div>
+                            {% else %}
+                                <div class="text-muted text-center py-5">
+                                    <i class="bi bi-chat" style="font-size: 32px; display: block;"></i>
+                                    Сообщений пока нет
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <form method="POST" action="{{ url_for('send_message', project_id=project.id) }}">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="message" placeholder="Напишите сообщение..." required>
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-send"></i> Отправить
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Правая колонка -->
+    <div class="col-md-4">
+        <!-- Участники -->
+        <div class="card mb-3">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-people"></i> Участники ({{ members|length }})</span>
+                {% if user_role in ['admin', 'manager'] or user.role == 'admin' %}
+                <a href="{{ url_for('project_settings', project_id=project.id) }}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-gear"></i>
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    {% for member in members %}
+                        <li class="mb-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-person-circle"></i> 
+                                    {{ member.user.first_name }} {{ member.user.last_name }}
+                                    {% if member.user.id == project.created_by %}
+                                        <span class="badge bg-primary">Создатель</span>
+                                    {% endif %}
+                                </div>
+                                <span class="badge {% if member.role_in_project == 'admin' %}bg-danger{% elif member.role_in_project == 'manager' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                    {{ member.role_in_project }}
+                                </span>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Другие проекты -->
+        <div class="card">
+            <div class="card-header bg-light">
+                <i class="bi bi-folder"></i> Другие проекты
+            </div>
+            <div class="card-body">
+                {% set other_projects = [] %}
+                {% for p in all_user_projects %}
+                    {% if p.id != project.id %}
+                        {% set other_projects = other_projects + [p] %}
+                    {% endif %}
+                {% endfor %}
+                
+                {% if other_projects %}
+                    <ul class="list-unstyled">
+                        {% for p in other_projects[:5] %}
+                            <li class="mb-2">
+                                <a href="{{ url_for('view_project', project_id=p.id) }}" class="text-decoration-none">
+                                    <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background: #f8f9fa;">
+                                        <div>
+                                            <i class="bi bi-folder-fill" style="color: #f59e0b;"></i>
+                                            <span class="ms-1">{{ p.name }}</span>
+                                        </div>
+                                        <span class="badge bg-secondary">{{ p.completion_percentage }}%</span>
+                                    </div>
+                                </a>
+                            </li>
+                        {% endfor %}
+                        {% if other_projects|length > 5 %}
+                            <li class="text-center mt-2">
+                                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary btn-sm w-100">
+                                    <i class="bi bi-grid"></i> Все проекты
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                {% else %}
+                    <div class="text-muted text-center">
+                        <i class="bi bi-folder" style="font-size: 24px; display: block;"></i>
+                        Нет других проектов
+                    </div>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary btn-sm w-100 mt-2">
+                        <i class="bi bi-grid"></i> Все проекты
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Фильтр задач
+document.addEventListener('DOMContentLoaded', function() {
+    const filterButtons = document.querySelectorAll('[data-filter]');
+    const taskCards = document.querySelectorAll('.task-card');
+    
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            const filter = this.dataset.filter;
+            
+            taskCards.forEach(card => {
+                if (filter === 'all') {
+                    card.style.display = '';
+                } else {
+                    const status = card.dataset.status;
+                    if (status === filter) {
+                        card.style.display = '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                }
+            });
+        });
+    });
+
+    // Auto scroll chat
+    const chatBox = document.getElementById('chatBox');
+    if (chatBox) {
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+});
+
+// Переключение вкладок для якорных ссылок
+document.addEventListener('DOMContentLoaded', function() {
+    const hash = window.location.hash;
+    if (hash) {
+        const tab = document.querySelector(`[href="${hash}"]`);
+        if (tab) {
+            const bsTab = new bootstrap.Tab(tab);
+            bsTab.show();
+        }
+    }
+});
+</script>
+{% endblock %}

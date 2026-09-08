@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('view_project', project_id=task.project_id) }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Назад к проекту
+    </a>
+    {% if task.parent_task_id %}
+    <a href="{{ url_for('view_task', task_id=task.parent_task_id) }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-up"></i> К родительской задаче
+    </a>
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">{{ task.title }}</h4>
+                <span class="badge {% if task.status == 'completed' %}bg-success{% elif task.status == 'in_progress' %}bg-warning{% else %}bg-secondary{% endif %}">
+                    {{ task.status }}
+                </span>
+            </div>
+            <div class="card-body">
+                <p><strong>Описание:</strong></p>
+                <p>{{ task.description or 'Нет описания' }}</p>
+                
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong><i class="bi bi-person"></i> Назначена:</strong></p>
+                        {% if task.assigned_to %}
+                            <p>{{ task.assignee.first_name }} {{ task.assignee.last_name }}</p>
+                        {% else %}
+                            <p class="text-muted">Не назначена</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong><i class="bi bi-calendar"></i> Дедлайн:</strong></p>
+                        <p>{{ task.due_date.strftime('%d.%m.%Y %H:%M') if task.due_date else 'Не указан' }}</p>
+                    </div>
+                </div>
+                
+                <hr>
+                <p><strong>Статус:</strong></p>
+                <form method="POST" action="{{ url_for('update_task_status', task_id=task.id) }}">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <select name="status" class="form-select">
+                                <option value="new" {% if task.status == 'new' %}selected{% endif %}>Новая</option>
+                                <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>В работе</option>
+                                <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>Завершена</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-primary w-100">Обновить статус</button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Подзадачи -->
+                <hr>
+                <h5><i class="bi bi-diagram-3"></i> Подзадачи</h5>
+                
+                <!-- Форма создания подзадачи -->
+                {% if user_role in ['admin', 'manager'] or user.role == 'admin' %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('create_task', project_id=task.project_id) }}">
+                            <input type="hidden" name="parent_task_id" value="{{ task.id }}">
+                            <div class="row g-2">
+                                <div class="col-md-5">
+                                    <input type="text" class="form-control" name="title" placeholder="Название подзадачи" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <select class="form-select" name="assigned_to">
+                                        <option value="">Назначить...</option>
+                                        {% for u in all_users %}
+                                            <option value="{{ u.id }}">{{ u.first_name }} {{ u.last_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="date" class="form-control" name="due_date">
+                                </div>
+                                <div class="col-md-1">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-12">
+                                    <input type="text" class="form-control" name="description" placeholder="Описание (опционально)">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Список подзадач -->
+                {% if subtasks %}
+                    {% for subtask in subtasks %}
+                    <div class="card task-card mb-2 {% if subtask.status == 'completed' %}completed{% elif subtask.status == 'in_progress' %}in_progress{% endif %}">
+                        <div class="card-body py-2">
+                            <div class="row align-items-center">
+                                <div class="col-md-5">
+                                    <a href="{{ url_for('view_task', task_id=subtask.id) }}" class="text-decoration-none text-dark">
+                                        <strong>{{ subtask.title }}</strong>
+                                    </a>
+                                    <br>
+                                    <small class="text-muted">{{ subtask.description or '' }}</small>
+                                    {% if subtask.assigned_to %}
+                                        <br><small><i class="bi bi-person"></i> {{ subtask.assignee.first_name }} {{ subtask.assignee.last_name }}</small>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-3">
+                                    <small>
+                                        <i class="bi bi-calendar"></i> Начало: {{ subtask.start_date.strftime('%d.%m') }}
+                                        {% if subtask.due_date %}
+                                            <br><i class="bi bi-calendar-check"></i> Дедлайн: {{ subtask.due_date.strftime('%d.%m.%Y') }}
+                                            {% if subtask.due_date < now and subtask.status != 'completed' %}
+                                                <span class="badge bg-danger">Просрочена</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <div class="col-md-4">
+                                    <form method="POST" action="{{ url_for('update_task_status', task_id=subtask.id) }}" class="d-inline">
+                                        <select name="status" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
+                                            <option value="new" {% if subtask.status == 'new' %}selected{% endif %}>🆕 Новая</option>
+                                            <option value="in_progress" {% if subtask.status == 'in_progress' %}selected{% endif %}>🔄 В работе</option>
+                                            <option value="completed" {% if subtask.status == 'completed' %}selected{% endif %}>✅ Завершена</option>
+                                        </select>
+                                    </form>
+                                    {% if user_role in ['admin', 'manager'] or user.role == 'admin' %}
+                                    <form method="POST" action="{{ url_for('delete_task', task_id=subtask.id) }}" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить подзадачу?')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                    <a href="{{ url_for('view_task', task_id=subtask.id) }}" class="btn btn-sm btn-outline-info">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-secondary">Нет подзадач.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Файлы задачи -->
+        <div class="card">
+            <div class="card-header bg-light">
+                <i class="bi bi-paperclip"></i> Файлы задачи
+            </div>
+            <div class="card-body">
+                <!-- Загрузка файла -->
+                <form method="POST" action="{{ url_for('upload_file', project_id=task.project_id) }}" enctype="multipart/form-data" class="mb-3">
+                    <input type="hidden" name="task_id" value="{{ task.id }}">
+                    <div class="input-group input-group-sm">
+                        <input type="file" class="form-control" name="file" required>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-cloud-upload"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Список файлов -->
+                {% if files %}
+                <div class="list-group">
+                    {% for file in files %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-file-earmark"></i>
+                            <a href="{{ url_for('download_file', file_id=file.id) }}" class="text-decoration-none">
+                                {{ file.original_name }}
+                            </a>
+                            <br>
+                            <small class="text-muted">
+                                {{ (file.file_size / 1024)|round(1) }} KB
+                            </small>
+                        </div>
+                        <div>
+                            <a href="{{ url_for('download_file', file_id=file.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-download"></i>
+                            </a>
+                            <form method="POST" action="{{ url_for('delete_file', file_id=file.id) }}" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить файл?')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-muted text-center">Нет прикрепленных файлов</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Информация -->
+        <div class="card mt-3">
+            <div class="card-header bg-light">
+                <i class="bi bi-info-circle"></i> Информация
+            </div>
+            <div class="card-body">
+                <p><strong>Создана:</strong> {{ task.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                <p><strong>Создатель:</strong> {{ task.task_creator.first_name }} {{ task.task_creator.last_name }}</p>
+                <p><strong>Проект:</strong> {{ task.project.name }}</p>
+                {% if task.parent_task %}
+                <p><strong>Родительская задача:</strong> 
+                    <a href="{{ url_for('view_task', task_id=task.parent_task.id) }}">{{ task.parent_task.title }}</a>
+                </p>
+                {% endif %}
+                
+                {% if user_role in ['admin', 'manager'] or user.role == 'admin' %}
+                <hr>
+                <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" onsubmit="return confirm('Удалить задачу и все подзадачи?')">
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="bi bi-trash"></i> Удалить задачу
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workspace</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --sidebar-width: 280px;
+            --header-height: 60px;
+            --primary-color: #4f46e5;
+            --sidebar-bg: #1a1a2e;
+            --sidebar-hover: #2d2d44;
+            --card-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f5f7fb;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            height: var(--header-height);
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .header .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header .logo i {
+            font-size: 28px;
+        }
+
+        .header-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-right .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-right .user-info .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            color: #a0a0c0;
+            overflow-y: auto;
+            padding: 20px 0;
+            z-index: 999;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #3d3d5c;
+            border-radius: 2px;
+        }
+
+        .sidebar .nav-section {
+            padding: 0 16px;
+            margin-bottom: 24px;
+        }
+
+        .sidebar .nav-section .section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6b6b8a;
+            padding: 0 8px;
+            margin-bottom: 8px;
+        }
+
+        .sidebar .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            color: #a0a0c0;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            margin-bottom: 2px;
+            position: relative;
+        }
+
+        .sidebar .nav-item:hover {
+            background: var(--sidebar-hover);
+            color: white;
+        }
+
+        .sidebar .nav-item.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .sidebar .nav-item i {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .sidebar .nav-item .badge {
+            margin-left: auto;
+            background: rgba(255,255,255,0.1);
+            color: #a0a0c0;
+        }
+
+        .sidebar .nav-item.active .badge {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .sidebar .project-tree {
+            padding: 0 16px;
+        }
+
+        .sidebar .project-tree .tree-item {
+            padding: 6px 8px 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #a0a0c0;
+            text-decoration: none;
+            font-size: 14px;
+            position: relative;
+        }
+
+        .sidebar .project-tree .tree-item:hover {
+            background: var(--sidebar-hover);
+            color: white;
+        }
+
+        .sidebar .project-tree .tree-item.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .sidebar .project-tree .tree-item .expand-icon {
+            font-size: 12px;
+            transition: transform 0.2s ease;
+        }
+
+        .sidebar .project-tree .tree-item .expand-icon.expanded {
+            transform: rotate(90deg);
+        }
+
+        .sidebar .project-tree .tree-children {
+            padding-left: 24px;
+        }
+
+        .sidebar .project-tree .tree-children .tree-item {
+            font-size: 13px;
+            padding: 4px 8px 4px 12px;
+        }
+
+        .sidebar .project-tree .tree-children .tree-item i {
+            font-size: 14px;
+            width: 18px;
+        }
+
+        .sidebar .project-tree .tree-children .tree-item .badge {
+            margin-left: auto;
+            background: rgba(255,255,255,0.1);
+            color: #a0a0c0;
+            font-size: 10px;
+        }
+
+        .sidebar .project-tree .tree-children .tree-item.active .badge {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            margin-top: var(--header-height);
+            height: calc(100vh - var(--header-height));
+            overflow-y: auto;
+            padding: 24px 32px;
+        }
+
+        .main-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .main-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .main-content::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+
+        /* Cards */
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid #f0f0f0;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .stat-card .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .stat-card .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .stat-card .stat-label {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .project-grid .project-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid #f0f0f0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .project-grid .project-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            border-color: var(--primary-color);
+        }
+
+        .project-card .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .project-card .project-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .project-card .project-progress {
+            margin-top: 12px;
+        }
+
+        .project-card .project-meta {
+            display: flex;
+            gap: 16px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .project-card .project-meta i {
+            margin-right: 4px;
+        }
+
+        /* Chat box */
+        .chat-box {
+            height: 300px;
+            overflow-y: auto;
+            background-color: #fafafa;
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .chat-box .message {
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #f0f0f0;
+        }
+
+        .chat-box .message .author {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .chat-box .message .time {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-left: 8px;
+        }
+
+        /* Task cards */
+        .task-card {
+            border-left: 4px solid #9ca3af;
+            transition: all 0.2s ease;
+        }
+
+        .task-card.completed {
+            border-left-color: #10b981;
+            background-color: #f0fdf4;
+        }
+
+        .task-card.in_progress {
+            border-left-color: #f59e0b;
+        }
+
+        .task-card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        /* Sidebar toggle (mobile) */
+        .sidebar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #1a1a2e;
+            cursor: pointer;
+            padding: 0 10px;
+        }
+
+        /* Overlay for mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 998;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .sidebar-overlay.show {
+                display: block;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+            }
+            
+            .sidebar-toggle {
+                display: block;
+            }
+            
+            .header .logo span {
+                display: none;
+            }
+        }
+
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        /* Floating action button */
+        .floating-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 100;
+        }
+
+        /* Utility classes */
+        .text-truncate-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+            <i class="bi bi-list"></i>
+        </button>
+        <div class="logo">
+            <i class="bi bi-layers"></i>
+            <span>Workspace</span>
+        </div>
+        <div class="header-right">
+            <div class="user-info">
+                <div class="avatar">
+                    {{ session.user_name[0]|upper if session.user_name else 'U' }}
+                </div>
+                <span class="d-none d-md-inline">{{ session.user_name }}</span>
+                <span class="badge bg-secondary d-none d-md-inline">{{ session.user_role }}</span>
+            </div>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm" title="Выйти">
+                <i class="bi bi-box-arrow-right"></i>
+            </a>
+        </div>
+    </header>
+
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="nav-section">
+            <div class="section-title">Навигация</div>
+            <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                <i class="bi bi-grid-3x3-gap-fill"></i>
+                <span>Дашборд</span>
+            </a>
+            {% if session.user_role == 'admin' %}
+            <a href="{{ url_for('create_project') }}" class="nav-item {% if request.endpoint == 'create_project' %}active{% endif %}">
+                <i class="bi bi-plus-circle"></i>
+                <span>Создать проект</span>
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="nav-section">
+            <div class="section-title">Проекты</div>
+            <div class="project-tree">
+                {% if projects %}
+                    {% for project in projects %}
+                        <div class="tree-item {% if request.view_args and request.view_args.project_id|int == project.id %}active{% endif %}" 
+                             onclick="toggleProject('{{ project.id }}')">
+                            <span class="expand-icon" id="expand-{{ project.id }}">▶</span>
+                            <i class="bi bi-folder-fill" style="color: #f59e0b;"></i>
+                            <span class="text-truncate" style="flex: 1;">{{ project.name }}</span>
+                            <span class="badge">{{ project.completion_percentage }}%</span>
+                        </div>
+                        <div class="tree-children" id="children-{{ project.id }}" style="display: {% if request.view_args and request.view_args.project_id|int == project.id %}block{% else %}none{% endif %};">
+                            <a href="{{ url_for('view_project', project_id=project.id) }}" class="tree-item {% if request.endpoint == 'view_project' and request.view_args.project_id|int == project.id %}active{% endif %}">
+                                <i class="bi bi-grid"></i>
+                                <span>Дашборд</span>
+                            </a>
+                            <a href="{{ url_for('view_project', project_id=project.id) }}#tasks" class="tree-item">
+                                <i class="bi bi-list-task"></i>
+                                <span>Задачи</span>
+                                <span class="badge">{{ project.tasks|length }}</span>
+                            </a>
+                            <a href="{{ url_for('view_project', project_id=project.id) }}#files" class="tree-item">
+                                <i class="bi bi-folder"></i>
+                                <span>Файлы</span>
+                            </a>
+                            <a href="{{ url_for('view_project', project_id=project.id) }}#chat" class="tree-item">
+                                <i class="bi bi-chat-dots"></i>
+                                <span>Чат</span>
+                                <span class="badge">{{ project.messages|length }}</span>
+                            </a>
+                            {% if session.user_role == 'admin' or (user_role and user_role in ['admin', 'manager']) %}
+                            <a href="{{ url_for('project_settings', project_id=project.id) }}" class="tree-item {% if request.endpoint == 'project_settings' and request.view_args.project_id|int == project.id %}active{% endif %}">
+                                <i class="bi bi-gear"></i>
+                                <span>Настройки</span>
+                            </a>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-muted" style="padding: 8px; font-size: 13px;">
+                        <i class="bi bi-info-circle"></i> Нет проектов
+                    </div>
+                    {% if session.user_role == 'admin' %}
+                    <a href="{{ url_for('create_project') }}" class="btn btn-outline-primary btn-sm w-100 mt-2">
+                        <i class="bi bi-plus-circle"></i> Создать проект
+                    </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        <i class="bi bi-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Toggle sidebar on mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('show');
+        }
+
+        // Toggle project tree
+        function toggleProject(projectId) {
+            const children = document.getElementById('children-' + projectId);
+            const expand = document.getElementById('expand-' + projectId);
+            
+            if (children.style.display === 'none') {
+                children.style.display = 'block';
+                if (expand) expand.classList.add('expanded');
+            } else {
+                children.style.display = 'none';
+                if (expand) expand.classList.remove('expanded');
+            }
+        }
+
+        // Auto-expand current project and close others
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentProject = window.location.pathname.match(/\/project\/(\d+)/);
+            if (currentProject) {
+                const projectId = currentProject[1];
+                const children = document.getElementById('children-' + projectId);
+                const expand = document.getElementById('expand-' + projectId);
+                if (children) {
+                    children.style.display = 'block';
+                    if (expand) expand.classList.add('expanded');
+                }
+            }
+
+            // Close sidebar on outside click (mobile)
+            document.addEventListener('click', function(e) {
+                const sidebar = document.getElementById('sidebar');
+                const toggle = document.querySelector('.sidebar-toggle');
+                const overlay = document.getElementById('sidebarOverlay');
+                if (window.innerWidth <= 768) {
+                    if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
+                        sidebar.classList.remove('open');
+                        overlay.classList.remove('show');
+                    }
+                }
+            });
+
+            // Close sidebar when clicking a link (mobile)
+            document.querySelectorAll('.sidebar .tree-item, .sidebar .nav-item').forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        document.getElementById('sidebar').classList.remove('open');
+                        document.getElementById('sidebarOverlay').classList.remove('show');
+                    }
+                });
+            });
+        });
+
+        // Smooth scroll to anchors
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const targetId = this.getAttribute('href');
+                if (targetId && targetId !== '#') {
+                    e.preventDefault();
+                    const target = document.querySelector(targetId);
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

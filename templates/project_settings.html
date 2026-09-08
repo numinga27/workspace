@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('view_project', project_id=project.id) }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Назад к проекту
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <h2><i class="bi bi-gear"></i> Настройки проекта: {{ project.name }}</h2>
+        
+        <div class="card mt-3">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-person-plus"></i> Пригласить участника
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('invite_user', project_id=project.id) }}" class="row g-2">
+                    <div class="col-md-6">
+                        <input type="email" class="form-control" name="email" placeholder="Email пользователя" required>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="role">
+                            <option value="member">Участник</option>
+                            <option value="manager">Помощник</option>
+                            <option value="admin">Руководитель</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-envelope"></i> Пригласить
+                        </button>
+                    </div>
+                </form>
+                <small class="text-muted">
+                    <i class="bi bi-info-circle"></i> 
+                    Если пользователь уже зарегистрирован, он будет добавлен сразу. 
+                    Если нет - получит ссылку для регистрации.
+                </small>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header bg-light">
+                <i class="bi bi-people"></i> Участники проекта
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Имя</th>
+                                <th>Email</th>
+                                <th>Роль</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for member in members %}
+                            <tr>
+                                <td>
+                                    {{ member.user.first_name }} {{ member.user.last_name }}
+                                    {% if member.user.id == project.created_by %}
+                                        <span class="badge bg-primary">Создатель</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ member.user.email }}</td>
+                                <td>
+                                    {% if member.user.id == project.created_by %}
+                                        <span class="badge bg-primary">admin</span>
+                                    {% else %}
+                                        <form method="POST" action="{{ url_for('change_member_role', project_id=project.id, member_id=member.id) }}" class="d-inline">
+                                            <select name="role" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
+                                                <option value="member" {% if member.role_in_project == 'member' %}selected{% endif %}>Участник</option>
+                                                <option value="manager" {% if member.role_in_project == 'manager' %}selected{% endif %}>Помощник</option>
+                                                <option value="admin" {% if member.role_in_project == 'admin' %}selected{% endif %}>Руководитель</option>
+                                            </select>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if member.user.id != project.created_by %}
+                                    <form method="POST" action="{{ url_for('remove_member', project_id=project.id, member_id=member.id) }}" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить участника из проекта?')">
+                                            <i class="bi bi-person-x"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-light">
+                <i class="bi bi-info-circle"></i> Информация
+            </div>
+            <div class="card-body">
+                <p><strong>Название:</strong> {{ project.name }}</p>
+                <p><strong>Создатель:</strong> {{ project.creator.first_name }} {{ project.creator.last_name }}</p>
+                <p><strong>Создан:</strong> {{ project.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                <p><strong>Участников:</strong> {{ members|length }}</p>
+                <hr>
+                <a href="{{ url_for('view_project', project_id=project.id) }}" class="btn btn-primary w-100">
+                    <i class="bi bi-eye"></i> Перейти к проекту
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

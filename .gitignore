@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+workspace.db
+*.db
+*.sqlite3
+
+# Flask
+instance/
+.webassets-cache
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Mac
+.DS_Store
+._*
+*.local
+
+# Uploads
+uploads/*.pdf
+uploads/*.docx
+uploads/*.jpg
+uploads/*.png
+!uploads/.gitkeep
+
+# Logs
+*.log
+app.log
+
+# Environments
+.env
+.venv

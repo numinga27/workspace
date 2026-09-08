@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('view_project', project_id=folder.project_id) }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Назад к проекту
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <h2><i class="bi bi-folder-fill text-warning"></i> {{ folder.name }}</h2>
+        
+        <!-- Форма создания подпапки -->
+        <div class="card mb-3">
+            <div class="card-header bg-light">
+                <i class="bi bi-folder-plus"></i> Создать подпапку
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('create_folder', project_id=folder.project_id) }}" class="row g-2">
+                    <input type="hidden" name="parent_id" value="{{ folder.id }}">
+                    <div class="col-md-8">
+                        <input type="text" class="form-control" name="name" placeholder="Название папки" required>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-folder-plus"></i> Создать
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Форма загрузки файла в папку -->
+        <div class="card mb-3">
+            <div class="card-header bg-light">
+                <i class="bi bi-cloud-upload"></i> Загрузить файл в папку
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('upload_file', project_id=folder.project_id) }}" enctype="multipart/form-data" class="row g-2">
+                    <input type="hidden" name="folder_id" value="{{ folder.id }}">
+                    <div class="col-md-8">
+                        <input type="file" class="form-control" name="file" required>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-cloud-upload"></i> Загрузить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Подпапки -->
+        {% if subfolders %}
+        <h6><i class="bi bi-folder"></i> Подпапки</h6>
+        <div class="list-group mb-3">
+            {% for subfolder in subfolders %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <a href="{{ url_for('view_folder', folder_id=subfolder.id) }}" class="text-decoration-none">
+                    <i class="bi bi-folder-fill text-warning"></i> {{ subfolder.name }}
+                </a>
+                <span>
+                    <span class="badge bg-secondary me-2">
+                        <i class="bi bi-file"></i> {{ subfolder.files|length }}
+                    </span>
+                    <form method="POST" action="{{ url_for('delete_folder', folder_id=subfolder.id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить папку и всё её содержимое?')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Файлы в папке -->
+        {% if files %}
+        <h6><i class="bi bi-file"></i> Файлы</h6>
+        <div class="list-group">
+            {% for file in files %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="bi bi-file-earmark"></i>
+                    <a href="{{ url_for('download_file', file_id=file.id) }}" class="text-decoration-none">
+                        {{ file.original_name }}
+                    </a>
+                    <small class="text-muted ms-2">
+                        ({{ (file.file_size / 1024)|round(1) }} KB)
+                    </small>
+                    <br>
+                    <small class="text-muted">
+                        Загрузил: {{ file.uploader.first_name }} {{ file.uploader.last_name }}
+                    </small>
+                </div>
+                <div>
+                    <a href="{{ url_for('download_file', file_id=file.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-download"></i>
+                    </a>
+                    <form method="POST" action="{{ url_for('delete_file', file_id=file.id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить файл?')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if not subfolders and not files %}
+        <div class="alert alert-secondary">Папка пуста.</div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-light">
+                <i class="bi bi-info-circle"></i> Информация
+            </div>
+            <div class="card-body">
+                <p><strong>Папка:</strong> {{ folder.name }}</p>
+                <p><strong>Создана:</strong> {{ folder.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                <p><strong>Создатель:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+                <hr>
+                <form method="POST" action="{{ url_for('delete_folder', folder_id=folder.id) }}" onsubmit="return confirm('Удалить папку и всё её содержимое?')">
+                    <button type="submit" class="btn btn-danger w-100">
+                        <i class="bi bi-trash"></i> Удалить папку
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
