@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1">📅 Мой календарь</h2>
+        <p class="text-muted mb-0">Все ваши события, задачи и вехи в одном месте</p>
+    </div>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPersonalEventModal">
+        <i class="bi bi-plus-lg"></i> Личное событие
+    </button>
+</div>
+
+<!-- Легенда -->
+<div class="d-flex flex-wrap gap-3 mb-3 small text-muted">
+    <span><span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #8b5cf6; vertical-align: middle;"></span> Личные события</span>
+    <span><span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #5b5bd6; vertical-align: middle;"></span> События проектов</span>
+    <span><span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #dc2626; vertical-align: middle;"></span> Просроченные задачи</span>
+    <span><span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #16a34a; vertical-align: middle;"></span> Завершено</span>
+</div>
+
+<div class="small text-muted mb-3">
+    <i class="bi bi-info-circle"></i>
+    Клик по дню — просмотр событий и создание личного события
+</div>
+
+<!-- Календарь -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div id="myCalendar"></div>
+    </div>
+</div>
+
+<!-- Личные события списком -->
+{% if personal_events %}
+<h5 class="mb-3"><i class="bi bi-person-fill"></i> Мои личные события ({{ personal_events|length }})</h5>
+{% for e in personal_events %}
+<div class="card mb-2 {% if e.start_time < now %}opacity-50{% endif %}">
+    <div class="card-body py-2 d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-3">
+            <div style="width: 4px; height: 40px; border-radius: 2px; background: {{ e.color_hex }};"></div>
+            <div>
+                <strong>{{ e.title }}</strong>
+                <br>
+                <small class="text-muted">
+                    <i class="bi bi-calendar-event"></i>
+                    {% if e.all_day %}
+                        {{ e.start_time.strftime('%d.%m.%Y') }} (весь день)
+                    {% else %}
+                        {{ e.start_time.strftime('%d.%m.%Y %H:%M') }}
+                        {% if e.end_time %} — {{ e.end_time.strftime('%H:%M') }}{% endif %}
+                    {% endif %}
+                </small>
+                {% if e.description %}
+                <br><small class="text-muted">{{ e.description }}</small>
+                {% endif %}
+            </div>
+        </div>
+        <form method="POST" action="{{ url_for('delete_event', event_id=e.id) }}">
+            <button type="submit" class="btn btn-outline-secondary btn-sm"
+                    style="width: 32px; height: 32px; padding: 0;"
+                    onclick="return confirm('Удалить событие?')">
+                <i class="bi bi-trash-fill text-danger"></i>
+            </button>
+        </form>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- Общие события из проектов -->
+{% if project_events %}
+<h5 class="mb-3 mt-4"><i class="bi bi-folder-fill text-warning"></i> События моих проектов ({{ project_events|length }})</h5>
+{% for e in project_events %}
+<div class="card mb-2 {% if e.start_time < now %}opacity-50{% endif %}">
+    <div class="card-body py-2 d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-3">
+            <div style="width: 4px; height: 40px; border-radius: 2px; background: {{ e.color_hex }};"></div>
+            <div>
+                <strong>{{ e.title }}</strong>
+                {% if e.project %}
+                <span class="badge bg-secondary ms-2">{{ e.project.name }}</span>
+                {% endif %}
+                <br>
+                <small class="text-muted">
+                    <i class="bi bi-calendar-event"></i>
+                    {% if e.all_day %}
+                        {{ e.start_time.strftime('%d.%m.%Y') }} (весь день)
+                    {% else %}
+                        {{ e.start_time.strftime('%d.%m.%Y %H:%M') }}
+                    {% endif %}
+                    {% if e.creator %} · {{ e.creator.first_name }} {{ e.creator.last_name }}{% endif %}
+                </small>
+                {% if e.description %}
+                <br><small class="text-muted">{{ e.description }}</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- МОДАЛЬНОЕ ОКНО: ПРОСМОТР ДНЯ -->
+<!-- ============================================================ -->
+<div class="modal fade" id="myDayModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-calendar-event"></i>
+                    <span id="myDayModalTitle">Дата</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="myDayModalEvents"></div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Закрыть
+                </button>
+                <button type="button" class="btn btn-primary" onclick="createMyEventFromDay()">
+                    <i class="bi bi-plus-lg"></i> Личное событие
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- МОДАЛЬНОЕ ОКНО: СОЗДАНИЕ ЛИЧНОГО СОБЫТИЯ -->
+<!-- ============================================================ -->
+<div class="modal fade" id="createPersonalEventModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-person-plus-fill"></i> Личное событие
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('create_personal_event') }}">
+                <div class="modal-body">
+                    <p class="text-muted small">
+                        <i class="bi bi-info-circle"></i>
+                        Это событие видите только вы. Его нельзя привязать к проекту.
+                    </p>
+
+                    <div class="mb-3">
+                        <label class="form-label">Название *</label>
+                        <input type="text" name="title" class="form-control"
+                               placeholder="Например: Встреча с врачом" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Описание</label>
+                        <textarea name="description" class="form-control" rows="2"
+                                  placeholder="Заметки..."></textarea>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="all_day" id="myAllDayCheck"
+                               onchange="toggleMyTimeFields()">
+                        <label class="form-check-label" for="myAllDayCheck">
+                            Весь день
+                        </label>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Начало *</label>
+                            <input type="datetime-local" name="start_time" id="myStartTimeField"
+                                   class="form-control" required>
+                            <input type="date" name="start_time" id="myStartDateField"
+                                   class="form-control" style="display: none;">
+                        </div>
+                        <div class="col-md-6 mb-3" id="myEndTimeBlock">
+                            <label class="form-label">Окончание</label>
+                            <input type="datetime-local" name="end_time" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Цвет</label>
+                        <div class="d-flex gap-2">
+                            {% for color, hex in [('purple', '#8b5cf6'), ('blue', '#5b5bd6'), ('green', '#16a34a'), ('red', '#dc2626'), ('orange', '#f59e0b'), ('teal', '#0891b2')] %}
+                            <label style="cursor: pointer;">
+                                <input type="radio" name="color" value="{{ color }}"
+                                       {% if color == 'purple' %}checked{% endif %}
+                                       style="display: none;"
+                                       onchange="updateMyColorSelection(this)">
+                                <span class="color-dot {% if color == 'purple' %}selected{% endif %}"
+                                      style="background: {{ hex }};"></span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Создать
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCRIPTS -->
+<!-- ============================================================ -->
+<script>
+let myCalendar = null;
+let mySelectedDateStr = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('myCalendar');
+    if (!calendarEl || typeof FullCalendar === 'undefined') return;
+
+    myCalendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'ru',
+        height: 'auto',
+        firstDay: 1,
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,listWeek'
+        },
+        buttonText: {
+            today: 'Сегодня',
+            month: 'Месяц',
+            week: 'Неделя',
+            list: 'Список'
+        },
+        events: '{{ url_for("my_calendar_json") }}',
+
+        dateClick: function(info) {
+            openMyDayModal(info.dateStr, info.date);
+        },
+
+        eventClick: function(info) {
+            info.jsEvent.stopPropagation();
+
+            if (info.event.url) {
+                window.location.href = info.event.url;
+                info.jsEvent.preventDefault();
+                return;
+            }
+            const props = info.event.extendedProps;
+            let msg = info.event.title;
+            if (props.description) msg += '\n\n' + props.description;
+            if (props.project) msg += '\n\nПроект: ' + props.project;
+            if (props.creator) msg += '\n\nАвтор: ' + props.creator;
+            alert(msg);
+        },
+
+        eventDidMount: function(info) {
+            const props = info.event.extendedProps;
+            let tooltip = info.event.title;
+            if (props.description) tooltip += '\n' + props.description;
+            if (props.project) tooltip += '\nПроект: ' + props.project;
+            info.el.title = tooltip;
+        },
+
+        dayCellDidMount: function(arg) {
+            arg.el.style.cursor = 'pointer';
+        }
+    });
+    myCalendar.render();
+});
+
+function openMyDayModal(dateStr, dateObj) {
+    mySelectedDateStr = dateStr;
+
+    const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+                    'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+    const days = ['воскресенье', 'понедельник', 'вторник', 'среда',
+                  'четверг', 'пятница', 'суббота'];
+
+    const d = dateObj || new Date(dateStr);
+    const dateLabel = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${days[d.getDay()]}`;
+
+    document.getElementById('myDayModalTitle').textContent = dateLabel;
+
+    const eventsList = document.getElementById('myDayModalEvents');
+    const events = myCalendar.getEvents().filter(ev => {
+        const evStart = ev.startStr.split('T')[0];
+        return evStart === dateStr;
+    });
+
+    if (events.length === 0) {
+        eventsList.innerHTML = `
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-calendar-x" style="font-size: 36px; opacity: 0.3; display: block; margin-bottom: 8px;"></i>
+                Нет событий на этот день
+            </div>
+        `;
+    } else {
+        eventsList.innerHTML = events.map(ev => {
+            const props = ev.extendedProps;
+            const timeLabel = ev.allDay ? 'Весь день' :
+                (ev.start ? ev.start.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'}) : '');
+            const color = ev.backgroundColor || '#5b5bd6';
+
+            return `
+                <div class="d-flex align-items-center gap-2 p-2 mb-2 rounded" style="background: var(--bg-tertiary);">
+                    <div style="width: 4px; height: 36px; border-radius: 2px; background: ${color};"></div>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold small">${ev.title}</div>
+                        <div class="text-muted" style="font-size: 11px;">
+                            ${timeLabel}
+                            ${props.description ? ' · ' + props.description : ''}
+                            ${props.project ? ' · ' + props.project : ''}
+                        </div>
+                    </div>
+                    ${ev.url ? `<a href="${ev.url}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-box-arrow-up-right"></i></a>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    new bootstrap.Modal(document.getElementById('myDayModal')).show();
+}
+
+function createMyEventFromDay() {
+    bootstrap.Modal.getInstance(document.getElementById('myDayModal')).hide();
+
+    if (mySelectedDateStr) {
+        document.getElementById('myStartTimeField').value = mySelectedDateStr + 'T10:00';
+        document.getElementById('myStartDateField').value = mySelectedDateStr;
+    }
+
+    setTimeout(() => {
+        new bootstrap.Modal(document.getElementById('createPersonalEventModal')).show();
+    }, 300);
+}
+
+function toggleMyTimeFields() {
+    const checked = document.getElementById('myAllDayCheck').checked;
+    const dateField = document.getElementById('myStartDateField');
+    const timeField = document.getElementById('myStartTimeField');
+    const endBlock = document.getElementById('myEndTimeBlock');
+
+    if (checked) {
+        dateField.style.display = 'block';
+        dateField.required = true;
+        timeField.style.display = 'none';
+        timeField.required = false;
+        endBlock.style.display = 'none';
+    } else {
+        dateField.style.display = 'none';
+        dateField.required = false;
+        timeField.style.display = 'block';
+        timeField.required = true;
+        endBlock.style.display = 'block';
+    }
+}
+
+function updateMyColorSelection(radio) {
+    document.querySelectorAll('#createPersonalEventModal .color-dot').forEach(dot => dot.classList.remove('selected'));
+    radio.parentElement.querySelector('.color-dot').classList.add('selected');
+}
+</script>
+{% endblock %}

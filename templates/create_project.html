@@ -1,7 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
+    <div class="col-md-8 col-lg-7">
+        <div class="mb-3">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> К дашборду
+            </a>
+        </div>
+
         <div class="card shadow">
             <div class="card-header bg-primary text-white">
                 <h4 class="mb-0"><i class="bi bi-folder-plus"></i> Новый проект</h4>
@@ -9,14 +15,78 @@
             <div class="card-body">
                 <form method="POST">
                     <div class="mb-3">
-                        <label for="name" class="form-label">Название проекта *</label>
-                        <input type="text" class="form-control" id="name" name="name" required>
+                        <label class="form-label">Название проекта *</label>
+                        <input type="text" name="name" class="form-control" 
+                               placeholder="Например: Строительство склада" required autofocus>
                     </div>
+
                     <div class="mb-3">
-                        <label for="description" class="form-label">Описание</label>
-                        <textarea class="form-control" id="description" name="description" rows="4"></textarea>
+                        <label class="form-label">Описание</label>
+                        <textarea name="description" class="form-control" rows="3"
+                                  placeholder="Краткое описание проекта..."></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Создать проект</button>
+
+                    <!-- Заказчик -->
+                    <div class="mb-3">
+                        <label class="form-label">Заказчик</label>
+                        <div class="input-group">
+                            <select name="customer_id" class="form-select">
+                                <option value="">— Без заказчика —</option>
+                                {% for c in customers %}
+                                <option value="{{ c.id }}">
+                                    {{ c.name }}{% if c.inn %} (ИНН: {{ c.inn }}){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <a href="{{ url_for('create_customer') }}?next={{ url_for('create_project') }}"
+                               class="btn btn-outline-primary"
+                               title="Добавить нового заказчика">
+                                <i class="bi bi-plus-lg"></i>
+                            </a>
+                        </div>
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            Нажмите <i class="bi bi-plus-lg"></i> справа, чтобы добавить нового заказчика.
+                            После сохранения вы вернётесь на эту форму.
+                        </small>
+                    </div>
+
+                    <!-- Даты -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Дата старта</label>
+                            <input type="date" name="start_date" class="form-control">
+                            <small class="text-muted">По умолчанию — сегодня</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Плановая дата окончания</label>
+                            <input type="date" name="end_date" class="form-control">
+                            <small class="text-muted">Можно изменить позже</small>
+                        </div>
+                    </div>
+
+                    <!-- Информация о правах -->
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>После создания</strong> вы автоматически становитесь
+                        <strong>руководителем проекта</strong> и сможете:
+                        <ul class="mb-0 mt-1 small">
+                            <li>Приглашать участников и назначать им роли</li>
+                            <li>Создавать задачи, вехи и To-Do</li>
+                            <li>Загружать файлы и писать отчёты</li>
+                            <li>Удалять проект (с подтверждением)</li>
+                        </ul>
+                    </div>
+
+                    <!-- Кнопки -->
+                    <div class="d-flex justify-content-between mt-3">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                            <i class="bi bi-x"></i> Отмена
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Создать проект
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>

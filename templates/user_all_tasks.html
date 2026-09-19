@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Назад
+        </a>
+        <h2 class="mt-2 mb-1">
+            👤 Задачи сотрудника: {{ employee.first_name }} {{ employee.last_name }}
+        </h2>
+        <p class="text-muted mb-0">
+            {{ employee.email }} · {{ employee.company }}
+        </p>
+    </div>
+    <a href="{{ url_for('employee_report_view', project_id=employee_projects[0].id if employee_projects else 0, user_id=employee.id) if employee_projects else '#' }}"
+       class="btn btn-outline-info"
+       {% if not employee_projects %}disabled{% endif %}>
+        <i class="bi bi-person-badge"></i> Полный отчёт
+    </a>
+</div>
+
+<!-- Статистика -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #e0e7ff; color: #4f46e5;">
+                <i class="bi bi-list-task"></i>
+            </div>
+            <div class="stat-number">{{ active|length }}</div>
+            <div class="stat-label">Активных</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="stat-card {% if urgent %}border-warning{% endif %}">
+            <div class="stat-icon" style="background: #fef3c7; color: #f59e0b;">
+                <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="stat-number">{{ urgent|length }}</div>
+            <div class="stat-label">Срочных</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="stat-card {% if overdue %}border-danger{% endif %}">
+            <div class="stat-icon" style="background: #fee2e2; color: #dc2626;">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+            <div class="stat-number text-danger">{{ overdue|length }}</div>
+            <div class="stat-label">Просрочено</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #d1fae5; color: #10b981;">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <div class="stat-number">{{ completed|length }}</div>
+            <div class="stat-label">Завершено</div>
+        </div>
+    </div>
+</div>
+
+<!-- Уведомления -->
+{% if overdue %}
+<div class="alert alert-danger mb-3">
+    <strong><i class="bi bi-exclamation-octagon-fill"></i> Просроченные задачи ({{ overdue|length }}):</strong>
+    <ul class="mb-0 mt-1">
+        {% for t in overdue %}
+        <li>
+            <a href="{{ url_for('view_task', task_id=t.id) }}">{{ t.title }}</a>
+            — просрочено на <strong>{{ t.days_overdue }} дн.</strong>
+            (проект: {{ t.project.name }})
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{% if urgent %}
+<div class="alert alert-warning mb-3">
+    <strong><i class="bi bi-clock-history"></i> Срочные (дедлайн ≤ 3 дней):</strong>
+    <ul class="mb-0 mt-1">
+        {% for t in urgent %}
+        <li>
+            <a href="{{ url_for('view_task', task_id=t.id) }}">{{ t.title }}</a>
+            — до {{ t.due_date.strftime('%d.%m.%Y') }}
+            ({{ (t.due_date - now).days }} дн. осталось)
+            (проект: {{ t.project.name }})
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<!-- Фильтры -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small">Проект</label>
+                <select name="project" class="form-select">
+                    <option value="">Все проекты</option>
+                    {% for p in employee_projects %}
+                    <option value="{{ p.id }}" {% if filter_project == p.id|string %}selected{% endif %}>
+                        {{ p.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small">Статус</label>
+                <select name="status" class="form-select">
+                    <option value="">Все статусы</option>
+                    <option value="new" {% if filter_status == 'new' %}selected{% endif %}>🆕 Новая</option>
+                    <option value="in_progress" {% if filter_status == 'in_progress' %}selected{% endif %}>🔄 В работе</option>
+                    <option value="completed" {% if filter_status == 'completed' %}selected{% endif %}>✅ Завершена</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-filter"></i> Применить
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Задачи -->
+<h5 class="mb-3">📋 Список задач ({{ tasks|length }})</h5>
+{% for task in tasks %}
+<div class="card task-card mb-2 {% if task.status == 'completed' %}completed{% elif task.status == 'in_progress' %}in_progress{% endif %} {% if task.is_overdue %}border-danger border-2{% endif %}">
+    <div class="card-body py-2">
+        <div class="d-flex align-items-start gap-2">
+            <div class="flex-grow-1">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <a href="{{ url_for('view_task', task_id=task.id) }}" class="text-decoration-none text-dark fw-bold">
+                            {{ task.title }}
+                        </a>
+                        <div class="d-flex gap-2 mt-1 flex-wrap small">
+                            <span class="badge bg-light text-dark border">
+                                <i class="bi bi-folder"></i> {{ task.project.name }}
+                            </span>
+                            {% if task.milestone %}
+                            <span class="badge bg-info text-dark">
+                                <i class="bi bi-flag"></i> {{ task.milestone.name }}
+                            </span>
+                            {% endif %}
+                            {% if task.subtasks %}
+                            <span class="badge bg-secondary">
+                                <i class="bi bi-diagram-3"></i> {{ task.subtasks|length }}
+                            </span>
+                            {% endif %}
+                            <span class="badge
+                                {% if task.status == 'completed' %}bg-success
+                                {% elif task.status == 'in_progress' %}bg-warning text-dark
+                                {% else %}bg-secondary{% endif %}">
+                                {{ task.status }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        {% if task.due_date %}
+                        <small class="{% if task.is_overdue %}text-danger fw-bold{% else %}text-muted{% endif %}">
+                            <i class="bi bi-calendar-event"></i> {{ task.due_date.strftime('%d.%m.%Y') }}
+                            {% if task.is_overdue %}
+                            <br><span class="badge bg-danger">+{{ task.days_overdue }} дн.</span>
+                            {% elif task.status != 'completed' %}
+                            {% set days_left = (task.due_date - now).days %}
+                            {% if days_left <= 3 and days_left >= 0 %}
+                            <br><span class="badge bg-warning text-dark">{{ days_left }} дн.</span>
+                            {% endif %}
+                            {% endif %}
+                        </small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-secondary text-center">
+    <i class="bi bi-inbox" style="font-size: 32px; display: block;"></i>
+    У сотрудника нет задач по выбранным фильтрам
+</div>
+{% endfor %}
+
+<!-- To-Do сотрудника -->
+{% if employee_todos %}
+<h5 class="mt-4 mb-3">✅ To-Do сотрудника ({{ employee_todos|length }})</h5>
+<div class="card">
+    <div class="card-body">
+        {% for todo in employee_todos %}
+        <div class="d-flex align-items-center mb-2">
+            <i class="bi bi-circle text-muted me-2"></i>
+            <div>
+                {{ todo.title }}
+                <small class="text-muted">· {{ todo.project.name }}</small>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

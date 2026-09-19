@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Отчёт по задаче — {{ task.title }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm 1.5cm;
+        }
+        body {
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: 10pt;
+            color: #1a1a2e;
+            line-height: 1.5;
+        }
+        h1 {
+            font-size: 20pt;
+            color: #4f46e5;
+            border-bottom: 2px solid #4f46e5;
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+        }
+        h2 {
+            font-size: 14pt;
+            margin-top: 24px;
+            margin-bottom: 12px;
+            border-left: 4px solid #4f46e5;
+            padding-left: 10px;
+        }
+        .header-info {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .header-info table { width: 100%; border-collapse: collapse; }
+        .header-info td { padding: 4px 8px; vertical-align: top; }
+        .header-info td:first-child { width: 180px; color: #6b7280; }
+
+        .stats-grid {
+            display: table;
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: separate;
+            border-spacing: 8px;
+        }
+        .stat-box {
+            display: table-cell;
+            width: 25%;
+            padding: 14px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+        }
+        .stat-box .icon {
+            font-size: 24pt;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .stat-box .num {
+            font-size: 22pt;
+            font-weight: bold;
+            color: #4f46e5;
+            display: block;
+            line-height: 1;
+        }
+        .stat-box.success .num { color: #16a34a; }
+        .stat-box.warning .num { color: #f59e0b; }
+        .stat-box.danger .num { color: #dc2626; }
+        .stat-box .lbl { font-size: 9pt; color: #6b7280; }
+
+        table.data {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 9pt;
+        }
+        table.data th {
+            background: #4f46e5;
+            color: white;
+            padding: 8px;
+            text-align: left;
+        }
+        table.data td {
+            padding: 8px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        table.data tr:nth-child(even) { background: #f8f9fa; }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 8pt;
+            font-weight: 600;
+        }
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        .badge-secondary { background: #e5e7eb; color: #374151; }
+
+        .comment-box {
+            background: #fef3c7;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 3px solid #f59e0b;
+            margin-top: 6px;
+            font-size: 9pt;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            font-size: 9pt;
+            line-height: 20px;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 8pt;
+            color: #6b7280;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<h1>📋 Отчёт по задаче: {{ task.title }}</h1>
+
+<!-- Основная информация -->
+<div class="header-info">
+    <table>
+        <tr>
+            <td>Проект:</td>
+            <td><strong>{{ task.project.name }}</strong></td>
+        </tr>
+        <tr>
+            <td>Исполнитель:</td>
+            <td>{{ task.assignee.first_name ~ ' ' ~ task.assignee.last_name if task.assignee else '—' }}</td>
+        </tr>
+        <tr>
+            <td>Статус:</td>
+            <td>
+                {% if task.status == 'completed' %}
+                    <span class="badge badge-success">✔ Завершена</span>
+                {% elif task.status == 'in_progress' %}
+                    <span class="badge badge-warning">🔄 В работе</span>
+                {% else %}
+                    <span class="badge badge-secondary">🆕 Новая</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td>Дедлайн:</td>
+            <td>
+                {{ task.due_date.strftime('%d.%m.%Y') if task.due_date else '—' }}
+                {% if task.is_overdue %}
+                    <span class="badge badge-danger">Просрочено на {{ task.days_overdue }} дн.</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% if task.milestone %}
+        <tr>
+            <td>Веха:</td>
+            <td>{{ task.milestone.name }}</td>
+        </tr>
+        {% endif %}
+        <tr>
+            <td>Дата отчёта:</td>
+            <td>{{ now.strftime('%d.%m.%Y %H:%M') }}</td>
+        </tr>
+    </table>
+</div>
+
+<!-- Описание -->
+{% if task.description %}
+<h2>📝 Описание</h2>
+<p>{{ task.description }}</p>
+{% endif %}
+
+<!-- Статистика подзадач -->
+<h2>📊 Статистика подзадач</h2>
+<div class="stats-grid">
+    <div class="stat-box">
+        <span class="icon">📋</span>
+        <span class="num">{{ stats.total }}</span>
+        <span class="lbl">Всего</span>
+    </div>
+    <div class="stat-box success">
+        <span class="icon">✅</span>
+        <span class="num">{{ stats.done }}</span>
+        <span class="lbl">Выполнено</span>
+    </div>
+    <div class="stat-box danger">
+        <span class="icon">⚠️</span>
+        <span class="num">{{ stats.overdue }}</span>
+        <span class="lbl">Просрочено</span>
+    </div>
+    <div class="stat-box">
+        <span class="icon">⚪</span>
+        <span class="num">{{ stats.new }}</span>
+        <span class="lbl">Не начато</span>
+    </div>
+</div>
+
+{% if stats.total > 0 %}
+{% set percent = (stats.done / stats.total * 100)|int %}
+<div class="progress-bar">
+    <div class="progress-fill" style="width: {{ percent }}%;">
+        {{ percent }}%
+    </div>
+</div>
+{% endif %}
+
+<!-- Список подзадач -->
+<h2>📋 Список подзадач</h2>
+{% if subtasks %}
+<table class="data">
+    <thead>
+        <tr>
+            <th>Задача</th>
+            <th>Исполнитель</th>
+            <th>Дедлайн</th>
+            <th>Статус</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for st in subtasks %}
+        <tr>
+            <td><strong>{{ st.title }}</strong></td>
+            <td>{{ st.assignee.first_name ~ ' ' ~ st.assignee.last_name if st.assignee else '—' }}</td>
+            <td>
+                {{ st.due_date.strftime('%d.%m.%Y') if st.due_date else '—' }}
+                {% if st.is_overdue %}
+                    <span class="badge badge-danger">+{{ st.days_overdue }} дн.</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if st.status == 'completed' %}
+                    <span class="badge badge-success">✔ Завершена</span>
+                {% elif st.status == 'in_progress' %}
+                    <span class="badge badge-warning">🔄 В работе</span>
+                {% else %}
+                    <span class="badge badge-secondary">🆕 Новая</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% if st.is_overdue and st.comment %}
+        <tr>
+            <td colspan="4" style="padding: 0;">
+                <div class="comment-box">
+                    <strong>💬 Причина:</strong> {{ st.comment }}
+                </div>
+            </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p style="color: #6b7280;">Подзадач нет.</p>
+{% endif %}
+
+<!-- Комментарий к самой задаче -->
+{% if task.is_overdue and task.comment %}
+<h2 style="color: #dc2626;">⚠️ Причина просрочки задачи</h2>
+<div class="comment-box" style="background: #fee2e2; border-left-color: #dc2626;">
+    {{ task.comment }}
+</div>
+{% endif %}
+
+<div class="footer">
+    Отчёт сформирован автоматически {{ now.strftime('%d.%m.%Y в %H:%M') }}<br>
+    Система управления проектами Workspace
+</div>
+
+</body>
+</html>

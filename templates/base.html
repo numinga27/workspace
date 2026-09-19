@@ -4,87 +4,188 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Workspace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+
+    <!-- FullCalendar -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
+    <!-- Сохраняем hash до его очистки, чтобы избежать прыжка браузера -->
+    <script>
+        window.__initialHash = window.location.hash;
+        if (window.location.hash) {
+            history.replaceState(null, null, window.location.pathname + window.location.search);
+        }
+    </script>
+
     <style>
         :root {
-            --sidebar-width: 280px;
-            --header-height: 60px;
-            --primary-color: #4f46e5;
-            --sidebar-bg: #1a1a2e;
-            --sidebar-hover: #2d2d44;
-            --card-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            --bg-primary: #fbfbfd;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f4f5f7;
+
+            --sidebar-bg: #0f0f14;
+            --sidebar-bg-hover: #1a1a24;
+            --sidebar-bg-active: #26262f;
+
+            --text-primary: #0d0d12;
+            --text-secondary: #52525b;
+            --text-tertiary: #a1a1aa;
+
+            --border-light: #eaeaea;
+            --border-medium: #d4d4d8;
+
+            --accent: #5b5bd6;
+            --accent-hover: #4a4ac4;
+            --accent-light: #eef0ff;
+            --accent-soft: #f2f3ff;
+
+            --success: #16a34a;
+            --success-light: #dcfce7;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --danger: #dc2626;
+            --danger-light: #fee2e2;
+            --info: #0891b2;
+            --info-light: #cffafe;
+
+            --sidebar-width: 272px;
+            --header-height: 56px;
+
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --radius-xl: 20px;
+
+            --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04);
+            --shadow-lg: 0 12px 32px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+
+            --transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
+            scroll-padding-top: calc(var(--header-height) + 20px);
         }
 
         body {
-            background-color: #f5f7fb;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
             overflow: hidden;
             height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Header */
+        /* ============================================================ */
+        /* HEADER */
+        /* ============================================================ */
         .header {
             height: var(--header-height);
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-light);
             display: flex;
             align-items: center;
             padding: 0 20px;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: 0; left: 0; right: 0;
             z-index: 1000;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
-
         .header .logo {
-            font-size: 20px;
+            font-size: 15px;
             font-weight: 700;
-            color: var(--primary-color);
+            color: var(--text-primary);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            letter-spacing: -0.01em;
         }
-
-        .header .logo i {
-            font-size: 28px;
+        .header .logo-icon {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            box-shadow: 0 2px 8px rgba(91, 91, 214, 0.3);
         }
-
         .header-right {
             margin-left: auto;
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 16px;
         }
-
         .header-right .user-info {
             display: flex;
             align-items: center;
             gap: 10px;
+            padding: 4px 12px 4px 4px;
+            border-radius: 999px;
+            background: var(--bg-tertiary);
+            transition: var(--transition);
+            cursor: pointer;
         }
-
+        .header-right .user-info:hover { background: var(--border-light); }
         .header-right .user-info .avatar {
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            background: var(--primary-color);
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 12px;
+            letter-spacing: 0.02em;
+        }
+        .header-right .user-info .user-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 13px;
+        }
+        .header-right .user-info .user-role {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .header-icon-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: var(--radius-md);
+            background: transparent;
+            border: 1px solid var(--border-light);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+        .header-icon-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--border-medium);
         }
 
-        /* Sidebar */
+        /* ============================================================ */
+        /* SIDEBAR */
+        /* ============================================================ */
         .sidebar {
             position: fixed;
             top: var(--header-height);
@@ -92,386 +193,904 @@
             bottom: 0;
             width: var(--sidebar-width);
             background: var(--sidebar-bg);
-            color: #a0a0c0;
+            color: #a1a1aa;
             overflow-y: auto;
-            padding: 20px 0;
+            padding: 16px 0;
             z-index: 999;
-            transition: transform 0.3s ease;
+            transition: var(--transition);
         }
-
-        .sidebar::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .sidebar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
         .sidebar::-webkit-scrollbar-thumb {
-            background: #3d3d5c;
+            background: rgba(255,255,255,0.1);
             border-radius: 2px;
+        }
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.2);
         }
 
         .sidebar .nav-section {
-            padding: 0 16px;
-            margin-bottom: 24px;
+            padding: 0 12px;
+            margin-bottom: 20px;
         }
-
         .sidebar .nav-section .section-title {
             font-size: 11px;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #6b6b8a;
-            padding: 0 8px;
-            margin-bottom: 8px;
+            letter-spacing: 0.06em;
+            color: #52525b;
+            padding: 0 10px;
+            margin-bottom: 4px;
         }
-
         .sidebar .nav-item {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 10px 16px;
-            border-radius: 8px;
-            color: #a0a0c0;
+            gap: 10px;
+            padding: 7px 10px;
+            border-radius: var(--radius-md);
+            color: #a1a1aa;
             text-decoration: none;
-            transition: all 0.2s ease;
+            transition: var(--transition);
             cursor: pointer;
-            margin-bottom: 2px;
-            position: relative;
+            margin-bottom: 1px;
+            font-size: 13.5px;
+            font-weight: 500;
         }
-
         .sidebar .nav-item:hover {
-            background: var(--sidebar-hover);
-            color: white;
+            background: var(--sidebar-bg-hover);
+            color: #fff;
         }
-
         .sidebar .nav-item.active {
-            background: var(--primary-color);
-            color: white;
+            background: var(--sidebar-bg-active);
+            color: #fff;
         }
-
         .sidebar .nav-item i {
-            font-size: 18px;
-            width: 24px;
+            font-size: 16px;
+            width: 18px;
             text-align: center;
+            opacity: 0.85;
         }
-
+        .sidebar .nav-item.active i { opacity: 1; }
         .sidebar .nav-item .badge {
             margin-left: auto;
-            background: rgba(255,255,255,0.1);
-            color: #a0a0c0;
+            background: rgba(255,255,255,0.08);
+            color: #a1a1aa;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
         }
-
         .sidebar .nav-item.active .badge {
-            background: rgba(255,255,255,0.2);
+            background: var(--accent);
+            color: #fff;
+        }
+
+        /* Красный пульсирующий бейдж */
+        .nav-badge-count {
+            margin-left: auto;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            background: var(--danger);
             color: white;
+            border-radius: 9px;
+            font-size: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 0 2px var(--sidebar-bg);
+            animation: pulse-badge 2s ease-in-out infinite;
         }
 
-        .sidebar .project-tree {
-            padding: 0 16px;
+        @keyframes pulse-badge {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 0 0 2px var(--sidebar-bg);
+            }
+            50% { 
+                transform: scale(1.08);
+                box-shadow: 0 0 0 2px var(--sidebar-bg), 0 0 8px rgba(220, 38, 38, 0.4);
+            }
         }
 
+        .sidebar .project-tree { padding: 0 12px; }
         .sidebar .project-tree .tree-item {
-            padding: 6px 8px 6px 12px;
-            border-radius: 6px;
+            padding: 6px 10px;
+            border-radius: var(--radius-md);
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: var(--transition);
             display: flex;
             align-items: center;
             gap: 8px;
-            color: #a0a0c0;
+            color: #a1a1aa;
             text-decoration: none;
-            font-size: 14px;
-            position: relative;
+            font-size: 13.5px;
+            font-weight: 500;
+            margin-bottom: 1px;
         }
-
         .sidebar .project-tree .tree-item:hover {
-            background: var(--sidebar-hover);
-            color: white;
+            background: var(--sidebar-bg-hover);
+            color: #fff;
         }
-
         .sidebar .project-tree .tree-item.active {
-            background: var(--primary-color);
-            color: white;
+            background: var(--sidebar-bg-active);
+            color: #fff;
         }
-
         .sidebar .project-tree .tree-item .expand-icon {
-            font-size: 12px;
+            font-size: 9px;
             transition: transform 0.2s ease;
+            width: 10px;
+            display: inline-block;
+            opacity: 0.5;
         }
-
         .sidebar .project-tree .tree-item .expand-icon.expanded {
             transform: rotate(90deg);
+            opacity: 1;
         }
-
+        .sidebar .project-tree .tree-item .folder-icon {
+            color: #f59e0b;
+            font-size: 15px;
+        }
+        .sidebar .project-tree .tree-item .project-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .sidebar .project-tree .tree-item .badge {
+            background: rgba(255,255,255,0.06);
+            color: #a1a1aa;
+            font-size: 10px;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
         .sidebar .project-tree .tree-children {
-            padding-left: 24px;
+            padding-left: 20px;
+            margin-top: 1px;
         }
-
         .sidebar .project-tree .tree-children .tree-item {
             font-size: 13px;
-            padding: 4px 8px 4px 12px;
+            padding: 5px 10px;
         }
-
         .sidebar .project-tree .tree-children .tree-item i {
-            font-size: 14px;
-            width: 18px;
+            font-size: 13px;
+            width: 15px;
+            opacity: 0.7;
         }
-
         .sidebar .project-tree .tree-children .tree-item .badge {
-            margin-left: auto;
-            background: rgba(255,255,255,0.1);
-            color: #a0a0c0;
+            background: rgba(255,255,255,0.06);
+            color: #71717a;
             font-size: 10px;
         }
-
         .sidebar .project-tree .tree-children .tree-item.active .badge {
-            background: rgba(255,255,255,0.2);
-            color: white;
+            background: var(--accent);
+            color: #fff;
         }
 
-        /* Main Content */
+        /* ============================================================ */
+        /* MAIN CONTENT */
+        /* ============================================================ */
         .main-content {
             margin-left: var(--sidebar-width);
             margin-top: var(--header-height);
             height: calc(100vh - var(--header-height));
             overflow-y: auto;
-            padding: 24px 32px;
+            padding: 32px 40px;
+            scroll-padding-top: 76px;
         }
-
-        .main-content::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .main-content::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
+        .main-content::-webkit-scrollbar { width: 8px; }
+        .main-content::-webkit-scrollbar-track { background: transparent; }
         .main-content::-webkit-scrollbar-thumb {
-            background: #d1d5db;
-            border-radius: 3px;
+            background: var(--border-medium);
+            border-radius: 4px;
+        }
+        .main-content::-webkit-scrollbar-thumb:hover {
+            background: var(--text-tertiary);
         }
 
-        /* Cards */
+        /* ============================================================ */
+        /* ANCHOR OFFSET для вкладок проекта */
+        /* ============================================================ */
+        .nav-tabs,
+        .tab-content,
+        [id="tasks"],
+        [id="todo"],
+        [id="reports"],
+        [id="calendar"],
+        [id="files"],
+        [id="chat"] {
+            scroll-margin-top: calc(var(--header-height) + 24px);
+        }
+
+        /* ============================================================ */
+        /* TYPOGRAPHY */
+        /* ============================================================ */
+        h1, h2, h3, h4, h5, h6 { color: var(--text-primary); }
+        h2 {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        h5 {
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+        .text-muted { color: var(--text-secondary) !important; }
+
+        /* ============================================================ */
+        /* BUTTONS */
+        /* ============================================================ */
+        .btn {
+            font-weight: 500;
+            border-radius: var(--radius-md);
+            padding: 8px 14px;
+            font-size: 13.5px;
+            transition: var(--transition);
+            border: 1px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            line-height: 1.4;
+        }
+        .btn i { font-size: 15px; }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 1px 2px rgba(91, 91, 214, 0.2);
+        }
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            color: white;
+            box-shadow: 0 4px 12px rgba(91, 91, 214, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline-primary {
+            background: var(--bg-secondary);
+            border-color: var(--border-medium);
+            color: var(--text-primary);
+        }
+        .btn-outline-primary:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--border-light);
+        }
+        .btn-secondary:hover {
+            background: var(--border-light);
+            color: var(--text-primary);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        .btn-danger:hover { background: #b91c1c; color: white; }
+
+        .btn-outline-danger {
+            background: var(--bg-secondary);
+            border-color: var(--border-medium);
+            color: var(--danger);
+        }
+        .btn-outline-danger:hover {
+            background: var(--danger-light);
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .btn-outline-secondary {
+            background: var(--bg-secondary);
+            border-color: var(--border-medium);
+            color: var(--text-secondary);
+        }
+        .btn-outline-secondary:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--border-medium);
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12.5px;
+            border-radius: var(--radius-sm);
+        }
+        .btn-sm i { font-size: 13px; }
+
+        /* ============================================================ */
+        /* CARDS */
+        /* ============================================================ */
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xs);
+            transition: var(--transition);
+        }
+        .card-body { padding: 20px; }
+        .card-header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-light);
+            padding: 14px 20px;
+            font-weight: 600;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+        }
+        .card:hover {
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* ============================================================ */
+        /* STAT CARDS */
+        /* ============================================================ */
         .stat-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: var(--card-shadow);
-            border: 1px solid #f0f0f0;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-xs);
+            transition: var(--transition);
         }
-
         .stat-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-md);
         }
-
         .stat-card .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 20px;
             margin-bottom: 12px;
         }
-
         .stat-card .stat-number {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 700;
-            color: #1a1a2e;
+            color: var(--text-primary);
+            line-height: 1;
+            letter-spacing: -0.02em;
         }
-
         .stat-card .stat-label {
-            color: #6b7280;
-            font-size: 14px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-top: 4px;
         }
 
-        .project-grid .project-card {
-            background: white;
-            border-radius: 12px;
+        /* ============================================================ */
+        /* PROJECT CARDS */
+        /* ============================================================ */
+        .project-card {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
             padding: 20px;
-            box-shadow: var(--card-shadow);
-            border: 1px solid #f0f0f0;
-            transition: all 0.3s ease;
+            border: 1px solid var(--border-light);
+            transition: var(--transition);
             cursor: pointer;
             text-decoration: none;
             color: inherit;
             display: block;
+            position: relative;
+            overflow: hidden;
         }
-
-        .project-grid .project-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-            border-color: var(--primary-color);
+        .project-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--accent);
+            color: inherit;
         }
-
+        .project-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), #8b5cf6);
+            opacity: 0;
+            transition: var(--transition);
+        }
+        .project-card:hover::before { opacity: 1; }
         .project-card .project-header {
             display: flex;
             justify-content: space-between;
-            align-items: start;
+            align-items: flex-start;
             margin-bottom: 12px;
+            gap: 12px;
         }
-
         .project-card .project-name {
-            font-size: 18px;
+            font-size: 15px;
             font-weight: 600;
-            color: #1a1a2e;
+            color: var(--text-primary);
+            line-height: 1.4;
+            letter-spacing: -0.01em;
         }
-
-        .project-card .project-progress {
-            margin-top: 12px;
-        }
-
+        .project-card .project-progress { margin-top: 14px; }
         .project-card .project-meta {
             display: flex;
-            gap: 16px;
+            gap: 14px;
             margin-top: 12px;
+            font-size: 12.5px;
+            color: var(--text-secondary);
+        }
+        .project-card .project-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .project-card .project-meta i { font-size: 13px; opacity: 0.7; }
+
+        /* Прогресс-бар */
+        .progress {
+            background-color: var(--bg-tertiary);
+            border-radius: 999px;
+            overflow: hidden;
+            height: 6px;
+        }
+        .progress-bar {
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            transition: width 0.6s ease;
+        }
+        .progress-bar.bg-success {
+            background: linear-gradient(90deg, #16a34a, #22c55e);
+        }
+        .progress-bar.bg-warning {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+        .progress-bar.bg-info {
+            background: linear-gradient(90deg, #0891b2, #06b6d4);
+        }
+
+        /* ============================================================ */
+        /* BADGES */
+        /* ============================================================ */
+        .badge {
+            font-weight: 600;
+            padding: 4px 9px;
+            border-radius: 6px;
+            font-size: 11px;
+            letter-spacing: 0.01em;
+        }
+        .badge.bg-primary { background: var(--accent) !important; }
+        .badge.bg-secondary {
+            background: var(--bg-tertiary) !important;
+            color: var(--text-secondary) !important;
+        }
+        .badge.bg-success {
+            background: var(--success-light) !important;
+            color: var(--success) !important;
+        }
+        .badge.bg-warning {
+            background: var(--warning-light) !important;
+            color: #92400e !important;
+        }
+        .badge.bg-danger {
+            background: var(--danger-light) !important;
+            color: var(--danger) !important;
+        }
+        .badge.bg-info {
+            background: var(--info-light) !important;
+            color: var(--info) !important;
+        }
+
+        /* ============================================================ */
+        /* FORMS */
+        /* ============================================================ */
+        .form-control, .form-select {
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-md);
+            padding: 9px 12px;
+            font-size: 13.5px;
+            transition: var(--transition);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(91, 91, 214, 0.12);
+            outline: none;
+        }
+        .form-control::placeholder {
+            color: var(--text-tertiary);
+        }
+        .form-label {
+            font-weight: 500;
             font-size: 13px;
-            color: #6b7280;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+        .form-control-sm, .form-select-sm {
+            padding: 6px 10px;
+            font-size: 12.5px;
+            border-radius: var(--radius-sm);
+        }
+        .form-check-input:checked {
+            background-color: var(--accent);
+            border-color: var(--accent);
         }
 
-        .project-card .project-meta i {
-            margin-right: 4px;
+        /* ============================================================ */
+        /* ALERTS */
+        /* ============================================================ */
+        .alert {
+            border-radius: var(--radius-md);
+            border: 1px solid transparent;
+            padding: 12px 16px;
+            font-size: 13.5px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .alert i { font-size: 17px; flex-shrink: 0; }
+        .alert-success {
+            background: var(--success-light);
+            color: #14532d;
+            border-color: #bbf7d0;
+        }
+        .alert-danger {
+            background: var(--danger-light);
+            color: #7f1d1d;
+            border-color: #fecaca;
+        }
+        .alert-warning {
+            background: var(--warning-light);
+            color: #78350f;
+            border-color: #fde68a;
+        }
+        .alert-info {
+            background: var(--info-light);
+            color: #164e63;
+            border-color: #a5f3fc;
+        }
+        .alert-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border-color: var(--border-light);
         }
 
-        /* Chat box */
+        /* ============================================================ */
+        /* TASK CARDS */
+        /* ============================================================ */
+        .task-card {
+            border-left: 3px solid var(--border-medium);
+            transition: var(--transition);
+            border-radius: var(--radius-md);
+        }
+        .task-card.completed {
+            border-left-color: var(--success);
+            background: #f0fdf4;
+        }
+        .task-card.in_progress { border-left-color: var(--warning); }
+        .task-card:hover {
+            box-shadow: var(--shadow-sm);
+            transform: translateX(2px);
+        }
+        .task-card.border-danger {
+            border: 2px solid var(--danger) !important;
+            border-left-width: 3px;
+        }
+
+        /* ============================================================ */
+        /* CHAT */
+        /* ============================================================ */
         .chat-box {
             height: 300px;
             overflow-y: auto;
-            background-color: #fafafa;
-            border-radius: 8px;
-            padding: 12px;
+            background-color: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            padding: 14px;
         }
-
         .chat-box .message {
-            margin-bottom: 12px;
-            padding: 8px 12px;
+            margin-bottom: 10px;
+            padding: 10px 14px;
             background: white;
-            border-radius: 8px;
-            border: 1px solid #f0f0f0;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-light);
+            font-size: 13.5px;
+            box-shadow: var(--shadow-xs);
         }
-
         .chat-box .message .author {
             font-weight: 600;
-            color: var(--primary-color);
+            color: var(--accent);
+            font-size: 13px;
         }
-
         .chat-box .message .time {
             font-size: 11px;
-            color: #9ca3af;
+            color: var(--text-tertiary);
             margin-left: 8px;
         }
 
-        /* Task cards */
-        .task-card {
-            border-left: 4px solid #9ca3af;
-            transition: all 0.2s ease;
+        /* ============================================================ */
+        /* EMPTY STATES */
+        /* ============================================================ */
+        .empty-state {
+            text-align: center;
+            padding: 64px 20px;
+        }
+        .empty-state-icon {
+            width: 72px;
+            height: 72px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-xl);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: var(--text-tertiary);
+            margin-bottom: 20px;
+        }
+        .empty-state h5 {
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        .empty-state p {
+            color: var(--text-secondary);
+            font-size: 13.5px;
+            margin-bottom: 20px;
         }
 
-        .task-card.completed {
-            border-left-color: #10b981;
-            background-color: #f0fdf4;
+        /* ============================================================ */
+        /* CALENDAR (FullCalendar) */
+        /* ============================================================ */
+        #calendar, #myCalendar {
+            --fc-border-color: var(--border-light);
+            --fc-today-bg-color: var(--accent-light);
+            --fc-page-bg-color: var(--bg-secondary);
+            font-family: 'Inter', sans-serif;
+            font-size: 13.5px;
+        }
+        #calendar .fc-toolbar-title,
+        #myCalendar .fc-toolbar-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        #calendar .fc-button,
+        #myCalendar .fc-button {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-medium);
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 12.5px;
+            padding: 6px 12px;
+            border-radius: var(--radius-md);
+            text-transform: capitalize;
+            box-shadow: none;
+        }
+        #calendar .fc-button:hover,
+        #myCalendar .fc-button:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--border-medium);
+            color: var(--text-primary);
+        }
+        #calendar .fc-button-active,
+        #calendar .fc-button:active,
+        #calendar .fc-button-primary:not(:disabled).fc-button-active,
+        #myCalendar .fc-button-active,
+        #myCalendar .fc-button:active,
+        #myCalendar .fc-button-primary:not(:disabled).fc-button-active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+        #calendar .fc-button-primary:disabled,
+        #myCalendar .fc-button-primary:disabled {
+            opacity: 0.5;
+        }
+        #calendar .fc-daygrid-day-number,
+        #calendar .fc-col-header-cell-cushion,
+        #myCalendar .fc-daygrid-day-number,
+        #myCalendar .fc-col-header-cell-cushion {
+            color: var(--text-secondary);
+            font-size: 12.5px;
+            font-weight: 500;
+            text-decoration: none;
+        }
+        #calendar .fc-col-header-cell-cushion,
+        #myCalendar .fc-col-header-cell-cushion {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.04em;
+        }
+        #calendar .fc-day-today,
+        #myCalendar .fc-day-today {
+            background: var(--accent-light) !important;
+        }
+        #calendar .fc-event,
+        #myCalendar .fc-event {
+            border-radius: 4px;
+            padding: 1px 4px;
+            font-size: 11.5px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+        }
+        #calendar .fc-event:hover,
+        #myCalendar .fc-event:hover {
+            opacity: 0.9;
+        }
+        #calendar .fc-list-event:hover td,
+        #myCalendar .fc-list-event:hover td {
+            background: var(--bg-tertiary);
         }
 
-        .task-card.in_progress {
-            border-left-color: #f59e0b;
+        .fc-daygrid-day {
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+        .fc-daygrid-day:hover {
+            background: rgba(91, 91, 214, 0.04) !important;
         }
 
-        .task-card:hover {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-
-        /* Sidebar toggle (mobile) */
+        /* ============================================================ */
+        /* TOGGLE MOBILE */
+        /* ============================================================ */
         .sidebar-toggle {
             display: none;
             background: none;
             border: none;
-            font-size: 24px;
-            color: #1a1a2e;
+            font-size: 22px;
+            color: var(--text-primary);
             cursor: pointer;
-            padding: 0 10px;
+            padding: 0 8px;
         }
-
-        /* Overlay for mobile */
         .sidebar-overlay {
             display: none;
             position: fixed;
             top: var(--header-height);
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
+            left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
             z-index: 998;
+            backdrop-filter: blur(2px);
         }
-
-        .sidebar-overlay.show {
-            display: block;
-        }
+        .sidebar-overlay.show { display: block; }
 
         @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                width: 280px;
-            }
-            
-            .sidebar.open {
-                transform: translateX(0);
-            }
-            
-            .sidebar-overlay.show {
-                display: block;
-            }
-            
-            .main-content {
-                margin-left: 0;
-                padding: 16px;
-            }
-            
-            .sidebar-toggle {
-                display: block;
-            }
-            
-            .header .logo span {
-                display: none;
-            }
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-overlay.show { display: block; }
+            .main-content { margin-left: 0; padding: 20px 16px; }
+            .sidebar-toggle { display: block; }
+            .header .logo span { display: none; }
+            h2 { font-size: 22px; }
         }
 
-        /* Toast notifications */
-        .toast-container {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            z-index: 9999;
-        }
-
-        /* Floating action button */
-        .floating-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            z-index: 100;
-        }
-
-        /* Utility classes */
+        /* ============================================================ */
+        /* UTILITY */
+        /* ============================================================ */
         .text-truncate-2 {
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .fade-in-up {
+            animation: fadeInUp 0.3s ease-out;
+        }
+
+        /* Nav tabs */
+        .nav-tabs {
+            border-bottom: 1px solid var(--border-light);
+            gap: 4px;
+        }
+        .nav-tabs .nav-link {
+            border: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 13.5px;
+            padding: 9px 14px;
+            border-radius: var(--radius-md) var(--radius-md) 0 0;
+            transition: var(--transition);
+            position: relative;
+        }
+        .nav-tabs .nav-link:hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+        .nav-tabs .nav-link.active {
+            color: var(--accent);
+            background: transparent;
+            border-bottom: 2px solid var(--accent);
+            font-weight: 600;
+        }
+        .nav-tabs .nav-link .badge {
+            margin-left: 6px;
+        }
+
+        /* Bootstrap overrides */
+        .modal-content {
+            border-radius: var(--radius-lg);
+            border: none;
+            box-shadow: var(--shadow-lg);
+        }
+        .modal-header {
+            border-bottom: 1px solid var(--border-light);
+            padding: 16px 20px;
+        }
+        .modal-body { padding: 20px; }
+        .modal-footer {
+            border-top: 1px solid var(--border-light);
+            padding: 14px 20px;
+        }
+
+        /* Dropdown */
+        .dropdown-menu {
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-md);
+            padding: 4px;
+            font-size: 13.5px;
+        }
+        .dropdown-item {
+            border-radius: var(--radius-sm);
+            padding: 7px 10px;
+            color: var(--text-primary);
+        }
+        .dropdown-item:hover {
+            background: var(--bg-tertiary);
+        }
+        .dropdown-item.text-danger:hover {
+            background: var(--danger-light);
+            color: var(--danger) !important;
+        }
+
+        /* Цветные точки */
+        .color-dot {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            transition: all 0.15s;
+            cursor: pointer;
+        }
+        .color-dot.selected {
+            border-color: var(--text-primary);
+            transform: scale(1.1);
+        }
+        .color-dot:hover {
+            transform: scale(1.05);
+        }
+
+        /* Backgrounds */
+        .bg-success-subtle { background-color: #f0fdf4 !important; }
+        .bg-warning-subtle { background-color: #fffbeb !important; }
+        .bg-danger-subtle { background-color: #fef2f2 !important; }
+        .bg-info-subtle { background-color: #f0f9ff !important; }
     </style>
 </head>
 <body>
-    <!-- Header -->
+    <!-- ============================================================ -->
+    <!-- HEADER -->
+    <!-- ============================================================ -->
     <header class="header">
-        <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+        <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Меню">
             <i class="bi bi-list"></i>
         </button>
         <div class="logo">
-            <i class="bi bi-layers"></i>
+            <div class="logo-icon">
+                <i class="bi bi-hexagon-fill"></i>
+            </div>
             <span>Workspace</span>
         </div>
         <div class="header-right">
@@ -479,32 +1098,52 @@
                 <div class="avatar">
                     {{ session.user_name[0]|upper if session.user_name else 'U' }}
                 </div>
-                <span class="d-none d-md-inline">{{ session.user_name }}</span>
-                <span class="badge bg-secondary d-none d-md-inline">{{ session.user_role }}</span>
+                <div class="d-none d-md-block">
+                    <div class="user-name">{{ session.user_name }}</div>
+                    <div class="user-role">{{ session.user_role }}</div>
+                </div>
             </div>
-            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm" title="Выйти">
+            <a href="{{ url_for('logout') }}" class="header-icon-btn" title="Выйти">
                 <i class="bi bi-box-arrow-right"></i>
             </a>
         </div>
     </header>
 
-    <!-- Sidebar Overlay (mobile) -->
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-    <!-- Sidebar -->
+    <!-- ============================================================ -->
+    <!-- SIDEBAR -->
+    <!-- ============================================================ -->
     <nav class="sidebar" id="sidebar">
         <div class="nav-section">
-            <div class="section-title">Навигация</div>
+            <div class="section-title">Основное</div>
             <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
-                <i class="bi bi-grid-3x3-gap-fill"></i>
+                <i class="bi bi-grid-1x2-fill"></i>
                 <span>Дашборд</span>
             </a>
-            {% if session.user_role == 'admin' %}
+            <a href="{{ url_for('my_tasks') }}" class="nav-item {% if request.endpoint == 'my_tasks' %}active{% endif %}">
+                <i class="bi bi-check2-square"></i>
+                <span>Мои задачи</span>
+                {% if my_overdue_count and my_overdue_count > 0 %}
+                    <span class="nav-badge-count">{{ my_overdue_count }}</span>
+                {% endif %}
+            </a>
+            <a href="{{ url_for('my_calendar') }}" class="nav-item {% if request.endpoint == 'my_calendar' %}active{% endif %}">
+                <i class="bi bi-calendar3"></i>
+                <span>Мой календарь</span>
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="section-title">Управление</div>
+            <a href="{{ url_for('customers_list') }}" class="nav-item {% if request.endpoint in ['customers_list', 'create_customer', 'edit_customer'] %}active{% endif %}">
+                <i class="bi bi-buildings"></i>
+                <span>Заказчики</span>
+            </a>
             <a href="{{ url_for('create_project') }}" class="nav-item {% if request.endpoint == 'create_project' %}active{% endif %}">
-                <i class="bi bi-plus-circle"></i>
+                <i class="bi bi-plus-square"></i>
                 <span>Создать проект</span>
             </a>
-            {% endif %}
         </div>
 
         <div class="nav-section">
@@ -512,34 +1151,83 @@
             <div class="project-tree">
                 {% if projects %}
                     {% for project in projects %}
-                        <div class="tree-item {% if request.view_args and request.view_args.project_id|int == project.id %}active{% endif %}" 
+                        {% set current_pid = request.view_args.get('project_id') if request.view_args else None %}
+                        {% set is_current = current_pid and current_pid|int == project.id %}
+                        {% set project_unread = unread_counts.get(project.id, 0) %}
+                        <div class="tree-item {% if is_current %}active{% endif %}"
                              onclick="toggleProject('{{ project.id }}')">
-                            <span class="expand-icon" id="expand-{{ project.id }}">▶</span>
-                            <i class="bi bi-folder-fill" style="color: #f59e0b;"></i>
-                            <span class="text-truncate" style="flex: 1;">{{ project.name }}</span>
-                            <span class="badge">{{ project.completion_percentage }}%</span>
+                            <span class="expand-icon {% if is_current %}expanded{% endif %}" id="expand-{{ project.id }}">▶</span>
+                            <i class="bi bi-folder-fill folder-icon"></i>
+                            <span class="project-name">{{ project.name }}</span>
+                            {% if project.is_overdue %}
+                                <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 12px;" title="Проект просрочен"></i>
+                            {% endif %}
+                            {% if project_unread > 0 and not is_current %}
+                                <span class="nav-badge-count">{{ project_unread }}</span>
+                            {% else %}
+                                <span class="badge">{{ project.completion_percentage }}%</span>
+                            {% endif %}
                         </div>
-                        <div class="tree-children" id="children-{{ project.id }}" style="display: {% if request.view_args and request.view_args.project_id|int == project.id %}block{% else %}none{% endif %};">
-                            <a href="{{ url_for('view_project', project_id=project.id) }}" class="tree-item {% if request.endpoint == 'view_project' and request.view_args.project_id|int == project.id %}active{% endif %}">
+                        <div class="tree-children" id="children-{{ project.id }}"
+                             style="display: {% if is_current %}block{% else %}none{% endif %};">
+                            <a href="{{ url_for('view_project', project_id=project.id) }}"
+                               class="tree-item project-tab-link"
+                               data-tab="dashboard"
+                               data-project-id="{{ project.id }}">
                                 <i class="bi bi-grid"></i>
                                 <span>Дашборд</span>
                             </a>
-                            <a href="{{ url_for('view_project', project_id=project.id) }}#tasks" class="tree-item">
+                            <a href="{{ url_for('view_project', project_id=project.id) }}#tasks" 
+                               class="tree-item project-tab-link" 
+                               data-tab="tasks"
+                               data-project-id="{{ project.id }}">
                                 <i class="bi bi-list-task"></i>
                                 <span>Задачи</span>
                                 <span class="badge">{{ project.tasks|length }}</span>
                             </a>
-                            <a href="{{ url_for('view_project', project_id=project.id) }}#files" class="tree-item">
+                            <a href="{{ url_for('view_project', project_id=project.id) }}#todo" 
+                               class="tree-item project-tab-link" 
+                               data-tab="todo"
+                               data-project-id="{{ project.id }}">
+                                <i class="bi bi-check2-square"></i>
+                                <span>To-Do</span>
+                            </a>
+                            <a href="{{ url_for('view_project', project_id=project.id) }}#reports" 
+                               class="tree-item project-tab-link" 
+                               data-tab="reports"
+                               data-project-id="{{ project.id }}">
+                                <i class="bi bi-file-earmark-text"></i>
+                                <span>Отчёты</span>
+                            </a>
+                            <a href="{{ url_for('view_project', project_id=project.id) }}#calendar" 
+                               class="tree-item project-tab-link" 
+                               data-tab="calendar"
+                               data-project-id="{{ project.id }}">
+                                <i class="bi bi-calendar3"></i>
+                                <span>Календарь</span>
+                            </a>
+                            <a href="{{ url_for('view_project', project_id=project.id) }}#files" 
+                               class="tree-item project-tab-link" 
+                               data-tab="files"
+                               data-project-id="{{ project.id }}">
                                 <i class="bi bi-folder"></i>
                                 <span>Файлы</span>
                             </a>
-                            <a href="{{ url_for('view_project', project_id=project.id) }}#chat" class="tree-item">
+                            <a href="{{ url_for('view_project', project_id=project.id) }}?mark_read=1#chat" 
+                               class="tree-item project-tab-link" 
+                               data-tab="chat"
+                               data-project-id="{{ project.id }}">
                                 <i class="bi bi-chat-dots"></i>
                                 <span>Чат</span>
-                                <span class="badge">{{ project.messages|length }}</span>
+                                {% if project_unread > 0 %}
+                                    <span class="nav-badge-count">{{ project_unread }}</span>
+                                {% else %}
+                                    <span class="badge">{{ project.messages|length }}</span>
+                                {% endif %}
                             </a>
                             {% if session.user_role == 'admin' or (user_role and user_role in ['admin', 'manager']) %}
-                            <a href="{{ url_for('project_settings', project_id=project.id) }}" class="tree-item {% if request.endpoint == 'project_settings' and request.view_args.project_id|int == project.id %}active{% endif %}">
+                            <a href="{{ url_for('project_settings', project_id=project.id) }}"
+                               class="tree-item {% if request.endpoint == 'project_settings' and is_current %}active{% endif %}">
                                 <i class="bi bi-gear"></i>
                                 <span>Настройки</span>
                             </a>
@@ -547,29 +1235,28 @@
                         </div>
                     {% endfor %}
                 {% else %}
-                    <div class="text-muted" style="padding: 8px; font-size: 13px;">
-                        <i class="bi bi-info-circle"></i> Нет проектов
+                    <div style="padding: 12px 10px; font-size: 12.5px; color: #52525b; text-align: center;">
+                        Нет проектов
                     </div>
-                    {% if session.user_role == 'admin' %}
-                    <a href="{{ url_for('create_project') }}" class="btn btn-outline-primary btn-sm w-100 mt-2">
-                        <i class="bi bi-plus-circle"></i> Создать проект
+                    <a href="{{ url_for('create_project') }}" class="btn btn-primary btn-sm w-100 mt-2">
+                        <i class="bi bi-plus-lg"></i> Создать проект
                     </a>
-                    {% endif %}
                 {% endif %}
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
+    <!-- ============================================================ -->
+    <!-- MAIN CONTENT -->
+    <!-- ============================================================ -->
     <main class="main-content" id="mainContent">
-        <!-- Flash messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
                     <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        <i class="bi bi-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <i class="bi bi-{% if category == 'success' %}check-circle-fill{% elif category == 'danger' %}exclamation-circle-fill{% elif category == 'warning' %}exclamation-triangle-fill{% else %}info-circle-fill{% endif %}"></i>
+                        <div style="flex: 1;">{{ message }}</div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" style="font-size: 10px;"></button>
                     </div>
                 {% endfor %}
             {% endif %}
@@ -578,23 +1265,22 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Bootstrap JS -->
+    <!-- ============================================================ -->
+    <!-- SCRIPTS -->
+    <!-- ============================================================ -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    
     <script>
-        // Toggle sidebar on mobile
+        // ============================================================
+        // SIDEBAR
+        // ============================================================
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('show');
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('show');
         }
 
-        // Toggle project tree
         function toggleProject(projectId) {
             const children = document.getElementById('children-' + projectId);
             const expand = document.getElementById('expand-' + projectId);
-            
             if (children.style.display === 'none') {
                 children.style.display = 'block';
                 if (expand) expand.classList.add('expanded');
@@ -604,20 +1290,92 @@
             }
         }
 
-        // Auto-expand current project and close others
-        document.addEventListener('DOMContentLoaded', function() {
-            const currentProject = window.location.pathname.match(/\/project\/(\d+)/);
-            if (currentProject) {
-                const projectId = currentProject[1];
-                const children = document.getElementById('children-' + projectId);
-                const expand = document.getElementById('expand-' + projectId);
-                if (children) {
-                    children.style.display = 'block';
-                    if (expand) expand.classList.add('expanded');
-                }
-            }
+        // ============================================================
+        // ПЛАВНАЯ ПРОКРУТКА К ВКЛАДКАМ С УЧЁТОМ ХЕДЕРА
+        // ============================================================
+        function scrollToTabs() {
+            const tabsContainer = document.querySelector('.nav-tabs');
+            const mainContent = document.querySelector('.main-content');
+            if (!tabsContainer || !mainContent) return;
 
-            // Close sidebar on outside click (mobile)
+            const headerHeight = 56;
+            const tabsRect = tabsContainer.getBoundingClientRect();
+            const mainRect = mainContent.getBoundingClientRect();
+
+            // Позиция вкладок внутри скролл-контейнера
+            const offsetInContainer = tabsRect.top - mainRect.top + mainContent.scrollTop;
+
+            mainContent.scrollTo({
+                top: Math.max(0, offsetInContainer - headerHeight - 16),
+                behavior: 'smooth'
+            });
+        }
+
+        function activateTab(targetId) {
+            const tabLink = document.querySelector(`.nav-tabs a[href="#${targetId}"]`);
+            if (tabLink) {
+                // Сначала переключаем вкладку
+                if (typeof bootstrap !== 'undefined') {
+                    const tab = new bootstrap.Tab(tabLink);
+                    tab.show();
+                } else {
+                    tabLink.click();
+                }
+                // Потом скроллим к вкладкам с учётом хедера
+                setTimeout(scrollToTabs, 50);
+            }
+            if (history.replaceState) {
+                history.replaceState(null, null, '#' + targetId);
+            }
+            updateSidebarActive(targetId);
+        }
+
+        function updateSidebarActive(tabId) {
+            document.querySelectorAll('.project-tab-link').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            const activeLink = document.querySelector(`.project-tab-link[data-tab="${tabId}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+        }
+
+        // ============================================================
+        // AJAX: ОТМЕТКА ЧАТА КАК ПРОЧИТАННОГО
+        // ============================================================
+        function markChatAsRead(projectId) {
+            fetch(`/project/${projectId}/mark_read`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const chatLink = document.querySelector(`.project-tab-link[data-tab="chat"][data-project-id="${projectId}"]`);
+                    if (chatLink) {
+                        const badge = chatLink.querySelector('.nav-badge-count');
+                        if (badge) badge.remove();
+                    }
+                    const children = document.getElementById(`children-${projectId}`);
+                    if (children) {
+                        const projectTreeItem = children.previousElementSibling;
+                        if (projectTreeItem) {
+                            const parentBadge = projectTreeItem.querySelector('.nav-badge-count');
+                            if (parentBadge) parentBadge.remove();
+                        }
+                    }
+                }
+            })
+            .catch(err => console.error('Ошибка отметки чата:', err));
+        }
+
+        // ============================================================
+        // ИНИЦИАЛИЗАЦИЯ
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
             document.addEventListener('click', function(e) {
                 const sidebar = document.getElementById('sidebar');
                 const toggle = document.querySelector('.sidebar-toggle');
@@ -630,7 +1388,6 @@
                 }
             });
 
-            // Close sidebar when clicking a link (mobile)
             document.querySelectorAll('.sidebar .tree-item, .sidebar .nav-item').forEach(link => {
                 link.addEventListener('click', function() {
                     if (window.innerWidth <= 768) {
@@ -639,19 +1396,75 @@
                     }
                 });
             });
-        });
 
-        // Smooth scroll to anchors
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                const targetId = this.getAttribute('href');
-                if (targetId && targetId !== '#') {
-                    e.preventDefault();
-                    const target = document.querySelector(targetId);
-                    if (target) {
-                        target.scrollIntoView({ behavior: 'smooth' });
-                    }
+            // --- Активация вкладки из hash при загрузке ---
+            const hash = window.__initialHash || window.location.hash;
+            const isProjectPage = window.location.pathname.match(/^\/project\/\d+$/);
+
+            if (isProjectPage) {
+                if (hash && hash.length > 1) {
+                    const targetId = hash.substring(1);
+                    setTimeout(() => {
+                        activateTab(targetId);
+                    }, 100);
+                } else {
+                    setTimeout(() => {
+                        updateSidebarActive('dashboard');
+                    }, 100);
                 }
+            }
+
+            // --- Обработка кликов по ссылкам вкладок ---
+            document.querySelectorAll('.project-tab-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    const tabId = this.dataset.tab;
+                    const projectId = this.dataset.projectId;
+                    const hashIndex = href.indexOf('#');
+
+                    if (tabId === 'chat' && projectId) {
+                        markChatAsRead(projectId);
+                    }
+
+                    if (hashIndex > 0) {
+                        const path = href.substring(0, hashIndex);
+                        const cleanPath = path.split('?')[0];
+                        const currentPath = window.location.pathname;
+
+                        if (cleanPath === currentPath) {
+                            e.preventDefault();
+                            activateTab(tabId);
+                        }
+                    } else {
+                        const path = href.split('?')[0];
+                        const currentPath = window.location.pathname;
+                        if (path === currentPath) {
+                            e.preventDefault();
+                            activateTab('tasks');
+                        }
+                    }
+                });
+            });
+
+            // --- Обновление подсветки при переключении вкладок вручную ---
+            document.querySelectorAll('.nav-tabs .nav-link').forEach(tabBtn => {
+                tabBtn.addEventListener('shown.bs.tab', function(e) {
+                    const href = this.getAttribute('href');
+                    if (href && href.startsWith('#')) {
+                        const tabId = href.substring(1);
+                        updateSidebarActive(tabId);
+                        if (history.replaceState) {
+                            history.replaceState(null, null, '#' + tabId);
+                        }
+
+                        if (tabId === 'chat') {
+                            const projectMatch = window.location.pathname.match(/^\/project\/(\d+)$/);
+                            if (projectMatch) {
+                                markChatAsRead(projectMatch[1]);
+                            }
+                        }
+                    }
+                });
             });
         });
     </script>

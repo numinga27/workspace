@@ -1,27 +1,337 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-4">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0"><i class="bi bi-box-arrow-in-right"></i> Вход</h4>
+<style>
+    /* Скрываем шапку и сайдбар на странице авторизации */
+    .header,
+    .sidebar,
+    .sidebar-overlay,
+    .sidebar-toggle {
+        display: none !important;
+    }
+
+    /* Растягиваем контент на весь экран */
+    .main-content {
+        padding: 0 !important;
+        margin-top: 0 !important;
+        margin-left: 0 !important;
+        height: 100vh !important;
+        overflow-y: auto;
+    }
+
+    .auth-wrapper {
+        display: flex;
+        min-height: 100vh;
+    }
+    .auth-form-side {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        background: var(--bg-secondary);
+    }
+    .auth-form-container {
+        width: 100%;
+        max-width: 400px;
+    }
+    .auth-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 32px;
+    }
+    .auth-logo .logo-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--accent), #8b5cf6);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 20px;
+        box-shadow: 0 4px 12px rgba(91, 91, 214, 0.3);
+    }
+    .auth-logo span {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--text-primary);
+    }
+    .auth-title {
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: 8px;
+        color: var(--text-primary);
+    }
+    .auth-subtitle {
+        color: var(--text-secondary);
+        font-size: 14.5px;
+        margin-bottom: 32px;
+    }
+    .auth-field {
+        margin-bottom: 16px;
+    }
+    .auth-field label {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+    }
+    .auth-field input {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1px solid var(--border-medium);
+        border-radius: var(--radius-md);
+        font-size: 14px;
+        transition: var(--transition);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-family: inherit;
+    }
+    .auth-field input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(91, 91, 214, 0.12);
+    }
+    .auth-btn {
+        width: 100%;
+        padding: 12px;
+        background: var(--accent);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        margin-top: 8px;
+        box-shadow: 0 1px 2px rgba(91, 91, 214, 0.2);
+        font-family: inherit;
+    }
+    .auth-btn:hover {
+        background: var(--accent-hover);
+        box-shadow: 0 4px 12px rgba(91, 91, 214, 0.3);
+        transform: translateY(-1px);
+    }
+    .auth-footer {
+        margin-top: 24px;
+        text-align: center;
+        font-size: 13.5px;
+        color: var(--text-secondary);
+    }
+    .auth-footer a {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .auth-footer a:hover { text-decoration: underline; }
+    .demo-hint {
+        margin-top: 24px;
+        padding: 12px 16px;
+        background: var(--bg-tertiary);
+        border-radius: var(--radius-md);
+        border-left: 3px solid var(--accent);
+        font-size: 12.5px;
+        color: var(--text-secondary);
+    }
+    .demo-hint strong { color: var(--text-primary); }
+
+    /* Правая сторона с иллюстрацией */
+    .auth-visual-side {
+        flex: 1;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        color: white;
+    }
+    .auth-visual-side::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(91, 91, 214, 0.4) 0%, transparent 70%);
+        animation: float 20s ease-in-out infinite;
+    }
+    .auth-visual-side::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -30%;
+        width: 80%;
+        height: 80%;
+        background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%);
+        animation: float 15s ease-in-out infinite reverse;
+    }
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(-20px, 20px); }
+    }
+
+    .auth-visual-content {
+        position: relative;
+        z-index: 2;
+        max-width: 460px;
+    }
+    .auth-visual-content h2 {
+        font-size: 36px;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: white;
+        line-height: 1.15;
+        margin-bottom: 16px;
+    }
+    .auth-visual-content h2 span {
+        background: linear-gradient(135deg, #a78bfa, #60a5fa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .auth-visual-content p {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 15px;
+        margin-bottom: 40px;
+        line-height: 1.6;
+    }
+    .feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    .feature-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.85);
+    }
+    .feature-list .feature-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+    .feature-list .feature-text strong {
+        display: block;
+        color: white;
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
+    .feature-list .feature-text span {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    @media (max-width: 900px) {
+        .auth-visual-side { display: none; }
+        .auth-form-side { flex: 1; padding: 24px; }
+    }
+</style>
+
+<div class="auth-wrapper">
+    <!-- Левая сторона: форма -->
+    <div class="auth-form-side">
+        <div class="auth-form-container">
+            <div class="auth-logo">
+                <div class="logo-icon">
+                    <i class="bi bi-hexagon-fill"></i>
+                </div>
+                <span>Workspace</span>
             </div>
-            <div class="card-body">
-                <form method="POST">
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Пароль</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">Войти</button>
-                </form>
-                <p class="mt-3 text-center">Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрироваться</a></p>
-                <hr>
-                <small class="text-muted">Тестовый вход: admin@example.com / admin123</small>
+
+            <h1 class="auth-title">С возвращением 👋</h1>
+            <p class="auth-subtitle">Войдите, чтобы продолжить работу</p>
+
+            <form method="POST">
+                <div class="auth-field">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email"
+                           placeholder="you@example.com" required autofocus>
+                </div>
+
+                <div class="auth-field">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" name="password"
+                           placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="auth-btn">
+                    Войти →
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрироваться</a>
             </div>
+
+            <div class="demo-hint">
+                <strong>Демо-доступ:</strong><br>
+                📧 admin@example.com &nbsp;·&nbsp; 🔑 admin123
+            </div>
+        </div>
+    </div>
+
+    <!-- Правая сторона: иллюстрация -->
+    <div class="auth-visual-side">
+        <div class="auth-visual-content">
+            <h2>Управляйте проектами <span>эффективно</span></h2>
+            <p>Всё необходимое для команды в одном месте: задачи, вехи, отчёты, файлы и общение.</p>
+
+            <ul class="feature-list">
+                <li>
+                    <div class="feature-icon">📋</div>
+                    <div class="feature-text">
+                        <strong>Задачи и подзадачи</strong>
+                        <span>Назначайте исполнителей и следите за прогрессом</span>
+                    </div>
+                </li>
+                <li>
+                    <div class="feature-icon">🎯</div>
+                    <div class="feature-text">
+                        <strong>Вехи проекта</strong>
+                        <span>Контрольные точки с уведомлениями о просрочке</span>
+                    </div>
+                </li>
+                <li>
+                    <div class="feature-icon">👥</div>
+                    <div class="feature-text">
+                        <strong>Команда с ролями</strong>
+                        <span>Руководитель, менеджер, инженер, логистик</span>
+                    </div>
+                </li>
+                <li>
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-text">
+                        <strong>PDF-отчёты</strong>
+                        <span>По проекту и по каждому сотруднику</span>
+                    </div>
+                </li>
+                <li>
+                    <div class="feature-icon">📧</div>
+                    <div class="feature-text">
+                        <strong>Email-уведомления</strong>
+                        <span>Автоматические напоминания о дедлайнах</span>
+                    </div>
+                </li>
+            </ul>
         </div>
     </div>
 </div>

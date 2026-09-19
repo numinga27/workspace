@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{{ url_for('view_project', project_id=project.id) }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> К проекту
+        </a>
+        <h2 class="mt-2 mb-0">
+            <i class="bi bi-person-badge"></i>
+            Отчёт по сотруднику: {{ employee.first_name }} {{ employee.last_name }}
+        </h2>
+        <p class="text-muted mb-0">
+            Проект: {{ project.name }} · Роль: <span class="badge bg-info">{{ stats.role_in_project }}</span>
+        </p>
+    </div>
+    <a href="{{ url_for('employee_report_pdf', project_id=project.id, user_id=employee.id) }}"
+       class="btn btn-danger">
+        <i class="bi bi-file-earmark-pdf"></i> Скачать PDF
+    </a>
+</div>
+
+<!-- Общая оценка -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-icon mx-auto" style="background: #e0e7ff; color: #4f46e5;">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <div class="stat-number">{{ stats.activity_score }}</div>
+            <div class="stat-label">Баллов активности</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-icon mx-auto" style="background: #d1fae5; color: #10b981;">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <div class="stat-number">{{ stats.completed_tasks }}/{{ stats.total_tasks }}</div>
+            <div class="stat-label">Задач выполнено</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center {% if stats.overdue_tasks > 0 %}border-danger{% endif %}">
+            <div class="stat-icon mx-auto" style="background: #fee2e2; color: #dc2626;">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+            <div class="stat-number text-danger">{{ stats.overdue_tasks }}</div>
+            <div class="stat-label">Просрочено</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-icon mx-auto" style="background: #dbeafe; color: #1e40af;">
+                <i class="bi bi-chat-dots"></i>
+            </div>
+            <div class="stat-number">{{ stats.total_messages }}</div>
+            <div class="stat-label">Сообщений</div>
+        </div>
+    </div>
+</div>
+
+<!-- Прогресс -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5>Процент выполнения задач</h5>
+        <div class="progress mb-3" style="height: 24px;">
+            <div class="progress-bar bg-success" style="width: {{ stats.completion_rate }}%;">
+                {{ stats.completion_rate }}%
+            </div>
+        </div>
+        
+        <h5>Процент просроченных задач</h5>
+        <div class="progress" style="height: 24px;">
+            <div class="progress-bar bg-danger" style="width: {{ stats.overdue_rate }}%;">
+                {{ stats.overdue_rate }}%
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Детальная статистика -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header bg-light">
+                <i class="bi bi-list-task"></i> Задачи
+            </div>
+            <div class="card-body">
+                {% if stats.tasks %}
+                    {% for t in stats.tasks %}
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded
+                        {% if t.status == 'completed' %}bg-success-subtle
+                        {% elif t.is_overdue %}bg-danger-subtle{% endif %}">
+                        <div>
+                            <strong>{{ t.title }}</strong>
+                            {% if t.parent_task %}
+                                <br><small class="text-muted">Подзадача: {{ t.parent_task.title }}</small>
+                            {% endif %}
+                        </div>
+                        <div class="text-end">
+                            <span class="badge 
+                                {% if t.status == 'completed' %}bg-success
+                                {% elif t.status == 'in_progress' %}bg-warning text-dark
+                                {% else %}bg-secondary{% endif %}">
+                                {{ t.status }}
+                            </span>
+                            {% if t.due_date %}
+                                <br><small class="text-muted">{{ t.due_date.strftime('%d.%m.%Y') }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">Задач нет</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <!-- To-Do -->
+        <div class="card mb-3">
+            <div class="card-header bg-light">
+                <i class="bi bi-check2-square"></i> To-Do
+            </div>
+            <div class="card-body">
+                {% if stats.todos %}
+                    {% for t in stats.todos %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="{% if t.is_done %}text-decoration-line-through text-muted{% endif %}">
+                            {{ t.title }}
+                        </span>
+                        <span class="badge {% if t.is_done %}bg-success{% else %}bg-secondary{% endif %}">
+                            {% if t.is_done %}✔{% else %}○{% endif %}
+                        </span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">Нет To-Do</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Выводы -->
+<div class="card">
+    <div class="card-header bg-light">
+        <i class="bi bi-lightbulb"></i> Выводы
+    </div>
+    <div class="card-body">
+        {% if stats.completion_rate >= 80 %}
+            <div class="alert alert-success">
+                ✅ <strong>Отличная работа!</strong> Большинство задач выполнено.
+            </div>
+        {% elif stats.completion_rate >= 50 %}
+            <div class="alert alert-info">
+                👍 <strong>Хорошая работа.</strong> Есть что улучшить.
+            </div>
+        {% elif stats.completion_rate >= 20 %}
+            <div class="alert alert-warning">
+                ⚠️ <strong>Средний результат.</strong> Возможно, требуется помощь.
+            </div>
+        {% else %}
+            <div class="alert alert-danger">
+                🚨 <strong>Низкая активность.</strong> Требуется внимание руководителя.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

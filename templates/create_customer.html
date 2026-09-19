@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+        <div class="mb-3">
+            <a href="{{ url_for('customers_list') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> К списку заказчиков
+            </a>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0"><i class="bi bi-building-add"></i> Новый заказчик</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <!-- Поле для возврата на исходную страницу -->
+                    <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
+
+                    <div class="mb-3">
+                        <label class="form-label">Наименование организации *</label>
+                        <input type="text" name="name" class="form-control"
+                               placeholder="ООО «Ромашка»" required autofocus>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">ИНН</label>
+                            <input type="text" name="inn" class="form-control"
+                                   placeholder="10 или 12 цифр"
+                                   pattern="[0-9]{10,12}"
+                                   title="ИНН должен содержать 10 или 12 цифр">
+                            <small class="text-muted">10 цифр — юрлицо, 12 — ИП</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Контактное лицо</label>
+                            <input type="text" name="contact_person" class="form-control"
+                                   placeholder="Иванов Иван Иванович">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Телефон</label>
+                            <input type="tel" name="phone" class="form-control"
+                                   placeholder="+7 (___) ___-__-__">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control"
+                                   placeholder="info@example.com">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Адрес</label>
+                        <input type="text" name="address" class="form-control"
+                               placeholder="г. Москва, ул. Примерная, д. 1">
+                    </div>
+
+                    <!-- Информация о правах -->
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Кто видит заказчика:</strong>
+                        <ul class="mb-0 mt-1 small">
+                            <li>Вы и все участники ваших проектов</li>
+                            <li>Если заказчик ещё не привязан ни к одному проекту — его видят все пользователи</li>
+                            <li>Глобальный администратор видит всех заказчиков</li>
+                        </ul>
+                    </div>
+
+                    <!-- Кнопки -->
+                    <div class="d-flex justify-content-between mt-3">
+                        <a href="{{ url_for('customers_list') }}" class="btn btn-secondary">
+                            <i class="bi bi-x"></i> Отмена
+                        </a>
+                        <button type="submit" class="btn btn-info text-white">
+                            <i class="bi bi-check-circle"></i> Сохранить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Подсказка если пришли из формы проекта -->
+        {% if request.args.get('next') and 'create_project' in request.args.get('next') %}
+        <div class="alert alert-warning mt-3">
+            <i class="bi bi-lightbulb"></i>
+            После сохранения заказчика вы вернётесь на форму создания проекта —
+            новый заказчик появится в выпадающем списке.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

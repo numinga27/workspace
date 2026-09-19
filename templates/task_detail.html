@@ -2,7 +2,7 @@
 {% block content %}
 <div class="mb-3">
     <a href="{{ url_for('view_project', project_id=task.project_id) }}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left"></i> Назад к проекту
+        <i class="bi bi-arrow-left"></i> К проекту
     </a>
     {% if task.parent_task_id %}
     <a href="{{ url_for('view_task', task_id=task.parent_task_id) }}" class="btn btn-outline-secondary btn-sm">
@@ -12,221 +12,446 @@
 </div>
 
 <div class="row">
+    <!-- ============================================================ -->
+    <!-- ЛЕВАЯ КОЛОНКА -->
+    <!-- ============================================================ -->
     <div class="col-md-8">
-        <div class="card">
+        <!-- ============================================ -->
+        <!-- ЗАГОЛОВОК И ОПИСАНИЕ -->
+        <!-- ============================================ -->
+        <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4 class="mb-0">{{ task.title }}</h4>
-                <span class="badge {% if task.status == 'completed' %}bg-success{% elif task.status == 'in_progress' %}bg-warning{% else %}bg-secondary{% endif %}">
-                    {{ task.status }}
+                <span class="badge {% if task.status == 'completed' %}bg-success{% elif task.status == 'in_progress' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                    {% if task.status == 'completed' %}✅ Завершена
+                    {% elif task.status == 'in_progress' %}🔄 В работе
+                    {% else %}🆕 Новая{% endif %}
                 </span>
             </div>
             <div class="card-body">
-                <p><strong>Описание:</strong></p>
-                <p>{{ task.description or 'Нет описания' }}</p>
-                
+                {% if task.description %}
+                    <p class="mb-3">{{ task.description }}</p>
+                {% else %}
+                    <p class="mb-3 text-muted">Описание не указано</p>
+                {% endif %}
+
                 <hr>
-                <div class="row">
+
+                <div class="row g-3">
                     <div class="col-md-6">
-                        <p><strong><i class="bi bi-person"></i> Назначена:</strong></p>
-                        {% if task.assigned_to %}
-                            <p>{{ task.assignee.first_name }} {{ task.assignee.last_name }}</p>
+                        <div class="small text-muted">Назначена</div>
+                        {% if task.assignee %}
+                            <div class="fw-bold">
+                                <i class="bi bi-person-circle"></i>
+                                {{ task.assignee.first_name }} {{ task.assignee.last_name }}
+                            </div>
                         {% else %}
-                            <p class="text-muted">Не назначена</p>
+                            <span class="text-muted">не назначена</span>
                         {% endif %}
                     </div>
                     <div class="col-md-6">
-                        <p><strong><i class="bi bi-calendar"></i> Дедлайн:</strong></p>
-                        <p>{{ task.due_date.strftime('%d.%m.%Y %H:%M') if task.due_date else 'Не указан' }}</p>
+                        <div class="small text-muted">Дедлайн</div>
+                        <div class="{% if task.is_overdue %}text-danger fw-bold{% endif %}">
+                            <i class="bi bi-calendar-event"></i>
+                            {% if task.due_date %}
+                                {{ task.due_date.strftime('%d.%m.%Y') }}
+                                {% if task.is_overdue %}
+                                    <span class="badge bg-danger ms-1">
+                                        Просрочено на {{ task.days_overdue }} дн.
+                                    </span>
+                                {% endif %}
+                            {% else %}
+                                не указан
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if task.milestone %}
+                    <div class="col-md-6">
+                        <div class="small text-muted">Веха</div>
+                        <div class="fw-bold">
+                            <i class="bi bi-flag-fill text-info"></i> {{ task.milestone.name }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="col-md-6">
+                        <div class="small text-muted">Создана</div>
+                        <div>
+                            <i class="bi bi-person"></i>
+                            {{ task.task_creator.first_name }} {{ task.task_creator.last_name }}
+                            <br>
+                            <small class="text-muted">{{ task.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                        </div>
                     </div>
                 </div>
-                
+
                 <hr>
-                <p><strong>Статус:</strong></p>
+
+                <!-- Форма смены статуса -->
                 <form method="POST" action="{{ url_for('update_task_status', task_id=task.id) }}">
                     <div class="row g-2">
                         <div class="col-md-6">
+                            <label class="form-label small">Изменить статус</label>
                             <select name="status" class="form-select">
-                                <option value="new" {% if task.status == 'new' %}selected{% endif %}>Новая</option>
-                                <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>В работе</option>
-                                <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>Завершена</option>
+                                <option value="new" {% if task.status == 'new' %}selected{% endif %}>🆕 Новая</option>
+                                <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>🔄 В работе</option>
+                                <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>✅ Завершена</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
-                            <button type="submit" class="btn btn-primary w-100">Обновить статус</button>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-check-circle"></i> Обновить
+                            </button>
                         </div>
                     </div>
                 </form>
+            </div>
+        </div>
 
-                <!-- Подзадачи -->
-                <hr>
-                <h5><i class="bi bi-diagram-3"></i> Подзадачи</h5>
-                
+        <!-- ============================================ -->
+        <!-- КОММЕНТАРИЙ К ПРОСРОЧКЕ (если задача просрочена) -->
+        <!-- ============================================ -->
+        {% if task.is_overdue %}
+        <div class="card mb-3" style="border-left: 4px solid var(--danger);">
+            <div class="card-header" style="background: var(--danger-light);">
+                <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                <strong>Причина просрочки задачи</strong>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2">
+                    Задача просрочена на <strong>{{ task.days_overdue }} дн.</strong>
+                    Укажите причину — она попадёт в отчёт по проекту.
+                </p>
+                <form method="POST" action="{{ url_for('update_task_comment', task_id=task.id) }}">
+                    <div class="input-group">
+                        <input type="text" name="comment" class="form-control"
+                               placeholder="Например: задержка поставки материалов..."
+                               value="{{ task.comment or '' }}">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Сохранить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% elif task.comment %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="small text-muted mb-1">Комментарий</div>
+                <div class="p-2 rounded" style="background: var(--bg-tertiary);">
+                    {{ task.comment }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ============================================ -->
+        <!-- ПОДЗАДАЧИ -->
+        <!-- ============================================ -->
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-diagram-3"></i> Подзадачи ({{ subtasks|length }})</span>
+                {% if can_manage %}
+                <button type="button" class="btn btn-primary btn-sm"
+                        data-bs-toggle="collapse" data-bs-target="#addSubtaskForm">
+                    <i class="bi bi-plus-lg"></i> Добавить
+                </button>
+                {% endif %}
+            </div>
+            <div class="card-body">
                 <!-- Форма создания подзадачи -->
-                {% if user_role in ['admin', 'manager'] or user.role == 'admin' %}
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <form method="POST" action="{{ url_for('create_task', project_id=task.project_id) }}">
-                            <input type="hidden" name="parent_task_id" value="{{ task.id }}">
-                            <div class="row g-2">
-                                <div class="col-md-5">
-                                    <input type="text" class="form-control" name="title" placeholder="Название подзадачи" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <select class="form-select" name="assigned_to">
-                                        <option value="">Назначить...</option>
-                                        {% for u in all_users %}
+                {% if can_manage %}
+                <div class="collapse mb-3" id="addSubtaskForm">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('create_task', project_id=task.project_id) }}">
+                                <input type="hidden" name="parent_task_id" value="{{ task.id }}">
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <input type="text" name="title" class="form-control"
+                                               placeholder="Название подзадачи" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select name="assigned_to" class="form-select">
+                                            <option value="">Исполнитель...</option>
+                                            {% for u in all_users %}
                                             <option value="{{ u.id }}">{{ u.first_name }} {{ u.last_name }}</option>
-                                        {% endfor %}
-                                    </select>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input type="date" name="due_date" class="form-control">
+                                    </div>
+                                    <div class="col-12">
+                                        <input type="text" name="description" class="form-control"
+                                               placeholder="Описание подзадачи">
+                                    </div>
+                                    <div class="col-12 text-end">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-check-circle"></i> Создать подзадачу
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="col-md-2">
-                                    <input type="date" class="form-control" name="due_date">
-                                </div>
-                                <div class="col-md-1">
-                                    <button type="submit" class="btn btn-primary w-100">
-                                        <i class="bi bi-plus"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="row mt-2">
-                                <div class="col-md-12">
-                                    <input type="text" class="form-control" name="description" placeholder="Описание (опционально)">
-                                </div>
-                            </div>
-                        </form>
+                            </form>
+                        </div>
                     </div>
                 </div>
                 {% endif %}
 
                 <!-- Список подзадач -->
-                {% if subtasks %}
-                    {% for subtask in subtasks %}
-                    <div class="card task-card mb-2 {% if subtask.status == 'completed' %}completed{% elif subtask.status == 'in_progress' %}in_progress{% endif %}">
-                        <div class="card-body py-2">
-                            <div class="row align-items-center">
-                                <div class="col-md-5">
-                                    <a href="{{ url_for('view_task', task_id=subtask.id) }}" class="text-decoration-none text-dark">
-                                        <strong>{{ subtask.title }}</strong>
-                                    </a>
-                                    <br>
-                                    <small class="text-muted">{{ subtask.description or '' }}</small>
-                                    {% if subtask.assigned_to %}
-                                        <br><small><i class="bi bi-person"></i> {{ subtask.assignee.first_name }} {{ subtask.assignee.last_name }}</small>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-3">
-                                    <small>
-                                        <i class="bi bi-calendar"></i> Начало: {{ subtask.start_date.strftime('%d.%m') }}
-                                        {% if subtask.due_date %}
-                                            <br><i class="bi bi-calendar-check"></i> Дедлайн: {{ subtask.due_date.strftime('%d.%m.%Y') }}
-                                            {% if subtask.due_date < now and subtask.status != 'completed' %}
-                                                <span class="badge bg-danger">Просрочена</span>
-                                            {% endif %}
-                                        {% endif %}
-                                    </small>
-                                </div>
-                                <div class="col-md-4">
-                                    <form method="POST" action="{{ url_for('update_task_status', task_id=subtask.id) }}" class="d-inline">
-                                        <select name="status" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
-                                            <option value="new" {% if subtask.status == 'new' %}selected{% endif %}>🆕 Новая</option>
-                                            <option value="in_progress" {% if subtask.status == 'in_progress' %}selected{% endif %}>🔄 В работе</option>
-                                            <option value="completed" {% if subtask.status == 'completed' %}selected{% endif %}>✅ Завершена</option>
-                                        </select>
-                                    </form>
-                                    {% if user_role in ['admin', 'manager'] or user.role == 'admin' %}
-                                    <form method="POST" action="{{ url_for('delete_task', task_id=subtask.id) }}" class="d-inline">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить подзадачу?')">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
-                                    {% endif %}
-                                    <a href="{{ url_for('view_task', task_id=subtask.id) }}" class="btn btn-sm btn-outline-info">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                </div>
+                {% for st in subtasks %}
+                <div class="border rounded p-2 mb-2 {% if st.status == 'completed' %}bg-success-subtle{% elif st.is_overdue %}bg-danger-subtle{% endif %}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <a href="{{ url_for('view_task', task_id=st.id) }}" class="text-decoration-none text-dark">
+                                <strong>{{ st.title }}</strong>
+                            </a>
+                            {% if st.description %}
+                                <br><small class="text-muted">{{ st.description }}</small>
+                            {% endif %}
+                            <div class="mt-1 small">
+                                {% if st.assignee %}
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-person"></i> {{ st.assignee.first_name }} {{ st.assignee.last_name }}
+                                </span>
+                                {% endif %}
+                                {% if st.due_date %}
+                                <span class="badge {% if st.is_overdue %}bg-danger{% else %}bg-secondary{% endif %}">
+                                    <i class="bi bi-calendar-event"></i> {{ st.due_date.strftime('%d.%m.%Y') }}
+                                    {% if st.is_overdue %}· +{{ st.days_overdue }} дн.{% endif %}
+                                </span>
+                                {% endif %}
                             </div>
                         </div>
+                        <div class="d-flex gap-1 align-items-center ms-2">
+                            <form method="POST" action="{{ url_for('update_task_status', task_id=st.id) }}">
+                                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    <option value="new" {% if st.status == 'new' %}selected{% endif %}>🆕</option>
+                                    <option value="in_progress" {% if st.status == 'in_progress' %}selected{% endif %}>🔄</option>
+                                    <option value="completed" {% if st.status == 'completed' %}selected{% endif %}>✅</option>
+                                </select>
+                            </form>
+                            {% if can_manage %}
+                            <form method="POST" action="{{ url_for('delete_task', task_id=st.id) }}">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                        onclick="return confirm('Удалить подзадачу?')">
+                                    <i class="bi bi-trash-fill text-danger"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
                     </div>
-                    {% endfor %}
+
+                    <!-- Комментарий к просроченной подзадаче -->
+                    {% if st.is_overdue %}
+                    <form method="POST" action="{{ url_for('update_task_comment', task_id=st.id) }}"
+                          class="mt-2">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-warning-subtle">
+                                <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                            </span>
+                            <input type="text" name="comment" class="form-control"
+                                   placeholder="Причина просрочки..."
+                                   value="{{ st.comment or '' }}">
+                            <button type="submit" class="btn btn-outline-secondary">
+                                <i class="bi bi-save"></i>
+                            </button>
+                        </div>
+                    </form>
+                    {% elif st.comment %}
+                    <div class="mt-2 p-2 rounded" style="background: var(--bg-tertiary); font-size: 12px;">
+                        <i class="bi bi-chat-text text-muted"></i> {{ st.comment }}
+                    </div>
+                    {% endif %}
+                </div>
                 {% else %}
-                    <div class="alert alert-secondary">Нет подзадач.</div>
-                {% endif %}
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-diagram-3" style="font-size: 32px; opacity: 0.3; display: block; margin-bottom: 8px;"></i>
+                    Подзадач пока нет
+                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
 
+    <!-- ============================================================ -->
+    <!-- ПРАВАЯ КОЛОНКА -->
+    <!-- ============================================================ -->
     <div class="col-md-4">
-        <!-- Файлы задачи -->
-        <div class="card">
-            <div class="card-header bg-light">
-                <i class="bi bi-paperclip"></i> Файлы задачи
+        <!-- ============================================ -->
+        <!-- ОТЧЁТ ПО ЗАДАЧЕ -->
+        <!-- ============================================ -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <i class="bi bi-clipboard-data"></i> Отчёт по задаче
             </div>
             <div class="card-body">
-                <!-- Загрузка файла -->
-                <form method="POST" action="{{ url_for('upload_file', project_id=task.project_id) }}" enctype="multipart/form-data" class="mb-3">
+                <!-- 4 счётчика -->
+                <div class="row g-2 text-center mb-3">
+                    <div class="col-6 col-md-3">
+                        <div class="p-2 rounded" style="background: var(--bg-tertiary);">
+                            <div class="fw-bold" style="font-size: 20px;">{{ task_stats.total }}</div>
+                            <div class="small text-muted" style="font-size: 10px;">📋 Всего</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-2 rounded" style="background: var(--success-light);">
+                            <div class="fw-bold text-success" style="font-size: 20px;">{{ task_stats.done }}</div>
+                            <div class="small text-muted" style="font-size: 10px;">✅ Готово</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-2 rounded" style="background: var(--danger-light);">
+                            <div class="fw-bold text-danger" style="font-size: 20px;">{{ task_stats.overdue }}</div>
+                            <div class="small text-muted" style="font-size: 10px;">⚠️ Просроч.</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-2 rounded" style="background: var(--bg-tertiary);">
+                            <div class="fw-bold text-muted" style="font-size: 20px;">{{ task_stats.new }}</div>
+                            <div class="small text-muted" style="font-size: 10px;">⚪ Не начато</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Прогресс -->
+                {% if task_stats.total > 0 %}
+                    {% set percent = (task_stats.done / task_stats.total * 100)|int %}
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>Прогресс подзадач</span>
+                            <span class="fw-bold">{{ percent }}%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-success" style="width: {{ percent }}%;"></div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Кнопка PDF -->
+                <a href="{{ url_for('task_report_pdf', task_id=task.id) }}"
+                   class="btn btn-outline-secondary w-100 btn-sm mt-2">
+                    <i class="bi bi-file-earmark-pdf-fill text-danger"></i> PDF-отчёт по задаче
+                </a>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- ФАЙЛЫ ЗАДАЧИ -->
+        <!-- ============================================ -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <i class="bi bi-paperclip"></i> Файлы задачи ({{ files|length }})
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('upload_file', project_id=task.project_id) }}"
+                      enctype="multipart/form-data" class="mb-3">
                     <input type="hidden" name="task_id" value="{{ task.id }}">
                     <div class="input-group input-group-sm">
                         <input type="file" class="form-control" name="file" required>
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-cloud-upload"></i>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-upload"></i>
                         </button>
                     </div>
                 </form>
 
-                <!-- Список файлов -->
-                {% if files %}
-                <div class="list-group">
-                    {% for file in files %}
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <i class="bi bi-file-earmark"></i>
-                            <a href="{{ url_for('download_file', file_id=file.id) }}" class="text-decoration-none">
-                                {{ file.original_name }}
-                            </a>
-                            <br>
-                            <small class="text-muted">
-                                {{ (file.file_size / 1024)|round(1) }} KB
-                            </small>
-                        </div>
-                        <div>
-                            <a href="{{ url_for('download_file', file_id=file.id) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-download"></i>
-                            </a>
-                            <form method="POST" action="{{ url_for('delete_file', file_id=file.id) }}" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить файл?')">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                        </div>
+                {% for file in files %}
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded"
+                     style="background: var(--bg-tertiary);">
+                    <div class="text-truncate" style="max-width: 200px;">
+                        <i class="bi bi-file-earmark"></i>
+                        <a href="{{ url_for('download_file', file_id=file.id) }}"
+                           class="text-decoration-none small" title="{{ file.original_name }}">
+                            {{ file.original_name }}
+                        </a>
                     </div>
-                    {% endfor %}
+                    <form method="POST" action="{{ url_for('delete_file', file_id=file.id) }}">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary p-0 px-1"
+                                onclick="return confirm('Удалить файл?')">
+                            <i class="bi bi-trash-fill text-danger" style="font-size: 12px;"></i>
+                        </button>
+                    </form>
                 </div>
                 {% else %}
-                <div class="text-muted text-center">Нет прикрепленных файлов</div>
-                {% endif %}
+                <div class="text-muted small text-center py-3">
+                    <i class="bi bi-paperclip" style="font-size: 24px; opacity: 0.3; display: block; margin-bottom: 4px;"></i>
+                    Нет файлов
+                </div>
+                {% endfor %}
             </div>
         </div>
 
-        <!-- Информация -->
-        <div class="card mt-3">
-            <div class="card-header bg-light">
+        <!-- ============================================ -->
+        <!-- ПРОСРОЧЕННЫЕ ПОДЗАДАЧИ С КОММЕНТАРИЯМИ -->
+        <!-- ============================================ -->
+        {% if task_stats.overdue_list %}
+        <div class="card mb-3" style="border-left: 4px solid var(--danger);">
+            <div class="card-header" style="background: var(--danger-light);">
+                <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                <strong>Просроченные подзадачи ({{ task_stats.overdue }})</strong>
+            </div>
+            <div class="card-body p-2">
+                {% for st in task_stats.overdue_list %}
+                <div class="p-2 mb-2 rounded" style="background: #fef2f2;">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <div class="small fw-bold">{{ st.title }}</div>
+                        <a href="{{ url_for('view_task', task_id=st.id) }}"
+                           class="btn btn-sm btn-outline-secondary p-0 px-1">
+                            <i class="bi bi-box-arrow-up-right" style="font-size: 11px;"></i>
+                        </a>
+                    </div>
+                    <div class="small text-danger fw-bold mb-2">
+                        <i class="bi bi-calendar-x"></i> Просрочено на {{ st.days_overdue }} дн.
+                    </div>
+
+                    <form method="POST" action="{{ url_for('update_task_comment', task_id=st.id) }}">
+                        <div class="input-group input-group-sm">
+                            <input type="text" name="comment" class="form-control"
+                                   placeholder="Причина просрочки..."
+                                   value="{{ st.comment or '' }}"
+                                   style="font-size: 12px;">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="bi bi-save" style="font-size: 11px;"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ============================================ -->
+        <!-- ИНФОРМАЦИЯ -->
+        <!-- ============================================ -->
+        <div class="card">
+            <div class="card-header">
                 <i class="bi bi-info-circle"></i> Информация
             </div>
-            <div class="card-body">
-                <p><strong>Создана:</strong> {{ task.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
-                <p><strong>Создатель:</strong> {{ task.task_creator.first_name }} {{ task.task_creator.last_name }}</p>
-                <p><strong>Проект:</strong> {{ task.project.name }}</p>
+            <div class="card-body small">
+                <p class="mb-1">
+                    <strong>Проект:</strong>
+                    <a href="{{ url_for('view_project', project_id=task.project_id) }}">
+                        {{ task.project.name }}
+                    </a>
+                </p>
                 {% if task.parent_task %}
-                <p><strong>Родительская задача:</strong> 
-                    <a href="{{ url_for('view_task', task_id=task.parent_task.id) }}">{{ task.parent_task.title }}</a>
+                <p class="mb-1">
+                    <strong>Родительская задача:</strong>
+                    <a href="{{ url_for('view_task', task_id=task.parent_task.id) }}">
+                        {{ task.parent_task.title }}
+                    </a>
                 </p>
                 {% endif %}
-                
-                {% if user_role in ['admin', 'manager'] or user.role == 'admin' %}
+                <p class="mb-1">
+                    <strong>ID задачи:</strong> #{{ task.id }}
+                </p>
+
+                {% if can_manage %}
                 <hr>
-                <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" onsubmit="return confirm('Удалить задачу и все подзадачи?')">
-                    <button type="submit" class="btn btn-danger w-100">
-                        <i class="bi bi-trash"></i> Удалить задачу
+                <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}"
+                      onsubmit="return confirm('Удалить задачу и все её подзадачи?')">
+                    <button type="submit" class="btn btn-outline-danger w-100 btn-sm">
+                        <i class="bi bi-trash-fill"></i> Удалить задачу
                     </button>
                 </form>
                 {% endif %}

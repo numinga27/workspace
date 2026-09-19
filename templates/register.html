@@ -1,38 +1,377 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
-        <div class="card shadow">
-            <div class="card-header bg-success text-white">
-                <h4 class="mb-0"><i class="bi bi-person-plus"></i> Регистрация</h4>
+<style>
+    /* Скрываем шапку и сайдбар на странице регистрации */
+    .header,
+    .sidebar,
+    .sidebar-overlay,
+    .sidebar-toggle {
+        display: none !important;
+    }
+
+    /* Растягиваем контент на весь экран */
+    .main-content {
+        padding: 0 !important;
+        margin-top: 0 !important;
+        margin-left: 0 !important;
+        height: 100vh !important;
+        overflow-y: auto;
+    }
+
+    .auth-wrapper {
+        display: flex;
+        min-height: 100vh;
+    }
+    .auth-form-side {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        background: var(--bg-secondary);
+        overflow-y: auto;
+    }
+    .auth-form-container {
+        width: 100%;
+        max-width: 400px;
+        padding: 20px 0;
+    }
+    .auth-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 32px;
+    }
+    .auth-logo .logo-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--accent), #8b5cf6);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 20px;
+        box-shadow: 0 4px 12px rgba(91, 91, 214, 0.3);
+    }
+    .auth-logo span {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--text-primary);
+    }
+    .auth-title {
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: 8px;
+        color: var(--text-primary);
+    }
+    .auth-subtitle {
+        color: var(--text-secondary);
+        font-size: 14.5px;
+        margin-bottom: 32px;
+    }
+    .auth-field {
+        margin-bottom: 14px;
+    }
+    .auth-field label {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+    }
+    .auth-field input {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1px solid var(--border-medium);
+        border-radius: var(--radius-md);
+        font-size: 14px;
+        transition: var(--transition);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-family: inherit;
+    }
+    .auth-field input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(91, 91, 214, 0.12);
+    }
+    .auth-field-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    .auth-btn {
+        width: 100%;
+        padding: 12px;
+        background: var(--accent);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        margin-top: 12px;
+        box-shadow: 0 1px 2px rgba(91, 91, 214, 0.2);
+        font-family: inherit;
+    }
+    .auth-btn:hover {
+        background: var(--accent-hover);
+        box-shadow: 0 4px 12px rgba(91, 91, 214, 0.3);
+        transform: translateY(-1px);
+    }
+    .auth-footer {
+        margin-top: 24px;
+        text-align: center;
+        font-size: 13.5px;
+        color: var(--text-secondary);
+    }
+    .auth-footer a {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .auth-footer a:hover { text-decoration: underline; }
+
+    .invite-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background: var(--accent-light);
+        color: var(--accent);
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
+    /* Правая сторона */
+    .auth-visual-side {
+        flex: 1;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        color: white;
+    }
+    .auth-visual-side::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(91, 91, 214, 0.4) 0%, transparent 70%);
+        animation: float 20s ease-in-out infinite;
+    }
+    .auth-visual-side::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -30%;
+        width: 80%;
+        height: 80%;
+        background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%);
+        animation: float 15s ease-in-out infinite reverse;
+    }
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(-20px, 20px); }
+    }
+
+    .auth-visual-content {
+        position: relative;
+        z-index: 2;
+        max-width: 460px;
+    }
+    .auth-visual-content h2 {
+        font-size: 36px;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: white;
+        line-height: 1.15;
+        margin-bottom: 16px;
+    }
+    .auth-visual-content h2 span {
+        background: linear-gradient(135deg, #a78bfa, #60a5fa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .auth-visual-content p {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 15px;
+        margin-bottom: 32px;
+        line-height: 1.6;
+    }
+    .steps-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    .steps-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+    }
+    .steps-list .step-num {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), #8b5cf6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 13px;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(91, 91, 214, 0.4);
+        color: white;
+    }
+    .steps-list .step-text strong {
+        display: block;
+        color: white;
+        font-weight: 600;
+        margin-bottom: 4px;
+        font-size: 14.5px;
+    }
+    .steps-list .step-text span {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.6);
+        line-height: 1.5;
+    }
+
+    @media (max-width: 900px) {
+        .auth-visual-side { display: none; }
+        .auth-form-side { flex: 1; padding: 24px; }
+    }
+</style>
+
+<div class="auth-wrapper">
+    <!-- Левая сторона: форма -->
+    <div class="auth-form-side">
+        <div class="auth-form-container">
+            <div class="auth-logo">
+                <div class="logo-icon">
+                    <i class="bi bi-hexagon-fill"></i>
+                </div>
+                <span>Workspace</span>
             </div>
-            <div class="card-body">
-                <form method="POST">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="first_name" class="form-label">Имя</label>
-                            <input type="text" class="form-control" id="first_name" name="first_name" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="last_name" class="form-label">Фамилия</label>
-                            <input type="text" class="form-control" id="last_name" name="last_name" required>
-                        </div>
+
+            {% if invitation %}
+            <div class="invite-badge">
+                <i class="bi bi-envelope-open-fill"></i>
+                Приглашение в проект
+            </div>
+            {% endif %}
+
+            <h1 class="auth-title">Создать аккаунт</h1>
+            <p class="auth-subtitle">
+                {% if invitation %}
+                    Завершите регистрацию, чтобы присоединиться
+                {% else %}
+                    Начните работу за пару минут
+                {% endif %}
+            </p>
+
+            <form method="POST">
+                <div class="auth-field-row">
+                    <div class="auth-field">
+                        <label for="first_name">Имя</label>
+                        <input type="text" id="first_name" name="first_name"
+                               placeholder="Иван" required autofocus>
                     </div>
-                    <div class="mb-3">
-                        <label for="company" class="form-label">Компания</label>
-                        <input type="text" class="form-control" id="company" name="company" required>
+                    <div class="auth-field">
+                        <label for="last_name">Фамилия</label>
+                        <input type="text" id="last_name" name="last_name"
+                               placeholder="Петров" required>
                     </div>
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+
+                <div class="auth-field">
+                    <label for="company">Компания</label>
+                    <input type="text" id="company" name="company"
+                           placeholder="ООО Ромашка" required>
+                </div>
+
+                <div class="auth-field">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email"
+                           placeholder="you@example.com" required
+                           {% if invitation %}value="{{ invitation.email }}"{% endif %}>
+                </div>
+
+                <div class="auth-field">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" name="password"
+                           placeholder="Минимум 6 символов" minlength="6" required>
+                </div>
+
+                <button type="submit" class="auth-btn">
+                    {% if invitation %}
+                        Присоединиться к проекту →
+                    {% else %}
+                        Зарегистрироваться →
+                    {% endif %}
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Правая сторона: иллюстрация -->
+    <div class="auth-visual-side">
+        <div class="auth-visual-content">
+            <h2>Начните работу <span>за 3 шага</span></h2>
+            <p>Работайте в команде, отслеживайте прогресс и достигайте целей вместе.</p>
+
+            <ul class="steps-list">
+                <li>
+                    <div class="step-num">1</div>
+                    <div class="step-text">
+                        <strong>Создайте аккаунт</strong>
+                        <span>Заполните короткую форму — займёт 30 секунд</span>
                     </div>
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Пароль</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
+                </li>
+                <li>
+                    <div class="step-num">2</div>
+                    <div class="step-text">
+                        <strong>Создайте проект</strong>
+                        <span>Добавьте заказчика, задачи и вехи</span>
                     </div>
-                    <button type="submit" class="btn btn-success w-100">Зарегистрироваться</button>
-                </form>
-                <p class="mt-3 text-center">Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти</a></p>
+                </li>
+                <li>
+                    <div class="step-num">3</div>
+                    <div class="step-text">
+                        <strong>Пригласите команду</strong>
+                        <span>Назначьте роли и работайте вместе</span>
+                    </div>
+                </li>
+            </ul>
+
+            <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                        ✨
+                    </div>
+                    <div style="font-size: 13px; color: rgba(255,255,255,0.6);">
+                        <strong style="color: white; display: block;">Бесплатно для команд до 10 человек</strong>
+                        Неограниченное число проектов
+                    </div>
+                </div>
             </div>
         </div>
     </div>

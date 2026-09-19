@@ -1,53 +1,360 @@
 {% extends "base.html" %}
 {% block content %}
-<!-- Заголовок -->
-<div class="d-flex justify-content-between align-items-start mb-4">
+
+<!-- ============================================================ -->
+<!-- ЗАГОЛОВОК -->
+<!-- ============================================================ -->
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
     <div>
-        <h2 class="mb-1">
-            <i class="bi bi-folder-fill" style="color: #f59e0b;"></i>
+        <h2 class="mb-2">
             {{ project.name }}
+            {% if project.status == 'completed' %}
+                <span class="badge bg-success">Завершён</span>
+            {% elif project.status == 'paused' %}
+                <span class="badge bg-warning text-dark">Приостановлен</span>
+            {% elif project.status == 'cancelled' %}
+                <span class="badge bg-danger">Отменён</span>
+            {% else %}
+                <span class="badge bg-primary">В работе</span>
+            {% endif %}
         </h2>
-        <p class="text-muted">{{ project.description or 'Нет описания' }}</p>
+        <p class="text-muted mb-2">{{ project.description or 'Нет описания' }}</p>
+
+        <div class="d-flex gap-3 flex-wrap small text-muted mb-2">
+            <span><i class="bi bi-calendar-plus"></i> Создан: {{ project.created_at.strftime('%d.%m.%Y') }}</span>
+            {% if project.start_date %}
+            <span><i class="bi bi-calendar-check"></i> Старт: {{ project.start_date.strftime('%d.%m.%Y') }}</span>
+            {% endif %}
+            {% if project.end_date %}
+            <span class="{% if project_overdue %}text-danger fw-bold{% endif %}">
+                <i class="bi bi-calendar-x"></i> План окончания: {{ project.end_date.strftime('%d.%m.%Y') }}
+                {% if project_overdue %}(просрочен на {{ project_days_overdue }} дн.){% endif %}
+            </span>
+            {% endif %}
+        </div>
+
+        {% if project.customer %}
+            <span class="badge bg-info">
+                <i class="bi bi-buildings"></i> {{ project.customer.name }}
+                {% if project.customer.inn %} · ИНН: {{ project.customer.inn }}{% endif %}
+            </span>
+        {% endif %}
     </div>
-    {% if user_role in ['admin', 'manager'] or user.role == 'admin' %}
-    <a href="{{ url_for('project_settings', project_id=project.id) }}" class="btn btn-outline-primary btn-sm">
-        <i class="bi bi-gear"></i> Управление
-    </a>
+
+    {% if can_manage %}
+    <div class="d-flex flex-wrap gap-2 justify-content-end">
+        <a href="{{ url_for('project_report_pdf', project_id=project.id) }}"
+           class="btn btn-outline-secondary btn-sm"
+           title="Скачать PDF-отчёт по проекту">
+            <i class="bi bi-file-earmark-pdf-fill text-danger"></i> PDF-отчёт
+        </a>
+        <a href="{{ url_for('edit_project', project_id=project.id) }}"
+           class="btn btn-outline-secondary btn-sm"
+           title="Редактировать проект">
+            <i class="bi bi-pencil-fill text-warning"></i> Редактировать
+        </a>
+        <a href="{{ url_for('project_settings', project_id=project.id) }}"
+           class="btn btn-outline-secondary btn-sm"
+           title="Управление командой">
+            <i class="bi bi-gear-fill text-primary"></i> Команда
+        </a>
+        <button type="button" class="btn btn-outline-secondary btn-sm"
+                data-bs-toggle="modal" data-bs-target="#deleteProjectModal"
+                title="Удалить проект">
+            <i class="bi bi-trash-fill text-danger"></i> Удалить
+        </button>
+    </div>
+
+    <!-- Модальное окно удаления -->
+    <div class="modal fade" id="deleteProjectModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="background: var(--danger-light); border-bottom-color: #fecaca;">
+                    <h5 class="modal-title" style="color: var(--danger);">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Удаление проекта
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{{ url_for('delete_project', project_id=project.id) }}">
+                    <div class="modal-body">
+                        <p class="fw-bold" style="color: var(--danger);">
+                            Внимание! Это действие нельзя отменить.
+                        </p>
+                        <p>Будут удалены <strong>все</strong> данные проекта:</p>
+                        <ul>
+                            <li>Задачи ({{ tasks|length }}) и подзадачи</li>
+                            <li>Вехи ({{ milestones|length }})</li>
+                            <li>Отчёты ({{ reports|length }})</li>
+                            <li>To-Do ({{ todos|length }})</li>
+                            <li>Календарь событий ({{ events|length }})</li>
+                            <li>Файлы и папки</li>
+                            <li>Сообщения в чате ({{ messages|length }})</li>
+                            <li>Участники ({{ members|length }})</li>
+                        </ul>
+                        <p>Для подтверждения введите слово <strong>УДАЛИТЬ</strong> заглавными буквами:</p>
+                        <input type="text" name="confirm_text" class="form-control"
+                               placeholder="УДАЛИТЬ" required autocomplete="off">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                            Отмена
+                        </button>
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="bi bi-trash-fill"></i> Удалить проект
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     {% endif %}
 </div>
 
-<!-- Статистика проекта -->
+<!-- ============================================================ -->
+<!-- УВЕДОМЛЕНИЯ О ПРОСРОЧКАХ -->
+<!-- ============================================================ -->
+{% if project_overdue %}
+<div class="alert alert-danger d-flex align-items-center mb-3">
+    <i class="bi bi-exclamation-octagon-fill fs-4 me-3"></i>
+    <div>
+        <strong>Проект просрочен!</strong>
+        Плановое окончание было {{ project.end_date.strftime('%d.%m.%Y') }}
+        ({{ project_days_overdue }} дн. назад).
+    </div>
+</div>
+{% endif %}
+
+{% if overdue_milestones %}
+<div class="alert alert-warning d-flex align-items-start mb-3">
+    <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+    <div style="flex: 1;">
+        <strong>Просроченные вехи ({{ overdue_milestones|length }}):</strong>
+        <ul class="mb-0 mt-1">
+            {% for m in overdue_milestones %}
+            <li>
+                <strong>{{ m.name }}</strong> —
+                дедлайн был {{ m.due_date.strftime('%d.%m.%Y') }},
+                просрочено на <span class="badge bg-danger">{{ m.days_overdue }} дн.</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+
+{% if overdue_tasks %}
+<div class="alert alert-warning d-flex align-items-start mb-3">
+    <i class="bi bi-clock-history fs-4 me-3"></i>
+    <div style="flex: 1;">
+        <strong>Просроченные задачи ({{ overdue_tasks|length }}):</strong>
+        <ul class="mb-0 mt-1">
+            {% for t in overdue_tasks[:5] %}
+            <li>
+                <a href="{{ url_for('view_task', task_id=t.id) }}">{{ t.title }}</a>
+                — дедлайн {{ t.due_date.strftime('%d.%m.%Y') }},
+                просрочено на <span class="badge bg-danger">{{ t.days_overdue }} дн.</span>
+                {% if t.assignee %}({{ t.assignee.first_name }} {{ t.assignee.last_name }}){% endif %}
+            </li>
+            {% endfor %}
+            {% if overdue_tasks|length > 5 %}
+            <li class="text-muted">…и ещё {{ overdue_tasks|length - 5 }}</li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- КАРТОЧКА ЗАКАЗЧИКА -->
+<!-- ============================================================ -->
+{% if project.customer %}
+<div class="card mb-4" style="border-left: 3px solid var(--info);">
+    <div class="card-body">
+        <h6 class="mb-3" style="color: var(--info); display: flex; align-items: center; gap: 8px;">
+            <i class="bi bi-buildings-fill"></i> Заказчик
+        </h6>
+        <div class="row small">
+            <div class="col-md-4 mb-2">
+                <div class="text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Наименование</div>
+                <div style="font-weight: 600;">{{ project.customer.name }}</div>
+            </div>
+            <div class="col-md-2 mb-2">
+                <div class="text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">ИНН</div>
+                <div style="font-weight: 600;">{{ project.customer.inn or '—' }}</div>
+            </div>
+            <div class="col-md-3 mb-2">
+                <div class="text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Контактное лицо</div>
+                <div style="font-weight: 600;">{{ project.customer.contact_person or '—' }}</div>
+            </div>
+            <div class="col-md-3 mb-2">
+                <div class="text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Телефон</div>
+                <div style="font-weight: 600;">{{ project.customer.phone or '—' }}</div>
+            </div>
+            <div class="col-md-4 mb-2">
+                <div class="text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Email</div>
+                <div style="font-weight: 600;">{{ project.customer.email or '—' }}</div>
+            </div>
+            <div class="col-md-8 mb-2">
+                <div class="text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Адрес</div>
+                <div style="font-weight: 600;">{{ project.customer.address or '—' }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- ПРОГРЕСС С ВЕХАМИ -->
+<!-- ============================================================ -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="fw-bold" style="font-size: 15px;">Прогресс проекта</span>
+            <span class="fw-bold" style="font-size: 20px; color: var(--accent);">{{ project.completion_percentage }}%</span>
+        </div>
+
+        <div class="progress" style="height: 10px;">
+            <div class="progress-bar bg-success" style="width: {{ project.completion_percentage }}%;"></div>
+        </div>
+
+        {% if milestones %}
+        <div class="d-flex justify-content-between mt-3" style="font-size: 11px;">
+            {% for m in milestones %}
+                {% set is_current = project.current_milestone and project.current_milestone.id == m.id %}
+                <div class="text-center" style="flex: 1; padding: 0 4px;">
+                    <div class="{% if m.is_completed %}text-success fw-bold{% elif m.is_overdue %}text-danger fw-bold{% elif is_current %}text-primary fw-bold{% else %}text-muted{% endif %}"
+                         {% if is_current %}style="background: var(--accent-light); border-radius: 4px; padding: 2px 4px;"{% endif %}>
+                        {% if m.is_completed %}✔
+                        {% elif m.is_overdue %}⚠
+                        {% elif is_current %}▶ ТЕКУЩАЯ
+                        {% else %}○{% endif %}
+                    </div>
+                    <div class="{% if m.is_completed %}text-success{% elif m.is_overdue %}text-danger{% elif is_current %}text-primary fw-bold{% else %}text-muted{% endif %}" style="font-size: 10px;">
+                        {{ m.name }}
+                    </div>
+                    {% if m.due_date %}
+                        <small class="d-block {% if m.is_overdue %}text-danger fw-bold{% else %}text-muted{% endif %}">
+                            {{ m.due_date.strftime('%d.%m.%Y') }}
+                            {% if m.is_overdue %}
+                                <br>+{{ m.days_overdue }} дн.
+                            {% elif m.days_left is not none and m.days_left <= 3 %}
+                                <br>Осталось: {{ m.days_left }} дн.
+                            {% endif %}
+                        </small>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if can_manage %}
+        <hr style="margin: 20px 0 16px;">
+        <form method="POST" action="{{ url_for('create_milestone', project_id=project.id) }}" class="row g-2">
+            <div class="col-md-5">
+                <input type="text" class="form-control form-control-sm" name="name"
+                       placeholder="Название вехи (напр. 'Фундамент завершён')" required>
+            </div>
+            <div class="col-md-3">
+                <input type="date" class="form-control form-control-sm" name="due_date">
+            </div>
+            <div class="col-md-3">
+                <input type="text" class="form-control form-control-sm" name="description" placeholder="Описание">
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-sm btn-primary w-100" title="Добавить веху">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </div>
+        </form>
+
+        {% if milestones %}
+        <div class="mt-3">
+            {% for m in milestones %}
+            <div class="d-flex align-items-center small mb-1 p-2 rounded
+                {% if m.is_overdue %}bg-danger-subtle border border-danger{% endif %}"
+                style="{% if not m.is_overdue %}background: var(--bg-tertiary);{% endif %}">
+                <form method="POST" action="{{ url_for('toggle_milestone', milestone_id=m.id) }}" class="me-2">
+                    <button type="submit" class="btn btn-sm {% if m.is_completed %}btn-success{% elif m.is_overdue %}btn-danger{% else %}btn-outline-secondary{% endif %}"
+                            style="width: 32px; height: 32px; padding: 0;">
+                        {% if m.is_completed %}<i class="bi bi-check-lg"></i>
+                        {% elif m.is_overdue %}<i class="bi bi-exclamation-triangle-fill"></i>
+                        {% else %}<i class="bi bi-circle"></i>{% endif %}
+                    </button>
+                </form>
+                <span class="{% if m.is_completed %}text-decoration-line-through text-muted{% endif %}" style="flex:1;">
+                    <strong>#{{ m.order_index + 1 }}</strong> {{ m.name }}
+                    {% if m.description %}<em class="text-muted">— {{ m.description }}</em>{% endif %}
+                    {% if m.due_date %}
+                        <small class="text-muted">
+                            · до {{ m.due_date.strftime('%d.%m.%Y') }}
+                            {% if m.is_overdue %}
+                                <span class="badge bg-danger ms-1">просрочено {{ m.days_overdue }} дн.</span>
+                            {% elif m.days_left is not none and m.days_left <= 3 %}
+                                <span class="badge bg-warning ms-1">осталось {{ m.days_left }} дн.</span>
+                            {% endif %}
+                        </small>
+                    {% endif %}
+                </span>
+                <form method="POST" action="{{ url_for('delete_milestone', milestone_id=m.id) }}">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary"
+                            style="width: 32px; height: 32px; padding: 0;"
+                            onclick="return confirm('Удалить веху?')">
+                        <i class="bi bi-trash-fill text-danger"></i>
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- СТАТИСТИКА -->
+<!-- ============================================================ -->
 <div class="row g-3 mb-4">
-    <div class="col-md-3 col-6">
+    <div class="col">
         <div class="stat-card">
-            <div class="stat-icon" style="background: #e0e7ff; color: #4f46e5;">
+            <div class="stat-icon" style="background: var(--accent-light); color: var(--accent);">
                 <i class="bi bi-list-task"></i>
             </div>
             <div class="stat-number">{{ tasks|length }}</div>
             <div class="stat-label">Всего задач</div>
         </div>
     </div>
-    <div class="col-md-3 col-6">
+    <div class="col">
         <div class="stat-card">
-            <div class="stat-icon" style="background: #d1fae5; color: #10b981;">
+            <div class="stat-icon" style="background: var(--success-light); color: var(--success);">
                 <i class="bi bi-check-circle-fill"></i>
             </div>
             <div class="stat-number">{{ tasks|selectattr('status', 'equalto', 'completed')|list|length }}</div>
             <div class="stat-label">Завершено</div>
         </div>
     </div>
-    <div class="col-md-3 col-6">
+    <div class="col">
         <div class="stat-card">
-            <div class="stat-icon" style="background: #fef3c7; color: #f59e0b;">
+            <div class="stat-icon" style="background: var(--warning-light); color: #b45309;">
                 <i class="bi bi-clock-fill"></i>
             </div>
             <div class="stat-number">{{ tasks|selectattr('status', 'equalto', 'in_progress')|list|length }}</div>
             <div class="stat-label">В работе</div>
         </div>
     </div>
-    <div class="col-md-3 col-6">
+    <div class="col">
+        <div class="stat-card {% if overdue_milestones or overdue_tasks %}border-danger{% endif %}">
+            <div class="stat-icon" style="background: var(--danger-light); color: var(--danger);">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+            <div class="stat-number" style="color: var(--danger);">
+                {{ overdue_milestones|length + overdue_tasks|length }}
+            </div>
+            <div class="stat-label">Просрочено</div>
+        </div>
+    </div>
+    <div class="col">
         <div class="stat-card">
-            <div class="stat-icon" style="background: #fce4ec; color: #ef4444;">
+            <div class="stat-icon" style="background: #fce4ec; color: #be185d;">
                 <i class="bi bi-people-fill"></i>
             </div>
             <div class="stat-number">{{ members|length }}</div>
@@ -56,22 +363,9 @@
     </div>
 </div>
 
-<!-- Прогресс -->
-<div class="card mb-4">
-    <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="fw-bold">Прогресс проекта</span>
-            <span class="fw-bold">{{ project.completion_percentage }}%</span>
-        </div>
-        <div class="progress" style="height: 12px;">
-            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" 
-                 style="width: {{ project.completion_percentage }}%;">
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Вкладки -->
+<!-- ============================================================ -->
+<!-- ВКЛАДКИ -->
+<!-- ============================================================ -->
 <ul class="nav nav-tabs mb-4" id="projectTabs" role="tablist">
     <li class="nav-item">
         <a class="nav-link active" id="tasks-tab" data-bs-toggle="tab" href="#tasks" role="tab">
@@ -79,15 +373,23 @@
         </a>
     </li>
     <li class="nav-item">
+        <a class="nav-link" id="todo-tab" data-bs-toggle="tab" href="#todo" role="tab">
+            <i class="bi bi-check2-square"></i> To-Do <span class="badge bg-secondary">{{ todos|length }}</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="reports-tab" data-bs-toggle="tab" href="#reports" role="tab">
+            <i class="bi bi-file-earmark-text"></i> Отчёты <span class="badge bg-secondary">{{ reports|length }}</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="calendar-tab" data-bs-toggle="tab" href="#calendar" role="tab">
+            <i class="bi bi-calendar3"></i> Календарь <span class="badge bg-secondary">{{ events|length }}</span>
+        </a>
+    </li>
+    <li class="nav-item">
         <a class="nav-link" id="files-tab" data-bs-toggle="tab" href="#files" role="tab">
-            <i class="bi bi-folder"></i> Файлы 
-            <span class="badge bg-secondary">
-                {% set total_files = files|length %}
-                {% for folder in folders %}
-                    {% set total_files = total_files + folder.files|length %}
-                {% endfor %}
-                {{ total_files }}
-            </span>
+            <i class="bi bi-folder"></i> Файлы
         </a>
     </li>
     <li class="nav-item">
@@ -100,12 +402,14 @@
 <div class="row">
     <div class="col-md-8">
         <div class="tab-content">
-            <!-- Вкладка ЗАДАЧИ -->
+
+            <!-- ============================================ -->
+            <!-- ЗАДАЧИ -->
+            <!-- ============================================ -->
             <div class="tab-pane fade show active" id="tasks" role="tabpanel">
-                <!-- Форма создания задачи -->
-                {% if user_role in ['admin', 'manager'] or user.role == 'admin' %}
+                {% if can_manage %}
                 <div class="card mb-4">
-                    <div class="card-header bg-light">
+                    <div class="card-header">
                         <i class="bi bi-plus-circle"></i> Новая задача
                     </div>
                     <div class="card-body">
@@ -118,7 +422,7 @@
                                     <select class="form-select" name="assigned_to">
                                         <option value="">Назначить...</option>
                                         {% for u in all_users %}
-                                            <option value="{{ u.id }}">{{ u.first_name }} {{ u.last_name }}</option>
+                                        <option value="{{ u.id }}">{{ u.first_name }} {{ u.last_name }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -127,13 +431,21 @@
                                 </div>
                                 <div class="col-md-2">
                                     <button type="submit" class="btn btn-primary w-100">
-                                        <i class="bi bi-plus"></i> Создать
+                                        <i class="bi bi-plus-lg"></i> Создать
                                     </button>
                                 </div>
                             </div>
-                            <div class="row mt-2">
-                                <div class="col-md-12">
+                            <div class="row g-2 mt-1">
+                                <div class="col-md-8">
                                     <input type="text" class="form-control" name="description" placeholder="Описание (опционально)">
+                                </div>
+                                <div class="col-md-4">
+                                    <select class="form-select" name="milestone_id">
+                                        <option value="">Веха (опц.)</option>
+                                        {% for m in milestones %}
+                                        <option value="{{ m.id }}">{{ m.name }}</option>
+                                        {% endfor %}
+                                    </select>
                                 </div>
                             </div>
                         </form>
@@ -141,227 +453,526 @@
                 </div>
                 {% endif %}
 
-                <!-- Фильтр задач -->
-                <div class="btn-group btn-group-sm mb-3" role="group">
-                    <button type="button" class="btn btn-outline-secondary active" data-filter="all">Все</button>
-                    <button type="button" class="btn btn-outline-secondary" data-filter="new">🆕 Новые</button>
-                    <button type="button" class="btn btn-outline-secondary" data-filter="in_progress">🔄 В работе</button>
-                    <button type="button" class="btn btn-outline-secondary" data-filter="completed">✅ Завершены</button>
-                </div>
-
-                <!-- Список задач -->
-                {% if tasks %}
-                    {% for task in tasks %}
-                    <div class="card task-card mb-3 {% if task.status == 'completed' %}completed{% elif task.status == 'in_progress' %}in_progress{% endif %}" data-status="{{ task.status }}">
-                        <div class="card-body">
-                            <div class="row align-items-start">
-                                <div class="col-md-6">
-                                    <a href="{{ url_for('view_task', task_id=task.id) }}" class="text-decoration-none text-dark">
-                                        <strong>{{ task.title }}</strong>
-                                    </a>
-                                    <br>
-                                    <small class="text-muted">{{ task.description or '' }}</small>
-                                    {% if task.assigned_to %}
-                                        <br><small><i class="bi bi-person"></i> {{ task.assignee.first_name }} {{ task.assignee.last_name }}</small>
+                {% for task in tasks %}
+                <div class="card task-card mb-3 {% if task.status == 'completed' %}completed{% elif task.status == 'in_progress' %}in_progress{% endif %} {% if task.is_overdue %}border-danger{% endif %}">
+                    <div class="card-body">
+                        <div class="row align-items-start g-2">
+                            <div class="col-md-7">
+                                <a href="{{ url_for('view_task', task_id=task.id) }}" class="text-decoration-none text-dark">
+                                    <strong>{{ task.title }}</strong>
+                                </a>
+                                {% if task.description %}<br><small class="text-muted">{{ task.description }}</small>{% endif %}
+                                <div class="d-flex gap-2 mt-2 flex-wrap">
+                                    {% if task.assignee %}
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-person-fill"></i> {{ task.assignee.first_name }} {{ task.assignee.last_name }}
+                                    </span>
+                                    {% endif %}
+                                    {% if task.milestone %}
+                                    <span class="badge bg-info">
+                                        <i class="bi bi-flag-fill"></i> {{ task.milestone.name }}
+                                    </span>
                                     {% endif %}
                                     {% if task.subtasks %}
-                                        <br><small><i class="bi bi-diagram-3"></i> {{ task.subtasks|length }} подзадач</small>
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-diagram-3"></i> {{ task.subtasks|length }} подзадач
+                                    </span>
                                     {% endif %}
                                 </div>
-                                <div class="col-md-3">
-                                    <small>
-                                        <i class="bi bi-calendar"></i> Начало: {{ task.start_date.strftime('%d.%m') }}
-                                        {% if task.due_date %}
-                                            <br><i class="bi bi-calendar-check"></i> Дедлайн: {{ task.due_date.strftime('%d.%m.%Y') }}
-                                            {% if task.due_date < now and task.status != 'completed' %}
-                                                <span class="badge bg-danger">Просрочена</span>
+                                {% if task.due_date %}
+                                    <div class="mt-2 small {% if task.is_overdue %}text-danger fw-bold{% else %}text-muted{% endif %}">
+                                        <i class="bi bi-calendar-event"></i> Дедлайн: {{ task.due_date.strftime('%d.%m.%Y') }}
+                                        {% if task.is_overdue %}
+                                            <span class="badge bg-danger ms-1">
+                                                <i class="bi bi-exclamation-triangle"></i>
+                                                Просрочена на {{ task.days_overdue }} дн.
+                                            </span>
+                                        {% elif task.status != 'completed' %}
+                                            {% set days_left = (task.due_date - now).days %}
+                                            {% if days_left <= 3 and days_left >= 0 %}
+                                                <span class="badge bg-warning ms-1">
+                                                    <i class="bi bi-clock"></i> Осталось {{ days_left }} дн.
+                                                </span>
                                             {% endif %}
                                         {% endif %}
-                                    </small>
-                                </div>
-                                <div class="col-md-3">
+                                    </div>
+                                {% endif %}
+
+                                <!-- Комментарий к просроченной задаче -->
+                                {% if task.is_overdue %}
+                                <form method="POST" action="{{ url_for('update_task_comment', task_id=task.id) }}" class="mt-2">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-warning-subtle">
+                                            <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                                        </span>
+                                        <input type="text" name="comment" class="form-control"
+                                               placeholder="Причина просрочки..."
+                                               value="{{ task.comment or '' }}"
+                                               style="font-size: 12px;">
+                                        <button type="submit" class="btn btn-outline-secondary">
+                                            <i class="bi bi-save" style="font-size: 11px;"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-5">
+                                <div class="d-flex gap-1 justify-content-end align-items-center">
                                     <form method="POST" action="{{ url_for('update_task_status', task_id=task.id) }}" class="d-inline">
-                                        <select name="status" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
+                                        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()" style="width: auto;">
                                             <option value="new" {% if task.status == 'new' %}selected{% endif %}>🆕 Новая</option>
                                             <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>🔄 В работе</option>
                                             <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>✅ Завершена</option>
                                         </select>
                                     </form>
-                                    <div class="mt-1">
-                                        {% if user_role in ['admin', 'manager'] or user.role == 'admin' %}
-                                        <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" class="d-inline">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить задачу?')">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
-                                        {% endif %}
-                                        <a href="{{ url_for('view_task', task_id=task.id) }}" class="btn btn-sm btn-outline-info">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                    </div>
+                                    <a href="{{ url_for('view_task', task_id=task.id) }}" class="btn btn-sm btn-outline-secondary" title="Открыть">
+                                        <i class="bi bi-eye-fill text-info"></i>
+                                    </a>
+                                    {% if can_manage %}
+                                    <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                                onclick="return confirm('Удалить задачу?')" title="Удалить">
+                                            <i class="bi bi-trash-fill text-danger"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
                                 </div>
                             </div>
-                            
-                            <!-- Прогресс задачи (подзадачи) -->
-                            {% if task.subtasks %}
-                            <div class="mt-2">
-                                {% set completed_subtasks = task.subtasks|selectattr('status', 'equalto', 'completed')|list|length %}
-                                {% set total_subtasks = task.subtasks|length %}
-                                {% set subtask_percentage = (completed_subtasks / total_subtasks * 100)|int %}
-                                <div class="d-flex justify-content-between small">
-                                    <span>Прогресс задачи</span>
-                                    <span>{{ subtask_percentage }}% ({{ completed_subtasks }}/{{ total_subtasks }})</span>
-                                </div>
-                                <div class="progress" style="height: 4px;">
-                                    <div class="progress-bar bg-info" style="width: {{ subtask_percentage }}%;"></div>
-                                </div>
-                            </div>
-                            {% endif %}
                         </div>
+                        {% if task.subtasks %}
+                        {% set completed_subtasks = task.subtasks|selectattr('status', 'equalto', 'completed')|list|length %}
+                        {% set total_subtasks = task.subtasks|length %}
+                        {% set subtask_percentage = (completed_subtasks / total_subtasks * 100)|int %}
+                        <div class="mt-3">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-muted">Прогресс подзадач</span>
+                                <span class="fw-bold">{{ subtask_percentage }}% ({{ completed_subtasks }}/{{ total_subtasks }})</span>
+                            </div>
+                            <div class="progress" style="height: 4px;">
+                                <div class="progress-bar bg-info" style="width: {{ subtask_percentage }}%;"></div>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endfor %}
+                </div>
                 {% else %}
-                    <div class="alert alert-secondary text-center">
-                        <i class="bi bi-inbox" style="font-size: 32px; display: block;"></i>
-                        Задач пока нет
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-list-task"></i>
                     </div>
-                {% endif %}
+                    <h5>Задач пока нет</h5>
+                    <p>Создайте первую задачу и назначьте исполнителя</p>
+                </div>
+                {% endfor %}
             </div>
 
-            <!-- Вкладка ФАЙЛЫ -->
+            <!-- ============================================ -->
+            <!-- TO-DO -->
+            <!-- ============================================ -->
+            <div class="tab-pane fade" id="todo" role="tabpanel">
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-check2-square"></i> To-Do лист проекта</span>
+                        {% if todo_stats and todo_stats.total > 0 %}
+                        <div class="d-flex gap-2 small">
+                            <span class="badge bg-success" title="Выполнено">✅ {{ todo_stats.done }}</span>
+                            <span class="badge bg-danger" title="Просрочено">⚠️ {{ todo_stats.overdue }}</span>
+                            <span class="badge bg-secondary" title="Не начато">⚪ {{ todo_stats.new }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('create_todo', project_id=project.id) }}" class="row g-2 mb-3">
+                            <div class="col-md-5">
+                                <input type="text" class="form-control" name="title"
+                                       placeholder="Что нужно сделать?" required>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" name="assigned_to">
+                                    <option value="">Кто делает?</option>
+                                    {% for m in members %}
+                                    <option value="{{ m.user.id }}">{{ m.user.first_name }} {{ m.user.last_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="date" class="form-control" name="due_date">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-plus-lg"></i> Добавить
+                                </button>
+                            </div>
+                        </form>
+
+                        <ul class="list-group list-group-flush">
+                            {% for todo in todos %}
+                            <li class="list-group-item px-0 {% if todo.is_done %}bg-success-subtle{% elif todo.is_overdue %}bg-danger-subtle{% endif %}">
+                                <div class="d-flex align-items-start gap-2">
+                                    <form method="POST" action="{{ url_for('toggle_todo', todo_id=todo.id) }}">
+                                        <button type="submit" class="btn btn-sm {% if todo.is_done %}btn-success{% else %}btn-outline-secondary{% endif %}"
+                                                style="width: 32px; height: 32px; padding: 0;">
+                                            {% if todo.is_done %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-circle"></i>{% endif %}
+                                        </button>
+                                    </form>
+                                    <div style="flex: 1;">
+                                        <span class="{% if todo.is_done %}text-decoration-line-through text-muted{% endif %}">
+                                            {{ todo.title }}
+                                        </span>
+                                        <div class="mt-1 small">
+                                            {% if todo.todo_assignee %}
+                                            <span class="badge bg-secondary">
+                                                <i class="bi bi-person"></i> {{ todo.todo_assignee.first_name }} {{ todo.todo_assignee.last_name }}
+                                            </span>
+                                            {% endif %}
+                                            {% if todo.due_date %}
+                                            <span class="badge {% if todo.is_overdue %}bg-danger{% else %}bg-secondary{% endif %}">
+                                                <i class="bi bi-calendar-event"></i> {{ todo.due_date.strftime('%d.%m.%Y') }}
+                                                {% if todo.is_overdue %}· +{{ todo.days_overdue }} дн.{% endif %}
+                                            </span>
+                                            {% endif %}
+                                            {% if todo.is_done and todo.done_at %}
+                                            <span class="badge bg-success">
+                                                ✔ {{ todo.done_at.strftime('%d.%m %H:%M') }}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+
+                                        <!-- Комментарий к просроченной To-Do -->
+                                        {% if todo.is_overdue %}
+                                        <form method="POST" action="{{ url_for('update_todo_comment', todo_id=todo.id) }}"
+                                              class="mt-2">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-warning-subtle">
+                                                    <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                                                </span>
+                                                <input type="text" name="comment" class="form-control"
+                                                       placeholder="Причина просрочки..."
+                                                       value="{{ todo.comment or '' }}"
+                                                       style="font-size: 12px;">
+                                                <button type="submit" class="btn btn-outline-secondary">
+                                                    <i class="bi bi-save" style="font-size: 11px;"></i>
+                                                </button>
+                                            </div>
+                                        </form>
+                                        {% elif todo.comment %}
+                                        <div class="mt-2 p-2 rounded" style="background: var(--bg-tertiary); font-size: 12px;">
+                                            <i class="bi bi-chat-text text-muted"></i> {{ todo.comment }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% if can_manage %}
+                                    <form method="POST" action="{{ url_for('delete_todo', todo_id=todo.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                                style="width: 32px; height: 32px; padding: 0;">
+                                            <i class="bi bi-trash-fill text-danger"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </li>
+                            {% else %}
+                            <li class="list-group-item text-muted text-center py-4 px-0">
+                                <i class="bi bi-inbox" style="font-size: 32px; display: block; margin-bottom: 8px; opacity: 0.3;"></i>
+                                Список пуст
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- ОТЧЁТЫ -->
+            <!-- ============================================ -->
+            <div class="tab-pane fade" id="reports" role="tabpanel">
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-file-earmark-text"></i> Отчёты по проекту</span>
+                        <a href="{{ url_for('project_report_pdf', project_id=project.id) }}"
+                           class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-file-earmark-pdf-fill text-danger"></i> Скачать PDF
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('create_report', project_id=project.id) }}" class="mb-4">
+                            <div class="row g-2">
+                                <div class="col-md-8">
+                                    <input type="text" class="form-control" name="title"
+                                           placeholder="Заголовок отчёта" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <select class="form-select" name="milestone_id">
+                                        <option value="">Веха (опц.)</option>
+                                        {% for m in milestones %}
+                                        <option value="{{ m.id }}">{{ m.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="col-md-5">
+                                    <label class="form-label">Статус / причина срыва</label>
+                                    <select name="reason" class="form-select">
+                                        <option value="on_track">✅ Всё по плану</option>
+                                        <option value="delay_supply">⚠️ Задержка поставки</option>
+                                        <option value="scope_change">📝 Изменение ТЗ</option>
+                                        <option value="contractor">👷 Проблема с подрядчиком</option>
+                                        <option value="force_majeure">🚨 Форс-мажор</option>
+                                        <option value="budget">💰 Проблемы с бюджетом</option>
+                                        <option value="other">❓ Другое</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Задержка (дней)</label>
+                                    <input type="number" name="delay_days" class="form-control" value="0" min="0">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Причина подробно</label>
+                                    <input type="text" name="reason_detail" class="form-control"
+                                           placeholder="Кратко опишите причину">
+                                </div>
+
+                                <div class="col-12">
+                                    <textarea class="form-control" name="content" rows="3"
+                                              placeholder="Содержание отчёта..."></textarea>
+                                </div>
+                                <div class="col-12 text-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-save"></i> Сохранить отчёт
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+
+                        {% for r in reports %}
+                        <div class="card mb-2" style="background: var(--bg-tertiary); border: 1px solid var(--border-light);">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <strong>{{ r.title }}</strong>
+                                        <span class="badge bg-{{ r.reason_color }}">{{ r.reason_display[0] }}</span>
+                                        {% if r.delay_days and r.delay_days > 0 %}
+                                        <span class="badge bg-danger">Задержка: {{ r.delay_days }} дн.</span>
+                                        {% endif %}
+                                        {% if r.milestone %}
+                                        <span class="badge bg-info">Веха: {{ r.milestone.name }}</span>
+                                        {% endif %}
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="bi bi-person"></i> {{ r.report_author.first_name }} {{ r.report_author.last_name }}
+                                            · {{ r.created_at.strftime('%d.%m.%Y %H:%M') }}
+                                        </small>
+                                    </div>
+                                    {% if can_manage or r.author_id == user.id %}
+                                    <form method="POST" action="{{ url_for('delete_report', report_id=r.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                                style="width: 32px; height: 32px; padding: 0;"
+                                                onclick="return confirm('Удалить отчёт?')">
+                                            <i class="bi bi-trash-fill text-danger"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                                {% if r.reason_detail %}
+                                <div class="mt-2 p-2 rounded bg-light small">
+                                    <strong>Причина:</strong> {{ r.reason_detail }}
+                                </div>
+                                {% endif %}
+                                {% if r.content %}
+                                <hr>
+                                <div style="white-space: pre-wrap;">{{ r.content }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-file-earmark-text" style="font-size: 32px; display: block; margin-bottom: 8px; opacity: 0.3;"></i>
+                            Отчётов пока нет
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- КАЛЕНДАРЬ -->
+            <!-- ============================================ -->
+            <div class="tab-pane fade" id="calendar" role="tabpanel">
+
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-calendar3"></i> Календарь событий</span>
+                        {% if can_manage %}
+                        <button type="button" class="btn btn-primary btn-sm"
+                                data-bs-toggle="modal" data-bs-target="#createEventModal">
+                            <i class="bi bi-plus-lg"></i> Новое событие
+                        </button>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap gap-3 mb-3 small text-muted">
+                            <span><span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #5b5bd6; vertical-align: middle;"></span> События проекта</span>
+                            <span><span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #8b5cf6; vertical-align: middle;"></span> Личные</span>
+                            <span><span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #dc2626; vertical-align: middle;"></span> Просроченные задачи</span>
+                            <span><span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #16a34a; vertical-align: middle;"></span> Завершено</span>
+                        </div>
+                        <div class="small text-muted mb-3">
+                            <i class="bi bi-info-circle"></i>
+                            Клик по дню — просмотр и создание события
+                        </div>
+                        <div id="calendar"></div>
+                    </div>
+                </div>
+
+                <h5 class="mb-3"><i class="bi bi-list-ul"></i> Общие события ({{ events|length }})</h5>
+                {% for e in events %}
+                <div class="card mb-2 {% if e.start_time < now %}opacity-50{% endif %}">
+                    <div class="card-body py-2 d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-3">
+                            <div style="width: 4px; height: 40px; border-radius: 2px; background: {{ e.color_hex }};"></div>
+                            <div>
+                                <strong>{{ e.title }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar-event"></i>
+                                    {% if e.all_day %}
+                                        {{ e.start_time.strftime('%d.%m.%Y') }} (весь день)
+                                    {% else %}
+                                        {{ e.start_time.strftime('%d.%m.%Y %H:%M') }}
+                                        {% if e.end_time %} — {{ e.end_time.strftime('%H:%M') }}{% endif %}
+                                    {% endif %}
+                                    {% if e.creator %} · {{ e.creator.first_name }} {{ e.creator.last_name }}{% endif %}
+                                </small>
+                                {% if e.description %}
+                                <br><small class="text-muted">{{ e.description }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if can_manage or e.created_by == user.id %}
+                        <form method="POST" action="{{ url_for('delete_event', event_id=e.id) }}">
+                            <button type="submit" class="btn btn-outline-secondary btn-sm"
+                                    style="width: 32px; height: 32px; padding: 0;"
+                                    onclick="return confirm('Удалить событие?')">
+                                <i class="bi bi-trash-fill text-danger"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-calendar-x"></i>
+                    </div>
+                    <h5>Событий пока нет</h5>
+                    <p>Создайте первое событие в календаре</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- ============================================ -->
+            <!-- ФАЙЛЫ -->
+            <!-- ============================================ -->
             <div class="tab-pane fade" id="files" role="tabpanel">
-                <h5><i class="bi bi-folder"></i> Папки и файлы</h5>
-                
-                <!-- Форма создания папки -->
                 <div class="card mb-3">
                     <div class="card-body">
-                        <form method="POST" action="{{ url_for('create_folder', project_id=project.id) }}" class="row g-2">
+                        <form method="POST" action="{{ url_for('create_folder', project_id=project.id) }}" class="row g-2 mb-2">
                             <div class="col-md-8">
                                 <input type="text" class="form-control" name="name" placeholder="Название папки" required>
                             </div>
                             <div class="col-md-4">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="bi bi-folder-plus"></i> Создать
+                                <button type="submit" class="btn btn-outline-secondary w-100">
+                                    <i class="bi bi-folder-plus text-warning"></i> Создать папку
                                 </button>
                             </div>
                         </form>
-                    </div>
-                </div>
-
-                <!-- Загрузка файла -->
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <form method="POST" action="{{ url_for('upload_file', project_id=project.id) }}" enctype="multipart/form-data" class="row g-2">
+                        <form method="POST" action="{{ url_for('upload_file', project_id=project.id) }}"
+                              enctype="multipart/form-data" class="row g-2">
                             <div class="col-md-8">
                                 <input type="file" class="form-control" name="file" required>
                             </div>
                             <div class="col-md-4">
-                                <button type="submit" class="btn btn-success w-100">
-                                    <i class="bi bi-cloud-upload"></i> Загрузить
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-upload"></i> Загрузить
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
 
-                <!-- Список папок -->
-                {% if folders %}
-                <h6 class="mt-3"><i class="bi bi-folder"></i> Папки</h6>
-                <div class="list-group mb-3">
-                    {% for folder in folders %}
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                        <a href="{{ url_for('view_folder', folder_id=folder.id) }}" class="text-decoration-none flex-grow-1">
-                            <i class="bi bi-folder-fill text-warning"></i> {{ folder.name }}
-                            <span class="badge bg-secondary">
-                                <i class="bi bi-file"></i> {{ folder.files|length }}
-                            </span>
+                {% for folder in folders %}
+                <div class="card mb-2">
+                    <div class="card-body py-2 d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('view_folder', folder_id=folder.id) }}" class="text-decoration-none">
+                            <i class="bi bi-folder-fill text-warning"></i> <strong>{{ folder.name }}</strong>
+                            <span class="badge bg-secondary ms-2">{{ folder.files|length }}</span>
                         </a>
-                        <div>
-                            <a href="{{ url_for('view_folder', folder_id=folder.id) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-folder-open"></i>
-                            </a>
-                            {% if user_role in ['admin', 'manager'] or user.role == 'admin' %}
-                            <form method="POST" action="{{ url_for('delete_folder', folder_id=folder.id) }}" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить папку и всё её содержимое?')">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                            {% endif %}
-                        </div>
+                        {% if can_manage %}
+                        <form method="POST" action="{{ url_for('delete_folder', folder_id=folder.id) }}">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                    style="width: 32px; height: 32px; padding: 0;"
+                                    onclick="return confirm('Удалить папку?')">
+                                <i class="bi bi-trash-fill text-danger"></i>
+                            </button>
+                        </form>
+                        {% endif %}
                     </div>
-                    {% endfor %}
                 </div>
-                {% endif %}
+                {% endfor %}
 
-                <!-- Список файлов -->
-                {% if files %}
-                <h6 class="mt-3"><i class="bi bi-file"></i> Файлы</h6>
-                <div class="list-group">
-                    {% for file in files %}
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                {% for file in files %}
+                <div class="card mb-2">
+                    <div class="card-body py-2 d-flex justify-content-between align-items-center">
                         <div>
                             <i class="bi bi-file-earmark"></i>
                             <a href="{{ url_for('download_file', file_id=file.id) }}" class="text-decoration-none">
                                 {{ file.original_name }}
                             </a>
-                            <small class="text-muted ms-2">
-                                ({{ (file.file_size / 1024)|round(1) }} KB)
-                            </small>
-                            <br>
-                            <small class="text-muted">
-                                Загрузил: {{ file.uploader.first_name }} {{ file.uploader.last_name }}
-                            </small>
+                            <small class="text-muted">({{ (file.file_size / 1024)|round(1) }} KB)</small>
                         </div>
-                        <div>
-                            <a href="{{ url_for('download_file', file_id=file.id) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-download"></i>
-                            </a>
-                            <form method="POST" action="{{ url_for('delete_file', file_id=file.id) }}" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить файл?')">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                        </div>
+                        <form method="POST" action="{{ url_for('delete_file', file_id=file.id) }}">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                    style="width: 32px; height: 32px; padding: 0;">
+                                <i class="bi bi-trash-fill text-danger"></i>
+                            </button>
+                        </form>
                     </div>
-                    {% endfor %}
                 </div>
-                {% endif %}
+                {% endfor %}
 
                 {% if not folders and not files %}
-                <div class="alert alert-secondary text-center">
-                    <i class="bi bi-folder" style="font-size: 32px; display: block;"></i>
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-folder" style="font-size: 32px; display: block; margin-bottom: 8px; opacity: 0.3;"></i>
                     Нет файлов и папок
                 </div>
                 {% endif %}
             </div>
 
-            <!-- Вкладка ЧАТ -->
+            <!-- ============================================ -->
+            <!-- ЧАТ -->
+            <!-- ============================================ -->
             <div class="tab-pane fade" id="chat" role="tabpanel">
                 <div class="card">
-                    <div class="card-header bg-light">
+                    <div class="card-header">
                         <i class="bi bi-chat-dots"></i> Чат проекта
                     </div>
                     <div class="card-body">
                         <div id="chatBox" class="chat-box mb-3" style="height: 400px;">
                             {% for msg in messages %}
-                                <div class="message">
-                                    <span class="author">{{ msg.author.first_name }} {{ msg.author.last_name }}</span>
-                                    <span class="time">{{ msg.created_at.strftime('%H:%M %d.%m.%Y') }}</span>
-                                    <br>
-                                    {{ msg.text }}
-                                </div>
+                            <div class="message">
+                                <span class="author">{{ msg.author.first_name }} {{ msg.author.last_name }}</span>
+                                <span class="time">{{ msg.created_at.strftime('%H:%M %d.%m.%Y') }}</span>
+                                <br>{{ msg.text }}
+                            </div>
                             {% else %}
-                                <div class="text-muted text-center py-5">
-                                    <i class="bi bi-chat" style="font-size: 32px; display: block;"></i>
-                                    Сообщений пока нет
-                                </div>
+                            <div class="text-muted text-center py-5">Сообщений пока нет</div>
                             {% endfor %}
                         </div>
                         <form method="POST" action="{{ url_for('send_message', project_id=project.id) }}">
                             <div class="input-group">
                                 <input type="text" class="form-control" name="message" placeholder="Напишите сообщение..." required>
                                 <button class="btn btn-primary" type="submit">
-                                    <i class="bi bi-send"></i> Отправить
+                                    <i class="bi bi-send-fill"></i> Отправить
                                 </button>
                             </div>
                         </form>
@@ -371,135 +982,376 @@
         </div>
     </div>
 
-    <!-- Правая колонка -->
+    <!-- ============================================================ -->
+    <!-- ПРАВАЯ КОЛОНКА -->
+    <!-- ============================================================ -->
     <div class="col-md-4">
-        <!-- Участники -->
         <div class="card mb-3">
-            <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-people"></i> Участники ({{ members|length }})</span>
-                {% if user_role in ['admin', 'manager'] or user.role == 'admin' %}
-                <a href="{{ url_for('project_settings', project_id=project.id) }}" class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-gear"></i>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-people-fill"></i> Команда ({{ members|length }})</span>
+                {% if can_manage %}
+                <a href="{{ url_for('project_settings', project_id=project.id) }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-gear-fill text-primary"></i>
                 </a>
                 {% endif %}
             </div>
             <div class="card-body">
-                <ul class="list-unstyled">
-                    {% for member in members %}
-                        <li class="mb-2">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <i class="bi bi-person-circle"></i> 
-                                    {{ member.user.first_name }} {{ member.user.last_name }}
-                                    {% if member.user.id == project.created_by %}
-                                        <span class="badge bg-primary">Создатель</span>
-                                    {% endif %}
-                                </div>
-                                <span class="badge {% if member.role_in_project == 'admin' %}bg-danger{% elif member.role_in_project == 'manager' %}bg-warning{% else %}bg-secondary{% endif %}">
-                                    {{ member.role_in_project }}
-                                </span>
-                            </div>
-                        </li>
-                    {% endfor %}
-                </ul>
+                {% for m in members %}
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="flex-grow-1" style="min-width: 0;">
+                        <a href="{{ url_for('employee_report_view', project_id=project.id, user_id=m.user.id) }}"
+                           class="text-decoration-none text-dark fw-bold small d-block"
+                           title="Отчёт по сотруднику в этом проекте">
+                            <i class="bi bi-person-circle"></i>
+                            {{ m.user.first_name }} {{ m.user.last_name }}
+                            {% if m.user.id == project.created_by %}
+                            <span class="badge bg-primary" style="font-size: 9px;">Создатель</span>
+                            {% endif %}
+                        </a>
+                        <a href="{{ url_for('user_all_tasks', user_id=m.user.id) }}"
+                           class="text-muted small text-decoration-none ms-4"
+                           title="Все задачи сотрудника по всем проектам">
+                            <i class="bi bi-list-check"></i> все задачи
+                        </a>
+                    </div>
+                    <div class="d-flex flex-column align-items-end gap-1">
+                        <span class="badge
+                            {% if m.role_in_project == 'admin' %}bg-danger
+                            {% elif m.role_in_project == 'manager' %}bg-warning text-dark
+                            {% elif m.role_in_project == 'chief_engineer' %}bg-info
+                            {% elif m.role_in_project == 'logistic' %}bg-success
+                            {% else %}bg-secondary{% endif %}">
+                            {{ m.role_display }}
+                        </span>
+                        <a href="{{ url_for('employee_report_pdf', project_id=project.id, user_id=m.user.id) }}"
+                           class="btn btn-sm btn-outline-secondary p-0 px-1"
+                           style="font-size: 10px; height: 22px;"
+                           title="PDF-отчёт по сотруднику">
+                            <i class="bi bi-file-pdf-fill text-danger"></i>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
         </div>
 
-        <!-- Другие проекты -->
         <div class="card">
-            <div class="card-header bg-light">
-                <i class="bi bi-folder"></i> Другие проекты
+            <div class="card-header">
+                <i class="bi bi-folder-fill text-warning"></i> Другие проекты
             </div>
             <div class="card-body">
-                {% set other_projects = [] %}
-                {% for p in all_user_projects %}
+                {% set has_others = false %}
+                {% for p in projects %}
                     {% if p.id != project.id %}
-                        {% set other_projects = other_projects + [p] %}
+                        {% set has_others = true %}
+                        <a href="{{ url_for('view_project', project_id=p.id) }}" class="text-decoration-none">
+                            <div class="d-flex justify-content-between align-items-center p-2 mb-1 rounded" style="background: var(--bg-tertiary);">
+                                <span class="text-truncate" style="color: var(--text-primary);">
+                                    <i class="bi bi-folder-fill text-warning"></i> {{ p.name }}
+                                </span>
+                                <span class="badge bg-secondary">{{ p.completion_percentage }}%</span>
+                            </div>
+                        </a>
                     {% endif %}
                 {% endfor %}
-                
-                {% if other_projects %}
-                    <ul class="list-unstyled">
-                        {% for p in other_projects[:5] %}
-                            <li class="mb-2">
-                                <a href="{{ url_for('view_project', project_id=p.id) }}" class="text-decoration-none">
-                                    <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background: #f8f9fa;">
-                                        <div>
-                                            <i class="bi bi-folder-fill" style="color: #f59e0b;"></i>
-                                            <span class="ms-1">{{ p.name }}</span>
-                                        </div>
-                                        <span class="badge bg-secondary">{{ p.completion_percentage }}%</span>
-                                    </div>
-                                </a>
-                            </li>
-                        {% endfor %}
-                        {% if other_projects|length > 5 %}
-                            <li class="text-center mt-2">
-                                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary btn-sm w-100">
-                                    <i class="bi bi-grid"></i> Все проекты
-                                </a>
-                            </li>
-                        {% endif %}
-                    </ul>
-                {% else %}
-                    <div class="text-muted text-center">
-                        <i class="bi bi-folder" style="font-size: 24px; display: block;"></i>
-                        Нет других проектов
-                    </div>
-                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary btn-sm w-100 mt-2">
-                        <i class="bi bi-grid"></i> Все проекты
-                    </a>
+                {% if not has_others %}
+                <div class="text-muted text-center small py-3">
+                    <i class="bi bi-folder" style="font-size: 24px; display: block; margin-bottom: 4px; opacity: 0.3;"></i>
+                    Нет других проектов
+                </div>
+                {% endif %}
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm w-100 mt-2">
+                    <i class="bi bi-grid"></i> Все проекты
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- МОДАЛЬНОЕ ОКНО: ПРОСМОТР ДНЯ -->
+<!-- ============================================================ -->
+<div class="modal fade" id="dayModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-calendar-event"></i>
+                    <span id="dayModalTitle">Дата</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="dayModalEvents"></div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Закрыть
+                </button>
+                {% if can_manage %}
+                <button type="button" class="btn btn-primary" onclick="createEventFromDay()">
+                    <i class="bi bi-plus-lg"></i> Добавить событие
+                </button>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
 
+<!-- ============================================================ -->
+<!-- МОДАЛЬНОЕ ОКНО: СОЗДАНИЕ СОБЫТИЯ -->
+<!-- ============================================================ -->
+{% if can_manage %}
+<div class="modal fade" id="createEventModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-calendar-plus"></i> Новое событие проекта
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('create_event', project_id=project.id) }}">
+                <div class="modal-body">
+                    <p class="text-muted small">
+                        <i class="bi bi-info-circle"></i> Это событие увидят все участники проекта.
+                    </p>
+
+                    <div class="mb-3">
+                        <label class="form-label">Название *</label>
+                        <input type="text" name="title" class="form-control"
+                               placeholder="Например: Планёрка по проекту" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Описание</label>
+                        <textarea name="description" class="form-control" rows="2"
+                                  placeholder="Повестка или заметки..."></textarea>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="all_day" id="allDayCheck"
+                               onchange="toggleTimeFields()">
+                        <label class="form-check-label" for="allDayCheck">
+                            Весь день (без указания времени)
+                        </label>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Начало *</label>
+                            <input type="datetime-local" name="start_time" id="startTimeField"
+                                   class="form-control" required>
+                            <input type="date" name="start_time" id="startDateField"
+                                   class="form-control" style="display: none;">
+                        </div>
+                        <div class="col-md-6 mb-3" id="endTimeBlock">
+                            <label class="form-label">Окончание</label>
+                            <input type="datetime-local" name="end_time" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Цвет</label>
+                        <div class="d-flex gap-2">
+                            {% for color, hex in [('blue', '#5b5bd6'), ('green', '#16a34a'), ('red', '#dc2626'), ('orange', '#f59e0b'), ('purple', '#8b5cf6'), ('teal', '#0891b2')] %}
+                            <label style="cursor: pointer;">
+                                <input type="radio" name="color" value="{{ color }}"
+                                       {% if loop.first %}checked{% endif %}
+                                       style="display: none;"
+                                       onchange="updateColorSelection(this)">
+                                <span class="color-dot {% if loop.first %}selected{% endif %}"
+                                      style="background: {{ hex }};"></span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Создать
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- SCRIPTS -->
+<!-- ============================================================ -->
 <script>
-// Фильтр задач
-document.addEventListener('DOMContentLoaded', function() {
-    const filterButtons = document.querySelectorAll('[data-filter]');
-    const taskCards = document.querySelectorAll('.task-card');
-    
-    filterButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            filterButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-            
-            const filter = this.dataset.filter;
-            
-            taskCards.forEach(card => {
-                if (filter === 'all') {
-                    card.style.display = '';
-                } else {
-                    const status = card.dataset.status;
-                    if (status === filter) {
-                        card.style.display = '';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                }
-            });
-        });
+let calendarInitialized = false;
+let currentCalendar = null;
+let selectedDateStr = null;
+
+function initCalendar() {
+    if (calendarInitialized) return;
+
+    const calendarEl = document.getElementById('calendar');
+    if (!calendarEl || typeof FullCalendar === 'undefined') return;
+
+    currentCalendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'ru',
+        height: 'auto',
+        firstDay: 1,
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,listWeek'
+        },
+        buttonText: {
+            today: 'Сегодня',
+            month: 'Месяц',
+            week: 'Неделя',
+            list: 'Список'
+        },
+        events: '{{ url_for("events_json", project_id=project.id) }}',
+
+        dateClick: function(info) {
+            openDayModal(info.dateStr, info.date);
+        },
+
+        eventClick: function(info) {
+            info.jsEvent.stopPropagation();
+
+            if (info.event.url) {
+                window.location.href = info.event.url;
+                info.jsEvent.preventDefault();
+                return;
+            }
+            const props = info.event.extendedProps;
+            let msg = info.event.title;
+            if (props.description) msg += '\n\n' + props.description;
+            if (props.creator) msg += '\n\nСоздал: ' + props.creator;
+            if (props.assignee) msg += '\n\nИсполнитель: ' + props.assignee;
+            alert(msg);
+        },
+
+        eventDidMount: function(info) {
+            const props = info.event.extendedProps;
+            let tooltip = info.event.title;
+            if (props.description) tooltip += '\n' + props.description;
+            info.el.title = tooltip;
+        },
+
+        dayCellDidMount: function(arg) {
+            arg.el.style.cursor = 'pointer';
+        }
+    });
+    calendar.render();
+    calendarInitialized = true;
+}
+
+function openDayModal(dateStr, dateObj) {
+    selectedDateStr = dateStr;
+
+    const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+                    'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+    const days = ['воскресенье', 'понедельник', 'вторник', 'среда',
+                  'четверг', 'пятница', 'суббота'];
+
+    const d = dateObj || new Date(dateStr);
+    const dateLabel = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${days[d.getDay()]}`;
+
+    document.getElementById('dayModalTitle').textContent = dateLabel;
+
+    const eventsList = document.getElementById('dayModalEvents');
+    const events = currentCalendar.getEvents().filter(ev => {
+        const evStart = ev.startStr.split('T')[0];
+        return evStart === dateStr;
     });
 
-    // Auto scroll chat
-    const chatBox = document.getElementById('chatBox');
-    if (chatBox) {
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
-});
+    if (events.length === 0) {
+        eventsList.innerHTML = `
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-calendar-x" style="font-size: 36px; opacity: 0.3; display: block; margin-bottom: 8px;"></i>
+                Нет событий на этот день
+            </div>
+        `;
+    } else {
+        eventsList.innerHTML = events.map(ev => {
+            const props = ev.extendedProps;
+            const timeLabel = ev.allDay ? 'Весь день' :
+                (ev.start ? ev.start.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'}) : '');
+            const color = ev.backgroundColor || '#5b5bd6';
 
-// Переключение вкладок для якорных ссылок
+            return `
+                <div class="d-flex align-items-center gap-2 p-2 mb-2 rounded" style="background: var(--bg-tertiary);">
+                    <div style="width: 4px; height: 36px; border-radius: 2px; background: ${color};"></div>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold small">${ev.title}</div>
+                        <div class="text-muted" style="font-size: 11px;">${timeLabel}${props.description ? ' · ' + props.description : ''}</div>
+                    </div>
+                    ${ev.url ? `<a href="${ev.url}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-box-arrow-up-right"></i></a>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    new bootstrap.Modal(document.getElementById('dayModal')).show();
+}
+
+function createEventFromDay() {
+    bootstrap.Modal.getInstance(document.getElementById('dayModal')).hide();
+
+    if (selectedDateStr) {
+        document.getElementById('startTimeField').value = selectedDateStr + 'T10:00';
+        document.getElementById('startDateField').value = selectedDateStr;
+    }
+
+    setTimeout(() => {
+        new bootstrap.Modal(document.getElementById('createEventModal')).show();
+    }, 300);
+}
+
+function toggleTimeFields() {
+    const checked = document.getElementById('allDayCheck').checked;
+    const dateField = document.getElementById('startDateField');
+    const timeField = document.getElementById('startTimeField');
+    const endBlock = document.getElementById('endTimeBlock');
+
+    if (checked) {
+        dateField.style.display = 'block';
+        dateField.required = true;
+        timeField.style.display = 'none';
+        timeField.required = false;
+        endBlock.style.display = 'none';
+    } else {
+        dateField.style.display = 'none';
+        dateField.required = false;
+        timeField.style.display = 'block';
+        timeField.required = true;
+        endBlock.style.display = 'block';
+    }
+}
+
+function updateColorSelection(radio) {
+    document.querySelectorAll('.color-dot').forEach(dot => dot.classList.remove('selected'));
+    radio.parentElement.querySelector('.color-dot').classList.add('selected');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const hash = window.location.hash;
     if (hash) {
         const tab = document.querySelector(`[href="${hash}"]`);
-        if (tab) {
-            const bsTab = new bootstrap.Tab(tab);
-            bsTab.show();
+        if (tab && typeof bootstrap !== 'undefined') {
+            new bootstrap.Tab(tab).show();
         }
     }
+
+    if (hash === '#calendar') {
+        setTimeout(initCalendar, 200);
+    }
+    const calTab = document.querySelector('#calendar-tab');
+    if (calTab) {
+        calTab.addEventListener('shown.bs.tab', initCalendar, { once: false });
+    }
+
+    const chatBox = document.getElementById('chatBox');
+    if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
 });
 </script>
 {% endblock %}

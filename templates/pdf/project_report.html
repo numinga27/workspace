@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Отчёт по проекту — {{ project.name }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm 1.5cm;
+            @bottom-center {
+                content: "Стр. " counter(page) " из " counter(pages);
+                font-size: 9pt;
+                color: #888;
+            }
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: 10pt;
+            color: #1a1a2e;
+            line-height: 1.5;
+        }
+        h1 {
+            font-size: 20pt;
+            color: #4f46e5;
+            border-bottom: 2px solid #4f46e5;
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+        }
+        h2 {
+            font-size: 14pt;
+            color: #1a1a2e;
+            margin-top: 24px;
+            margin-bottom: 12px;
+            border-left: 4px solid #4f46e5;
+            padding-left: 10px;
+        }
+        h3 {
+            font-size: 11pt;
+            margin-top: 16px;
+            margin-bottom: 8px;
+        }
+        .header-info {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .header-info table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .header-info td {
+            padding: 4px 8px;
+            vertical-align: top;
+        }
+        .header-info td:first-child {
+            width: 180px;
+            color: #6b7280;
+        }
+
+        /* ============================================================ */
+        /* ЛИНИЯ ПРОЕКТА С ВЕХАМИ */
+        /* ============================================================ */
+        .project-timeline {
+            position: relative;
+            margin: 24px 0 16px 0;
+            padding: 0 10px;
+        }
+
+        /* Прогресс-бар с вехами */
+        .milestone-track {
+            position: relative;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            margin: 40px 0 60px 0;
+        }
+
+        .milestone-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(90deg, #4f46e5, #6366f1);
+            border-radius: 4px;
+        }
+
+        /* Метка вехи на линии */
+        .milestone-marker {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 24px;
+        }
+
+        /* Кружок вехи */
+        .milestone-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #d1d5db;
+            display: inline-block;
+            position: relative;
+            z-index: 2;
+        }
+
+        .milestone-dot.completed {
+            background: #16a34a;
+            border-color: #16a34a;
+            color: white;
+            line-height: 14px;
+            font-size: 10pt;
+            text-align: center;
+        }
+
+        .milestone-dot.overdue {
+            background: #dc2626;
+            border-color: #dc2626;
+            color: white;
+            line-height: 14px;
+            font-size: 10pt;
+            text-align: center;
+        }
+
+        .milestone-dot.current {
+            background: #5b5bd6;
+            border-color: #5b5bd6;
+            color: white;
+            line-height: 14px;
+            font-size: 9pt;
+            text-align: center;
+            box-shadow: 0 0 0 4px #eef0ff;
+        }
+
+        /* Подписи вех — сверху */
+        .milestone-label-top {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 7.5pt;
+            white-space: nowrap;
+            color: #6b7280;
+            font-weight: 600;
+            text-align: center;
+            max-width: 100px;
+        }
+
+        .milestone-label-top.current {
+            color: #5b5bd6;
+            font-weight: 700;
+            background: #eef0ff;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .milestone-label-top.overdue { color: #dc2626; }
+        .milestone-label-top.completed { color: #16a34a; }
+
+        /* Подписи вех — снизу (дата) */
+        .milestone-date-bottom {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 6.5pt;
+            white-space: nowrap;
+            color: #9ca3af;
+        }
+
+        .milestone-date-bottom.overdue {
+            color: #dc2626;
+            font-weight: 700;
+        }
+
+        /* ============================================================ */
+        /* САММАРИ ИКОНКАМИ */
+        /* ============================================================ */
+        .icon-summary {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin: 24px 0;
+        }
+
+        .icon-item {
+            flex: 1;
+            text-align: center;
+            padding: 14px 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .icon-item .icon {
+            font-size: 22pt;
+            display: block;
+            margin-bottom: 4px;
+            line-height: 1;
+        }
+
+        .icon-item .icon-num {
+            font-size: 20pt;
+            font-weight: bold;
+            color: #4f46e5;
+            display: block;
+            line-height: 1;
+            margin-bottom: 2px;
+        }
+
+        .icon-item .icon-label {
+            font-size: 8.5pt;
+            color: #6b7280;
+        }
+
+        .icon-item.success { background: #f0fdf4; border-color: #bbf7d0; }
+        .icon-item.success .icon-num { color: #16a34a; }
+
+        .icon-item.warning { background: #fffbeb; border-color: #fde68a; }
+        .icon-item.warning .icon-num { color: #d97706; }
+
+        .icon-item.danger { background: #fef2f2; border-color: #fecaca; }
+        .icon-item.danger .icon-num { color: #dc2626; }
+
+        /* ============================================================ */
+        /* ТАБЛИЦЫ */
+        /* ============================================================ */
+        table.data {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 9pt;
+        }
+        table.data th {
+            background: #4f46e5;
+            color: white;
+            padding: 8px;
+            text-align: left;
+            font-weight: 600;
+        }
+        table.data td {
+            padding: 8px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: top;
+        }
+        table.data tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        /* Таблица просроченных задач */
+        table.overdue-table th {
+            background: #dc2626;
+        }
+
+        table.overdue-table tr:nth-child(even) {
+            background: #fef2f2;
+        }
+
+        /* Бейджи */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 8pt;
+            font-weight: 600;
+        }
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        .badge-secondary { background: #e5e7eb; color: #374151; }
+        .badge-info { background: #dbeafe; color: #1e40af; }
+        .badge-primary { background: #eef0ff; color: #4338ca; }
+
+        /* Комментарий к причине */
+        .comment-box {
+            background: #fef3c7;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 3px solid #f59e0b;
+            margin-top: 6px;
+            font-size: 8.5pt;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 8pt;
+            color: #6b7280;
+            text-align: center;
+        }
+        .alert-box {
+            padding: 10px 14px;
+            border-radius: 6px;
+            margin: 12px 0;
+            border-left: 4px solid;
+        }
+        .alert-danger {
+            background: #fee2e2;
+            border-color: #dc2626;
+            color: #7f1d1d;
+        }
+        .alert-warning {
+            background: #fef3c7;
+            border-color: #d97706;
+            color: #78350f;
+        }
+        .reason-block {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 6px;
+            border-left: 3px solid #4f46e5;
+        }
+        .page-break { page-break-before: always; }
+    </style>
+</head>
+<body>
+
+<h1>📋 Отчёт по проекту: {{ project.name }}</h1>
+
+<!-- ============================================================ -->
+<!-- ОСНОВНАЯ ИНФОРМАЦИЯ -->
+<!-- ============================================================ -->
+<div class="header-info">
+    <table>
+        <tr>
+            <td>Заказчик:</td>
+            <td><strong>{{ project.customer.name if project.customer else '—' }}</strong>
+                {% if project.customer and project.customer.inn %}(ИНН: {{ project.customer.inn }}){% endif %}
+            </td>
+        </tr>
+        {% if project.customer and project.customer.contact_person %}
+        <tr>
+            <td>Контактное лицо:</td>
+            <td>{{ project.customer.contact_person }}
+                {% if project.customer.phone %}· {{ project.customer.phone }}{% endif %}
+            </td>
+        </tr>
+        {% endif %}
+        <tr>
+            <td>Руководитель проекта:</td>
+            <td>{{ project.creator.first_name }} {{ project.creator.last_name }}</td>
+        </tr>
+        <tr>
+            <td>Статус:</td>
+            <td>
+                {% if project.status == 'completed' %}
+                    <span class="badge badge-success">Завершён</span>
+                {% elif project.status == 'paused' %}
+                    <span class="badge badge-warning">Приостановлен</span>
+                {% elif project.status == 'cancelled' %}
+                    <span class="badge badge-danger">Отменён</span>
+                {% else %}
+                    <span class="badge badge-info">В работе</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td>Дата создания:</td>
+            <td>{{ project.created_at.strftime('%d.%m.%Y') }}</td>
+        </tr>
+        <tr>
+            <td>Дата старта:</td>
+            <td>{{ project.start_date.strftime('%d.%m.%Y') if project.start_date else '—' }}</td>
+        </tr>
+        <tr>
+            <td>Плановая дата окончания:</td>
+            <td>
+                {{ project.end_date.strftime('%d.%m.%Y') if project.end_date else '—' }}
+                {% if project.is_overdue %}
+                    <span class="badge badge-danger">Просрочен на {{ project.days_overdue }} дн.</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td>Общий прогресс:</td>
+            <td><strong style="color: #4f46e5;">{{ stats.completion_percentage }}%</strong></td>
+        </tr>
+        <tr>
+            <td>Дата отчёта:</td>
+            <td>{{ now.strftime('%d.%m.%Y %H:%M') }}</td>
+        </tr>
+    </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- ЛИНИЯ ПРОЕКТА С ВЕХАМИ -->
+<!-- ============================================================ -->
+<h2>🎯 Линия проекта и вехи</h2>
+
+{% if stats.milestones %}
+<div class="project-timeline">
+    <div class="milestone-track">
+        <!-- Прогресс-заливка -->
+        <div class="milestone-progress" style="width: {{ stats.completion_percentage }}%;"></div>
+
+        <!-- Метки вех -->
+        {% set total_milestones = stats.milestones|length %}
+        {% for m in stats.milestones %}
+            {% set position = ((loop.index0 + 0.5) / total_milestones * 100) %}
+            {% set is_current = project.current_milestone and project.current_milestone.id == m.id %}
+
+            <div class="milestone-marker" style="left: {{ position }}%;">
+                <!-- Подпись сверху -->
+                <div class="milestone-label-top
+                    {% if m.is_completed %}completed
+                    {% elif m.is_overdue %}overdue
+                    {% elif is_current %}current{% endif %}">
+                    {% if is_current %}▶ ТЕКУЩАЯ{% else %}{{ m.name }}{% endif %}
+                </div>
+
+                <!-- Кружок -->
+                <div class="milestone-dot
+                    {% if m.is_completed %}completed
+                    {% elif m.is_overdue %}overdue
+                    {% elif is_current %}current{% endif %}">
+                    {% if m.is_completed %}✓
+                    {% elif m.is_overdue %}!
+                    {% elif is_current %}▶{% endif %}
+                </div>
+
+                <!-- Дата снизу -->
+                {% if m.due_date %}
+                <div class="milestone-date-bottom {% if m.is_overdue %}overdue{% endif %}">
+                    {{ m.due_date.strftime('%d.%m.%Y') }}
+                    {% if m.is_overdue %}<br>+{{ m.days_overdue }}д{% endif %}
+                </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Таблица вех -->
+<table class="data">
+    <thead>
+        <tr>
+            <th>№</th>
+            <th>Название</th>
+            <th>Дедлайн</th>
+            <th>Статус</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for m in stats.milestones %}
+        {% set is_current = project.current_milestone and project.current_milestone.id == m.id %}
+        <tr {% if is_current %}style="background: #eef0ff; font-weight: 600;"{% endif %}>
+            <td>{{ m.order_index + 1 }}</td>
+            <td>
+                {{ m.name }}
+                {% if is_current %}
+                    <span class="badge badge-primary">▶ Текущая</span>
+                {% endif %}
+            </td>
+            <td>{{ m.due_date.strftime('%d.%m.%Y') if m.due_date else '—' }}</td>
+            <td>
+                {% if m.is_completed %}
+                    <span class="badge badge-success">✔ Завершена</span>
+                {% elif m.is_overdue %}
+                    <span class="badge badge-danger">⚠ Просрочена ({{ m.days_overdue }} дн.)</span>
+                {% elif is_current %}
+                    <span class="badge badge-primary">▶ В работе</span>
+                {% else %}
+                    <span class="badge badge-secondary">○ В плане</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p style="color: #6b7280;">Вехи не заданы.</p>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- САММАРИ ПО ЗАДАЧАМ ИКОНКАМИ -->
+<!-- ============================================================ -->
+<h2>📊 Сводка по задачам</h2>
+
+<div class="icon-summary">
+    <div class="icon-item success">
+        <span class="icon">✅</span>
+        <span class="icon-num">{{ stats.completed_tasks }}</span>
+        <span class="icon-label">Выполнено</span>
+    </div>
+    <div class="icon-item warning">
+        <span class="icon">🔄</span>
+        <span class="icon-num">{{ stats.in_progress_tasks }}</span>
+        <span class="icon-label">В работе</span>
+    </div>
+    <div class="icon-item danger">
+        <span class="icon">⚠️</span>
+        <span class="icon-num">{{ stats.overdue_tasks }}</span>
+        <span class="icon-label">Просрочено</span>
+    </div>
+    <div class="icon-item">
+        <span class="icon">⚪</span>
+        <span class="icon-num">{{ stats.new_tasks }}</span>
+        <span class="icon-label">Не начато</span>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- СВОДКА ПО TO-DO -->
+<!-- ============================================================ -->
+{% if stats.todo_total > 0 %}
+<h2>✅ Сводка по To-Do</h2>
+
+<div class="icon-summary">
+    <div class="icon-item">
+        <span class="icon">📋</span>
+        <span class="icon-num">{{ stats.todo_total }}</span>
+        <span class="icon-label">Всего</span>
+    </div>
+    <div class="icon-item success">
+        <span class="icon">✅</span>
+        <span class="icon-num">{{ stats.todo_done }}</span>
+        <span class="icon-label">Выполнено</span>
+    </div>
+    <div class="icon-item danger">
+        <span class="icon">⚠️</span>
+        <span class="icon-num">{{ stats.todo_overdue }}</span>
+        <span class="icon-label">Просрочено</span>
+    </div>
+    <div class="icon-item">
+        <span class="icon">⚪</span>
+        <span class="icon-num">{{ stats.todo_new }}</span>
+        <span class="icon-label">Не начато</span>
+    </div>
+</div>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- ПРОСРОЧЕННЫЕ ЗАДАЧИ С ПРИЧИНАМИ -->
+<!-- ============================================================ -->
+{% if stats.overdue_tasks_list %}
+<h2 style="color: #dc2626;">⚠️ Просроченные задачи ({{ stats.overdue_tasks|length }})</h2>
+
+<table class="data overdue-table">
+    <thead>
+        <tr>
+            <th>Задача</th>
+            <th>Исполнитель</th>
+            <th>Дедлайн</th>
+            <th>Просрочено</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for t in stats.overdue_tasks_list %}
+        <tr>
+            <td><strong>{{ t.title }}</strong></td>
+            <td>{{ t.assignee.first_name ~ ' ' ~ t.assignee.last_name if t.assignee else '—' }}</td>
+            <td>{{ t.due_date.strftime('%d.%m.%Y') }}</td>
+            <td><span class="badge badge-danger">{{ t.days_overdue }} дн.</span></td>
+        </tr>
+        {% if t.comment %}
+        <tr>
+            <td colspan="4" style="padding: 0;">
+                <div class="comment-box">
+                    <strong>💬 Причина:</strong> {{ t.comment }}
+                </div>
+            </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- ПРОСРОЧЕННЫЕ TO-DO -->
+<!-- ============================================================ -->
+{% set overdue_todos = stats.todos|selectattr('is_overdue')|list %}
+{% if overdue_todos %}
+<h2 style="color: #dc2626;">⚠️ Просроченные To-Do ({{ overdue_todos|length }})</h2>
+
+<table class="data overdue-table">
+    <thead>
+        <tr>
+            <th>Задача</th>
+            <th>Исполнитель</th>
+            <th>Дедлайн</th>
+            <th>Просрочено</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for t in overdue_todos %}
+        <tr>
+            <td><strong>{{ t.title }}</strong></td>
+            <td>{{ t.todo_assignee.first_name ~ ' ' ~ t.todo_assignee.last_name if t.todo_assignee else '—' }}</td>
+            <td>{{ t.due_date.strftime('%d.%m.%Y') }}</td>
+            <td><span class="badge badge-danger">{{ t.days_overdue }} дн.</span></td>
+        </tr>
+        {% if t.comment %}
+        <tr>
+            <td colspan="4" style="padding: 0;">
+                <div class="comment-box">
+                    <strong>💬 Причина:</strong> {{ t.comment }}
+                </div>
+            </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- ПЕРЕЧЕНЬ ТЕКУЩИХ ЗАДАЧ -->
+<!-- ============================================================ -->
+<h2 class="page-break">📝 Текущие задачи ({{ stats.in_progress_tasks_list|length + stats.new_tasks_list|length }})</h2>
+
+{% if stats.in_progress_tasks_list or stats.new_tasks_list %}
+<table class="data">
+    <thead>
+        <tr>
+            <th>Задача</th>
+            <th>Исполнитель</th>
+            <th>Дедлайн</th>
+            <th>Статус</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for t in stats.in_progress_tasks_list %}
+        <tr>
+            <td><strong>{{ t.title }}</strong></td>
+            <td>{{ t.assignee.first_name ~ ' ' ~ t.assignee.last_name if t.assignee else '—' }}</td>
+            <td>{{ t.due_date.strftime('%d.%m.%Y') if t.due_date else '—' }}</td>
+            <td><span class="badge badge-warning">🔄 В работе</span></td>
+        </tr>
+        {% endfor %}
+        {% for t in stats.new_tasks_list %}
+        <tr>
+            <td><strong>{{ t.title }}</strong></td>
+            <td>{{ t.assignee.first_name ~ ' ' ~ t.assignee.last_name if t.assignee else '—' }}</td>
+            <td>{{ t.due_date.strftime('%d.%m.%Y') if t.due_date else '—' }}</td>
+            <td><span class="badge badge-secondary">🆕 Новая</span></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p style="color: #6b7280;">Активных задач нет.</p>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- ВЫПОЛНЕННЫЕ ЗАДАЧИ -->
+<!-- ============================================================ -->
+{% if stats.completed_tasks_list %}
+<h2>✅ Выполненные задачи ({{ stats.completed_tasks|length }})</h2>
+
+<table class="data">
+    <thead>
+        <tr>
+            <th>Задача</th>
+            <th>Исполнитель</th>
+            <th>Дедлайн</th>
+            <th>Статус</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for t in stats.completed_tasks_list %}
+        <tr>
+            <td><strong>{{ t.title }}</strong></td>
+            <td>{{ t.assignee.first_name ~ ' ' ~ t.assignee.last_name if t.assignee else '—' }}</td>
+            <td>{{ t.due_date.strftime('%d.%m.%Y') if t.due_date else '—' }}</td>
+            <td><span class="badge badge-success">✔ Завершена</span></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- ИСТОРИЯ ОТЧЁТОВ -->
+<!-- ============================================================ -->
+{% if stats.reports %}
+<h2>📄 История отчётов</h2>
+{% for r in stats.reports %}
+<div class="reason-block">
+    <strong>{{ r.title }}</strong>
+    <span class="badge badge-{{ r.reason_color }}">{{ r.reason_display[0] }}</span>
+    {% if r.delay_days and r.delay_days > 0 %}
+        <span class="badge badge-danger">Задержка: {{ r.delay_days }} дн.</span>
+    {% endif %}
+    <br>
+    <small style="color: #6b7280;">
+        {{ r.report_author.first_name }} {{ r.report_author.last_name }} ·
+        {{ r.created_at.strftime('%d.%m.%Y %H:%M') }}
+    </small>
+    {% if r.reason_detail %}
+    <div style="margin-top: 6px;"><strong>Причина:</strong> {{ r.reason_detail }}</div>
+    {% endif %}
+    {% if r.content %}
+    <div style="margin-top: 6px;">{{ r.content }}</div>
+    {% endif %}
+</div>
+{% endfor %}
+{% endif %}
+
+<div class="footer">
+    Отчёт сформирован автоматически {{ now.strftime('%d.%m.%Y в %H:%M') }}<br>
+    Система управления проектами Workspace
+</div>
+
+</body>
+</html>
