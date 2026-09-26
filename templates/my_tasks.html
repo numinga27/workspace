@@ -1,9 +1,24 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
         <h2 class="mb-1">📌 Мои задачи</h2>
-        <p class="text-muted mb-0">Все задачи по всем проектам, где вы назначены исполнителем</p>
+        <p class="text-muted mb-0">
+            Все задачи по всем проектам, где вы назначены исполнителем
+            {% if unread_task_ids and unread_task_ids|length > 0 %}
+                · <span class="badge bg-primary">{{ unread_task_ids|length }} новых</span>
+            {% endif %}
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        {% if unread_task_ids and unread_task_ids|length > 0 %}
+        <form method="POST" action="{{ url_for('tasks.mark_all_read') }}">
+            <button type="submit" class="btn btn-outline-primary btn-sm"
+                    title="Отметить все как прочитанные">
+                <i class="bi bi-check-all"></i> Прочитать все
+            </button>
+        </form>
+        {% endif %}
     </div>
 </div>
 
@@ -54,7 +69,7 @@
     <ul class="mb-0 mt-1">
         {% for t in overdue[:5] %}
         <li>
-            <a href="{{ url_for('view_task', task_id=t.id) }}">{{ t.title }}</a>
+            <a href="{{ url_for('tasks.view_task', task_id=t.id) }}">{{ t.title }}</a>
             — просрочено на <strong>{{ t.days_overdue }} дн.</strong>
             (проект: {{ t.project.name }})
         </li>
@@ -72,7 +87,7 @@
     <ul class="mb-0 mt-1">
         {% for t in urgent %}
         <li>
-            <a href="{{ url_for('view_task', task_id=t.id) }}">{{ t.title }}</a>
+            <a href="{{ url_for('tasks.view_task', task_id=t.id) }}">{{ t.title }}</a>
             — до {{ t.due_date.strftime('%d.%m.%Y') }}
             ({{ (t.due_date - now).days }} дн. осталось)
         </li>
@@ -117,10 +132,17 @@
 <!-- Задачи -->
 <h5 class="mb-3">📋 Список задач ({{ tasks|length }})</h5>
 {% for task in tasks %}
-<div class="card task-card mb-2 {% if task.status == 'completed' %}completed{% elif task.status == 'in_progress' %}in_progress{% endif %} {% if task.is_overdue %}border-danger border-2{% endif %}">
+{# ← ПОДСВЕТКА НЕПРОЧИТАННОЙ ЗАДАЧИ #}
+{% set is_unread = task.id in unread_task_ids %}
+<div class="card task-card mb-2
+    {% if task.status == 'completed' %}completed
+    {% elif task.status == 'in_progress' %}in_progress{% endif %}
+    {% if task.is_overdue %}border-danger border-2{% endif %}
+    {% if is_unread %}unread{% endif %}"
+    data-task-id="{{ task.id }}">
     <div class="card-body py-2">
         <div class="d-flex align-items-start gap-2">
-            <form method="POST" action="{{ url_for('update_task_status', task_id=task.id) }}" class="mt-1">
+            <form method="POST" action="{{ url_for('tasks.update_task_status', task_id=task.id) }}" class="mt-1">
                 <input type="hidden" name="status" value="{% if task.status == 'completed' %}new{% else %}completed{% endif %}">
                 <button type="submit" class="btn btn-sm p-0 border-0 bg-transparent">
                     {% if task.status == 'completed' %}
@@ -134,9 +156,14 @@
             <div class="flex-grow-1">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <a href="{{ url_for('view_task', task_id=task.id) }}" class="text-decoration-none text-dark fw-bold">
+                        <a href="{{ url_for('tasks.view_task', task_id=task.id) }}"
+                           class="text-decoration-none text-dark fw-bold">
                             {{ task.title }}
                         </a>
+                        {# ← БЕЙДЖ «НОВОЕ» ДЛЯ НЕПРОЧИТАННЫХ #}
+                        {% if is_unread %}
+                            <span class="badge-new ms-2">НОВОЕ</span>
+                        {% endif %}
                         <div class="d-flex gap-2 mt-1 flex-wrap small">
                             <span class="badge bg-light text-dark border">
                                 <i class="bi bi-folder"></i> {{ task.project.name }}
@@ -182,20 +209,48 @@
 
 <!-- Мои To-Do -->
 {% if my_todos %}
-<h5 class="mt-4 mb-3">✅ Мои To-Do ({{ my_todos|length }})</h5>
+<h5 class="mt-4 mb-3">
+    ✅ Мои To-Do ({{ my_todos|length }})
+    {% if unread_todo_ids and unread_todo_ids|length > 0 %}
+        · <span class="badge bg-primary">{{ unread_todo_ids|length }} новых</span>
+    {% endif %}
+</h5>
 <div class="card">
-    <div class="card-body">
+    <div class="card-body p-0">
         {% for todo in my_todos %}
-        <div class="d-flex align-items-center mb-2">
-            <form method="POST" action="{{ url_for('toggle_todo', todo_id=todo.id) }}" class="me-2">
-                <button type="submit" class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-circle"></i>
-                </button>
-            </form>
-            <div>
-                {{ todo.title }}
-                <small class="text-muted">· {{ todo.project.name if todo.project else '—' }}</small>
+        {% set todo_unread = todo.id in unread_todo_ids %}
+        <div class="d-flex align-items-center justify-content-between p-2 border-bottom
+                    {% if todo_unread %}bg-info-subtle{% endif %}"
+             data-todo-id="{{ todo.id }}">
+            <div class="d-flex align-items-center">
+                <form method="POST" action="{{ url_for('todos.toggle_todo', todo_id=todo.id) }}" class="me-2">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-circle"></i>
+                    </button>
+                </form>
+                <div>
+                    <span>{{ todo.title }}</span>
+                    {# ← БЕЙДЖ «НОВОЕ» ДЛЯ НЕПРОЧИТАННЫХ #}
+                    {% if todo_unread %}
+                        <span class="badge-new ms-2">НОВОЕ</span>
+                    {% endif %}
+                    <br>
+                    <small class="text-muted">
+                        <i class="bi bi-folder"></i> {{ todo.project.name if todo.project else '—' }}
+                        {% if todo.due_date %}
+                            · <i class="bi bi-calendar-event"></i> {{ todo.due_date.strftime('%d.%m.%Y') }}
+                            {% if todo.is_overdue %}
+                                <span class="badge bg-danger">+{{ todo.days_overdue }} дн.</span>
+                            {% endif %}
+                        {% endif %}
+                    </small>
+                </div>
             </div>
+            <a href="{{ url_for('projects.view_project', project_id=todo.project_id) }}?_tab=todo"
+               class="btn btn-sm btn-outline-secondary"
+               title="Открыть в проекте">
+                <i class="bi bi-arrow-right"></i>
+            </a>
         </div>
         {% endfor %}
     </div>

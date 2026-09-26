@@ -1,15 +1,31 @@
 {% extends "base.html" %}
 {% block content %}
+
+{# ← ПУНКТ 5 + ГОСТЬ: определяем режим #}
+{% set is_guest = is_guest_view|default(false) %}
+
 <div class="mb-3">
-    <a href="{{ url_for('view_project', project_id=task.project_id) }}" class="btn btn-outline-secondary btn-sm">
+    {% if not is_guest %}
+    <a href="{{ url_for('projects.view_project', project_id=task.project_id) }}" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-arrow-left"></i> К проекту
     </a>
-    {% if task.parent_task_id %}
-    <a href="{{ url_for('view_task', task_id=task.parent_task_id) }}" class="btn btn-outline-secondary btn-sm">
+    {% endif %}
+    {% if task.parent_task_id and not is_guest %}
+    <a href="{{ url_for('tasks.view_task', task_id=task.parent_task_id) }}" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-arrow-up"></i> К родительской задаче
     </a>
     {% endif %}
 </div>
+
+{% if is_guest %}
+<!-- Информация для гостя -->
+<div class="alert alert-info mb-3">
+    <i class="bi bi-info-circle"></i>
+    <strong>Вы — гость проекта.</strong>
+    Вам доступна только эта задача. Здесь вы можете менять статус,
+    оставить комментарий и видеть дедлайн.
+</div>
+{% endif %}
 
 <div class="row">
     <!-- ============================================================ -->
@@ -20,13 +36,28 @@
         <!-- ЗАГОЛОВОК И ОПИСАНИЕ -->
         <!-- ============================================ -->
         <div class="card mb-3">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">{{ task.title }}</h4>
-                <span class="badge {% if task.status == 'completed' %}bg-success{% elif task.status == 'in_progress' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
-                    {% if task.status == 'completed' %}✅ Завершена
-                    {% elif task.status == 'in_progress' %}🔄 В работе
-                    {% else %}🆕 Новая{% endif %}
-                </span>
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <h4 class="mb-0">{{ task.title }}</h4>
+                    <span class="badge {% if task.status == 'completed' %}bg-success{% elif task.status == 'in_progress' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                        {% if task.status == 'completed' %}✅ Завершена
+                        {% elif task.status == 'in_progress' %}🔄 В работе
+                        {% else %}🆕 Новая{% endif %}
+                    </span>
+                    {% if task.is_overdue %}
+                    <span class="badge bg-danger">
+                        ⚠ Просрочена на {{ task.days_overdue }} дн.
+                    </span>
+                    {% endif %}
+                </div>
+
+                {# ← ПУНКТ 5: кнопка редактирования #}
+                {% if not is_guest and (can_manage or task.assigned_to == user.id) %}
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                        data-bs-toggle="modal" data-bs-target="#editTaskModal">
+                    <i class="bi bi-pencil"></i> Редактировать
+                </button>
+                {% endif %}
             </div>
             <div class="card-body">
                 {% if task.description %}
@@ -44,11 +75,15 @@
                             <div class="fw-bold">
                                 <i class="bi bi-person-circle"></i>
                                 {{ task.assignee.first_name }} {{ task.assignee.last_name }}
+                                {% if is_guest and task.assignee.id == user.id %}
+                                <span class="badge bg-guest ms-1">вы</span>
+                                {% endif %}
                             </div>
                         {% else %}
                             <span class="text-muted">не назначена</span>
                         {% endif %}
                     </div>
+
                     <div class="col-md-6">
                         <div class="small text-muted">Дедлайн</div>
                         <div class="{% if task.is_overdue %}text-danger fw-bold{% endif %}">
@@ -65,7 +100,8 @@
                             {% endif %}
                         </div>
                     </div>
-                    {% if task.milestone %}
+
+                    {% if task.milestone and not is_guest %}
                     <div class="col-md-6">
                         <div class="small text-muted">Веха</div>
                         <div class="fw-bold">
@@ -73,6 +109,8 @@
                         </div>
                     </div>
                     {% endif %}
+
+                    {% if not is_guest %}
                     <div class="col-md-6">
                         <div class="small text-muted">Создана</div>
                         <div>
@@ -82,15 +120,18 @@
                             <small class="text-muted">{{ task.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
                         </div>
                     </div>
+                    {% endif %}
                 </div>
 
                 <hr>
 
                 <!-- Форма смены статуса -->
-                <form method="POST" action="{{ url_for('update_task_status', task_id=task.id) }}">
+                <form method="POST" action="{{ url_for('tasks.update_task_status', task_id=task.id) }}">
                     <div class="row g-2">
                         <div class="col-md-6">
-                            <label class="form-label small">Изменить статус</label>
+                            <label class="form-label small">
+                                {% if is_guest %}Отметить статус{% else %}Изменить статус{% endif %}
+                            </label>
                             <select name="status" class="form-select">
                                 <option value="new" {% if task.status == 'new' %}selected{% endif %}>🆕 Новая</option>
                                 <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>🔄 В работе</option>
@@ -108,7 +149,7 @@
         </div>
 
         <!-- ============================================ -->
-        <!-- КОММЕНТАРИЙ К ПРОСРОЧКЕ (если задача просрочена) -->
+        <!-- КОММЕНТАРИЙ К ПРОСРОЧКЕ -->
         <!-- ============================================ -->
         {% if task.is_overdue %}
         <div class="card mb-3" style="border-left: 4px solid var(--danger);">
@@ -121,7 +162,7 @@
                     Задача просрочена на <strong>{{ task.days_overdue }} дн.</strong>
                     Укажите причину — она попадёт в отчёт по проекту.
                 </p>
-                <form method="POST" action="{{ url_for('update_task_comment', task_id=task.id) }}">
+                <form method="POST" action="{{ url_for('tasks.update_task_comment', task_id=task.id) }}">
                     <div class="input-group">
                         <input type="text" name="comment" class="form-control"
                                placeholder="Например: задержка поставки материалов..."
@@ -145,8 +186,9 @@
         {% endif %}
 
         <!-- ============================================ -->
-        <!-- ПОДЗАДАЧИ -->
+        <!-- ПОДЗАДАЧИ (скрыто для гостя) -->
         <!-- ============================================ -->
+        {% if not is_guest %}
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-diagram-3"></i> Подзадачи ({{ subtasks|length }})</span>
@@ -163,7 +205,7 @@
                 <div class="collapse mb-3" id="addSubtaskForm">
                     <div class="card">
                         <div class="card-body">
-                            <form method="POST" action="{{ url_for('create_task', project_id=task.project_id) }}">
+                            <form method="POST" action="{{ url_for('projects.create_task', project_id=task.project_id) }}">
                                 <input type="hidden" name="parent_task_id" value="{{ task.id }}">
                                 <div class="row g-2">
                                     <div class="col-md-6">
@@ -173,9 +215,32 @@
                                     <div class="col-md-3">
                                         <select name="assigned_to" class="form-select">
                                             <option value="">Исполнитель...</option>
-                                            {% for u in all_users %}
-                                            <option value="{{ u.id }}">{{ u.first_name }} {{ u.last_name }}</option>
+                                            <option value="user:{{ user.id }}">
+                                                👤 Я — {{ user.first_name }} {{ user.last_name }}
+                                            </option>
+                                            {% for m in members|default([]) %}
+                                            <option value="user:{{ m.user.id }}">
+                                                {{ m.user.first_name }} {{ m.user.last_name }}
+                                            </option>
                                             {% endfor %}
+                                            {% if project.customer and project.customer.contacts %}
+                                            <optgroup label="Заказчик: {{ project.customer.name }}">
+                                                {% for c in project.customer.contacts %}
+                                                <option value="contact:{{ c.id }}">
+                                                    {{ c.full_name }}
+                                                </option>
+                                                {% endfor %}
+                                            </optgroup>
+                                            {% endif %}
+                                            {% if project.supplier and project.supplier.contacts %}
+                                            <optgroup label="Поставщик: {{ project.supplier.name }}">
+                                                {% for c in project.supplier.contacts %}
+                                                <option value="contact:{{ c.id }}">
+                                                    {{ c.full_name }}
+                                                </option>
+                                                {% endfor %}
+                                            </optgroup>
+                                            {% endif %}
                                         </select>
                                     </div>
                                     <div class="col-md-3">
@@ -202,7 +267,7 @@
                 <div class="border rounded p-2 mb-2 {% if st.status == 'completed' %}bg-success-subtle{% elif st.is_overdue %}bg-danger-subtle{% endif %}">
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
-                            <a href="{{ url_for('view_task', task_id=st.id) }}" class="text-decoration-none text-dark">
+                            <a href="{{ url_for('tasks.view_task', task_id=st.id) }}" class="text-decoration-none text-dark">
                                 <strong>{{ st.title }}</strong>
                             </a>
                             {% if st.description %}
@@ -223,7 +288,7 @@
                             </div>
                         </div>
                         <div class="d-flex gap-1 align-items-center ms-2">
-                            <form method="POST" action="{{ url_for('update_task_status', task_id=st.id) }}">
+                            <form method="POST" action="{{ url_for('tasks.update_task_status', task_id=st.id) }}">
                                 <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
                                     <option value="new" {% if st.status == 'new' %}selected{% endif %}>🆕</option>
                                     <option value="in_progress" {% if st.status == 'in_progress' %}selected{% endif %}>🔄</option>
@@ -231,7 +296,7 @@
                                 </select>
                             </form>
                             {% if can_manage %}
-                            <form method="POST" action="{{ url_for('delete_task', task_id=st.id) }}">
+                            <form method="POST" action="{{ url_for('tasks.delete_task', task_id=st.id) }}">
                                 <button type="submit" class="btn btn-sm btn-outline-secondary"
                                         onclick="return confirm('Удалить подзадачу?')">
                                     <i class="bi bi-trash-fill text-danger"></i>
@@ -243,7 +308,7 @@
 
                     <!-- Комментарий к просроченной подзадаче -->
                     {% if st.is_overdue %}
-                    <form method="POST" action="{{ url_for('update_task_comment', task_id=st.id) }}"
+                    <form method="POST" action="{{ url_for('tasks.update_task_comment', task_id=st.id) }}"
                           class="mt-2">
                         <div class="input-group input-group-sm">
                             <span class="input-group-text bg-warning-subtle">
@@ -271,6 +336,7 @@
                 {% endfor %}
             </div>
         </div>
+        {% endif %}
     </div>
 
     <!-- ============================================================ -->
@@ -327,11 +393,13 @@
                     </div>
                 {% endif %}
 
-                <!-- Кнопка PDF -->
-                <a href="{{ url_for('task_report_pdf', task_id=task.id) }}"
+                <!-- Кнопка PDF (не для гостя) -->
+                {% if not is_guest %}
+                <a href="{{ url_for('pdf.task_report_pdf', task_id=task.id) }}"
                    class="btn btn-outline-secondary w-100 btn-sm mt-2">
                     <i class="bi bi-file-earmark-pdf-fill text-danger"></i> PDF-отчёт по задаче
                 </a>
+                {% endif %}
             </div>
         </div>
 
@@ -343,7 +411,8 @@
                 <i class="bi bi-paperclip"></i> Файлы задачи ({{ files|length }})
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ url_for('upload_file', project_id=task.project_id) }}"
+                {% if not is_guest %}
+                <form method="POST" action="{{ url_for('files.upload_file', project_id=task.project_id) }}"
                       enctype="multipart/form-data" class="mb-3">
                     <input type="hidden" name="task_id" value="{{ task.id }}">
                     <div class="input-group input-group-sm">
@@ -353,23 +422,26 @@
                         </button>
                     </div>
                 </form>
+                {% endif %}
 
                 {% for file in files %}
                 <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded"
                      style="background: var(--bg-tertiary);">
                     <div class="text-truncate" style="max-width: 200px;">
                         <i class="bi bi-file-earmark"></i>
-                        <a href="{{ url_for('download_file', file_id=file.id) }}"
+                        <a href="{{ url_for('files.download_file', file_id=file.id) }}"
                            class="text-decoration-none small" title="{{ file.original_name }}">
                             {{ file.original_name }}
                         </a>
                     </div>
-                    <form method="POST" action="{{ url_for('delete_file', file_id=file.id) }}">
+                    {% if not is_guest %}
+                    <form method="POST" action="{{ url_for('files.delete_file', file_id=file.id) }}">
                         <button type="submit" class="btn btn-sm btn-outline-secondary p-0 px-1"
                                 onclick="return confirm('Удалить файл?')">
                             <i class="bi bi-trash-fill text-danger" style="font-size: 12px;"></i>
                         </button>
                     </form>
+                    {% endif %}
                 </div>
                 {% else %}
                 <div class="text-muted small text-center py-3">
@@ -381,9 +453,9 @@
         </div>
 
         <!-- ============================================ -->
-        <!-- ПРОСРОЧЕННЫЕ ПОДЗАДАЧИ С КОММЕНТАРИЯМИ -->
+        <!-- ПРОСРОЧЕННЫЕ ПОДЗАДАЧИ -->
         <!-- ============================================ -->
-        {% if task_stats.overdue_list %}
+        {% if not is_guest and task_stats.overdue_list %}
         <div class="card mb-3" style="border-left: 4px solid var(--danger);">
             <div class="card-header" style="background: var(--danger-light);">
                 <i class="bi bi-exclamation-triangle-fill text-danger"></i>
@@ -394,7 +466,7 @@
                 <div class="p-2 mb-2 rounded" style="background: #fef2f2;">
                     <div class="d-flex justify-content-between align-items-start mb-1">
                         <div class="small fw-bold">{{ st.title }}</div>
-                        <a href="{{ url_for('view_task', task_id=st.id) }}"
+                        <a href="{{ url_for('tasks.view_task', task_id=st.id) }}"
                            class="btn btn-sm btn-outline-secondary p-0 px-1">
                             <i class="bi bi-box-arrow-up-right" style="font-size: 11px;"></i>
                         </a>
@@ -403,7 +475,7 @@
                         <i class="bi bi-calendar-x"></i> Просрочено на {{ st.days_overdue }} дн.
                     </div>
 
-                    <form method="POST" action="{{ url_for('update_task_comment', task_id=st.id) }}">
+                    <form method="POST" action="{{ url_for('tasks.update_task_comment', task_id=st.id) }}">
                         <div class="input-group input-group-sm">
                             <input type="text" name="comment" class="form-control"
                                    placeholder="Причина просрочки..."
@@ -428,16 +500,18 @@
                 <i class="bi bi-info-circle"></i> Информация
             </div>
             <div class="card-body small">
+                {% if not is_guest %}
                 <p class="mb-1">
                     <strong>Проект:</strong>
-                    <a href="{{ url_for('view_project', project_id=task.project_id) }}">
+                    <a href="{{ url_for('projects.view_project', project_id=task.project_id) }}">
                         {{ task.project.name }}
                     </a>
                 </p>
-                {% if task.parent_task %}
+                {% endif %}
+                {% if task.parent_task and not is_guest %}
                 <p class="mb-1">
                     <strong>Родительская задача:</strong>
-                    <a href="{{ url_for('view_task', task_id=task.parent_task.id) }}">
+                    <a href="{{ url_for('tasks.view_task', task_id=task.parent_task.id) }}">
                         {{ task.parent_task.title }}
                     </a>
                 </p>
@@ -446,9 +520,9 @@
                     <strong>ID задачи:</strong> #{{ task.id }}
                 </p>
 
-                {% if can_manage %}
+                {% if not is_guest and can_manage %}
                 <hr>
-                <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}"
+                <form method="POST" action="{{ url_for('tasks.delete_task', task_id=task.id) }}"
                       onsubmit="return confirm('Удалить задачу и все её подзадачи?')">
                     <button type="submit" class="btn btn-outline-danger w-100 btn-sm">
                         <i class="bi bi-trash-fill"></i> Удалить задачу
@@ -459,4 +533,112 @@
         </div>
     </div>
 </div>
+
+<!-- ============================================================ -->
+<!-- МОДАЛКА РЕДАКТИРОВАНИЯ ЗАДАЧИ (ПУНКТ 5) -->
+<!-- ============================================================ -->
+{% if not is_guest and (can_manage or task.assigned_to == user.id) %}
+<div class="modal fade" id="editTaskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('tasks.edit_task', task_id=task.id) }}">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-pencil"></i> Редактировать задачу
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Название *</label>
+                        <input type="text" name="title" class="form-control"
+                               value="{{ task.title }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Описание</label>
+                        <textarea name="description" class="form-control"
+                                  rows="3">{{ task.description or '' }}</textarea>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Исполнитель</label>
+                            <select name="assigned_to" class="form-select">
+                                <option value="">— Не назначен —</option>
+
+                                <optgroup label="Команда">
+                                    {% for u in all_users %}
+                                    <option value="user:{{ u.id }}"
+                                            {% if task.assigned_to == u.id %}selected{% endif %}>
+                                        {{ u.first_name }} {{ u.last_name }}
+                                    </option>
+                                    {% endfor %}
+                                </optgroup>
+
+                                {% if project.customer and project.customer.contacts %}
+                                <optgroup label="Заказчик: {{ project.customer.name }}">
+                                    {% for c in project.customer.contacts %}
+                                    <option value="contact:{{ c.id }}"
+                                            {% if task.assignee and task.assignee.contact_profile and task.assignee.contact_profile.id == c.id %}selected{% endif %}>
+                                        {{ c.full_name }}{% if c.position %} — {{ c.position }}{% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </optgroup>
+                                {% endif %}
+
+                                {% if project.supplier and project.supplier.contacts %}
+                                <optgroup label="Поставщик: {{ project.supplier.name }}">
+                                    {% for c in project.supplier.contacts %}
+                                    <option value="contact:{{ c.id }}"
+                                            {% if task.assignee and task.assignee.contact_profile and task.assignee.contact_profile.id == c.id %}selected{% endif %}>
+                                        {{ c.full_name }}{% if c.position %} — {{ c.position }}{% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </optgroup>
+                                {% endif %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Дедлайн</label>
+                            <input type="date" name="due_date" class="form-control"
+                                   value="{{ task.due_date.strftime('%Y-%m-%d') if task.due_date else '' }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Статус</label>
+                            <select name="status" class="form-select">
+                                <option value="new" {% if task.status == 'new' %}selected{% endif %}>🆕 Новая</option>
+                                <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>🔄 В работе</option>
+                                <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>✅ Завершена</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Веха</label>
+                            <select name="milestone_id" class="form-select">
+                                <option value="">— Без вехи —</option>
+                                {% for m in milestones %}
+                                <option value="{{ m.id }}"
+                                        {% if task.milestone_id == m.id %}selected{% endif %}>
+                                    {{ m.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% endblock %}

@@ -3,30 +3,108 @@
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
         <h2 class="mb-1">📅 Мой календарь</h2>
-        <p class="text-muted mb-0">Все ваши события, задачи и вехи в одном месте</p>
+        <p class="text-muted mb-0">Все ваши события, задачи, вехи и To-Do в одном месте</p>
     </div>
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPersonalEventModal">
         <i class="bi bi-plus-lg"></i> Личное событие
     </button>
 </div>
 
-<!-- Легенда -->
-<div class="d-flex flex-wrap gap-3 mb-3 small text-muted">
-    <span><span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #8b5cf6; vertical-align: middle;"></span> Личные события</span>
-    <span><span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #5b5bd6; vertical-align: middle;"></span> События проектов</span>
-    <span><span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #dc2626; vertical-align: middle;"></span> Просроченные задачи</span>
-    <span><span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #16a34a; vertical-align: middle;"></span> Завершено</span>
+<!-- ============================================================ -->
+<!-- ИНТЕРАКТИВНАЯ ЛЕГЕНДА-ФИЛЬТР -->
+<!-- ============================================================ -->
+<div class="d-flex flex-wrap gap-2 mb-3 small text-muted" id="calendarLegend">
+    <span class="legend-item" data-type="personal" onclick="toggleLegendFilter(this)" title="Кликните, чтобы скрыть/показать">
+        <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #8b5cf6; vertical-align: middle;"></span>
+        Личные события
+    </span>
+    <span class="legend-item" data-type="project_event" onclick="toggleLegendFilter(this)" title="Кликните, чтобы скрыть/показать">
+        <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #5b5bd6; vertical-align: middle;"></span>
+        События проектов
+    </span>
+    <span class="legend-item" data-type="task-new" onclick="toggleLegendFilter(this)" title="Кликните, чтобы скрыть/показать">
+        <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #a1a1aa; vertical-align: middle;"></span>
+        Мои задачи (новые)
+    </span>
+    <span class="legend-item" data-type="task-progress" onclick="toggleLegendFilter(this)" title="Кликните, чтобы скрыть/показать">
+        <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #f59e0b; vertical-align: middle;"></span>
+        Мои задачи (в работе)
+    </span>
+    <span class="legend-item" data-type="overdue" onclick="toggleLegendFilter(this)" title="Кликните, чтобы скрыть/показать">
+        <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #dc2626; vertical-align: middle;"></span>
+        Просрочено
+    </span>
+    <span class="legend-item" data-type="completed" onclick="toggleLegendFilter(this)" title="Кликните, чтобы скрыть/показать">
+        <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #16a34a; vertical-align: middle;"></span>
+        Завершено
+    </span>
+    <span class="legend-item" data-type="todo" onclick="toggleLegendFilter(this)" title="Кликните, чтобы скрыть/показать">
+        <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #0891b2; vertical-align: middle;"></span>
+        Мои To-Do
+    </span>
 </div>
 
-<div class="small text-muted mb-3">
-    <i class="bi bi-info-circle"></i>
-    Клик по дню — просмотр событий и создание личного события
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div class="small text-muted">
+        <i class="bi bi-info-circle"></i>
+        Клик по дню — просмотр событий и создание личного события.
+        Клик по цвету — <strong>скрыть/показать</strong> тип.
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <div class="small text-muted" id="my-calendar-filter-count">
+            Показано: <strong>0</strong> событий
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                onclick="resetLegendFilters()" title="Показать все типы">
+            <i class="bi bi-arrow-counterclockwise"></i> Сбросить
+        </button>
+    </div>
 </div>
 
 <!-- Календарь -->
 <div class="card mb-4">
     <div class="card-body">
         <div id="myCalendar"></div>
+    </div>
+</div>
+
+<!-- Статистика по типам -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #f3e8ff; color: #8b5cf6;">
+                <i class="bi bi-person-fill"></i>
+            </div>
+            <div class="stat-number">{{ personal_events|length }}</div>
+            <div class="stat-label">Личных событий</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #e0e7ff; color: #5b5bd6;">
+                <i class="bi bi-folder-fill"></i>
+            </div>
+            <div class="stat-number">{{ project_events|length }}</div>
+            <div class="stat-label">Событий проектов</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #fef3c7; color: #f59e0b;">
+                <i class="bi bi-list-task"></i>
+            </div>
+            <div class="stat-number" id="tasksCount">—</div>
+            <div class="stat-label">Моих задач</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #cffafe; color: #0891b2;">
+                <i class="bi bi-check2-square"></i>
+            </div>
+            <div class="stat-number" id="todosCount">—</div>
+            <div class="stat-label">Моих To-Do</div>
+        </div>
     </div>
 </div>
 
@@ -55,7 +133,7 @@
                 {% endif %}
             </div>
         </div>
-        <form method="POST" action="{{ url_for('delete_event', event_id=e.id) }}">
+        <form method="POST" action="{{ url_for('calendar.delete_event', event_id=e.id) }}">
             <button type="submit" class="btn btn-outline-secondary btn-sm"
                     style="width: 32px; height: 32px; padding: 0;"
                     onclick="return confirm('Удалить событие?')">
@@ -67,9 +145,12 @@
 {% endfor %}
 {% endif %}
 
-<!-- Общие события из проектов -->
+<!-- События проектов списком -->
 {% if project_events %}
-<h5 class="mb-3 mt-4"><i class="bi bi-folder-fill text-warning"></i> События моих проектов ({{ project_events|length }})</h5>
+<h5 class="mb-3 mt-4">
+    <i class="bi bi-folder-fill text-warning"></i>
+    События моих проектов ({{ project_events|length }})
+</h5>
 {% for e in project_events %}
 <div class="card mb-2 {% if e.start_time < now %}opacity-50{% endif %}">
     <div class="card-body py-2 d-flex justify-content-between align-items-center">
@@ -78,7 +159,10 @@
             <div>
                 <strong>{{ e.title }}</strong>
                 {% if e.project %}
-                <span class="badge bg-secondary ms-2">{{ e.project.name }}</span>
+                <a href="{{ url_for('projects.view_project', project_id=e.project.id) }}#calendar"
+                   class="badge bg-secondary ms-2 text-decoration-none">
+                    {{ e.project.name }}
+                </a>
                 {% endif %}
                 <br>
                 <small class="text-muted">
@@ -140,7 +224,7 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ url_for('create_personal_event') }}">
+            <form method="POST" action="{{ url_for('calendar.create_personal_event') }}">
                 <div class="modal-body">
                     <p class="text-muted small">
                         <i class="bi bi-info-circle"></i>
@@ -213,7 +297,143 @@
 <script>
 let myCalendar = null;
 let mySelectedDateStr = null;
+let __prevFilterState = null;
 
+// ============================================================
+// ISO-НОМЕР НЕДЕЛИ
+// ============================================================
+function getISOWeek(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return week;
+}
+
+// ============================================================
+// ФИЛЬТР ПО КЛИКУ НА ЛЕГЕНДУ
+// ============================================================
+const LEGEND_FILTER_KEY = 'calendarLegendFilters_personal';
+const ALL_TYPES = ['personal', 'project_event', 'task-new', 'task-progress', 'overdue', 'completed', 'todo'];
+
+function getLegendFilters() {
+    try {
+        return JSON.parse(localStorage.getItem(LEGEND_FILTER_KEY) || '{}');
+    } catch (e) {
+        return {};
+    }
+}
+
+function saveLegendFilters(state) {
+    localStorage.setItem(LEGEND_FILTER_KEY, JSON.stringify(state));
+}
+
+function restoreLegendFilters() {
+    const state = getLegendFilters();
+    const enabledCount = ALL_TYPES.filter(t => state[t] !== false).length;
+    if (enabledCount === 0) {
+        localStorage.removeItem(LEGEND_FILTER_KEY);
+        __prevFilterState = null;
+        document.querySelectorAll('#calendarLegend .legend-item').forEach(el => {
+            el.classList.remove('legend-disabled');
+        });
+        return;
+    }
+    document.querySelectorAll('#calendarLegend .legend-item').forEach(el => {
+        const type = el.dataset.type;
+        if (state[type] === false) el.classList.add('legend-disabled');
+        else el.classList.remove('legend-disabled');
+    });
+}
+
+function toggleLegendFilter(el) {
+    const type = el.dataset.type;
+    const state = getLegendFilters();
+    const isDisabled = el.classList.toggle('legend-disabled');
+    state[type] = !isDisabled;
+    saveLegendFilters(state);
+
+    const enabledCount = ALL_TYPES.filter(t => state[t] !== false).length;
+    if (enabledCount === 0) {
+        const countEl = document.getElementById('my-calendar-filter-count');
+        if (countEl) countEl.innerHTML = '<span class="text-warning">⚠ Все типы скрыты</span>';
+        return;
+    }
+    applyLegendFilters();
+}
+
+function resetLegendFilters() {
+    localStorage.removeItem(LEGEND_FILTER_KEY);
+    __prevFilterState = null;
+    document.querySelectorAll('#calendarLegend .legend-item').forEach(el => {
+        el.classList.remove('legend-disabled');
+    });
+    applyLegendFilters(true);
+}
+
+function applyLegendFilters(force) {
+    if (!myCalendar) return;
+    const state = getLegendFilters();
+
+    const stateStr = JSON.stringify(state);
+    if (!force && __prevFilterState === stateStr) return;
+    __prevFilterState = stateStr;
+
+    const enabledCount = ALL_TYPES.filter(t => state[t] !== false).length;
+    if (enabledCount === 0) {
+        myCalendar.getEvents().forEach(ev => {
+            if (ev.display === 'none') ev.setProp('display', 'auto');
+        });
+        updateCalendarCount();
+        return;
+    }
+
+    let visible = 0;
+    myCalendar.getEvents().forEach(ev => {
+        const props = ev.extendedProps || {};
+        const type = props.type || 'personal';
+        const color = ev.backgroundColor || '';
+
+        let legendType = null;
+        if (type === 'personal' || type === 'personal_event') legendType = 'personal';
+        else if (type === 'project_event') legendType = 'project_event';
+        else if (type === 'milestone') legendType = 'milestone';
+        else if (type === 'todo') {
+            if (color === '#dc2626') legendType = 'overdue';
+            else if (color === '#16a34a') legendType = 'completed';
+            else legendType = 'todo';
+        } else if (type === 'task') {
+            if (color === '#a1a1aa') legendType = 'task-new';
+            else if (color === '#f59e0b') legendType = 'task-progress';
+            else if (color === '#dc2626') legendType = 'overdue';
+            else if (color === '#16a34a') legendType = 'completed';
+            else legendType = 'task-new';
+        }
+
+        const shouldHide = legendType && state[legendType] === false;
+        const currentDisplay = ev.display;
+
+        if (shouldHide && currentDisplay !== 'none') ev.setProp('display', 'none');
+        else if (!shouldHide && currentDisplay === 'none') ev.setProp('display', 'auto');
+
+        if (!shouldHide) visible++;
+    });
+
+    const countEl = document.getElementById('my-calendar-filter-count');
+    if (countEl) countEl.innerHTML = `Показано: <strong>${visible}</strong> событий`;
+}
+
+function updateCalendarCount() {
+    if (!myCalendar) return;
+    const total = myCalendar.getEvents().filter(e => e.display !== 'none').length;
+    const countEl = document.getElementById('my-calendar-filter-count');
+    if (countEl) countEl.innerHTML = `Показано: <strong>${total}</strong> событий`;
+}
+
+// ============================================================
+// ИНИЦИАЛИЗАЦИЯ КАЛЕНДАРЯ
+// ============================================================
 document.addEventListener('DOMContentLoaded', function() {
     const calendarEl = document.getElementById('myCalendar');
     if (!calendarEl || typeof FullCalendar === 'undefined') return;
@@ -223,6 +443,16 @@ document.addEventListener('DOMContentLoaded', function() {
         locale: 'ru',
         height: 'auto',
         firstDay: 1,
+
+        // ← НОВОЕ: заголовок с номером недели
+        titleFormat: function(dateInfo) {
+            const d = dateInfo.date.marker;
+            const week = getISOWeek(d);
+            const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                                'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+            return `${monthNames[d.getMonth()]} ${d.getFullYear()} · неделя ${week}`;
+        },
+
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
@@ -234,7 +464,7 @@ document.addEventListener('DOMContentLoaded', function() {
             week: 'Неделя',
             list: 'Список'
         },
-        events: '{{ url_for("my_calendar_json") }}',
+        events: '{{ url_for("calendar.my_calendar_json") }}',
 
         dateClick: function(info) {
             openMyDayModal(info.dateStr, info.date);
@@ -242,7 +472,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         eventClick: function(info) {
             info.jsEvent.stopPropagation();
-
             if (info.event.url) {
                 window.location.href = info.event.url;
                 info.jsEvent.preventDefault();
@@ -266,28 +495,63 @@ document.addEventListener('DOMContentLoaded', function() {
 
         dayCellDidMount: function(arg) {
             arg.el.style.cursor = 'pointer';
+
+            // ← НОВОЕ: метка недели в понедельниках
+            const date = arg.date;
+            if (date.getDay() === 1) {  // понедельник
+                const weekNum = getISOWeek(date);
+                const badge = document.createElement('div');
+                badge.className = 'fc-week-number-badge';
+                badge.textContent = `Н${weekNum}`;
+                badge.title = `ISO-неделя ${weekNum}`;
+
+                const dayTop = arg.el.querySelector('.fc-daygrid-day-top');
+                if (dayTop) dayTop.appendChild(badge);
+            }
+        },
+
+        eventsSet: function(events) {
+            // Счётчики
+            let tasksCount = 0;
+            let todosCount = 0;
+            events.forEach(ev => {
+                const type = ev.extendedProps && ev.extendedProps.type;
+                if (type === 'task') tasksCount++;
+                if (type === 'todo') todosCount++;
+            });
+            const tasksEl = document.getElementById('tasksCount');
+            const todosEl = document.getElementById('todosCount');
+            if (tasksEl) tasksEl.textContent = tasksCount;
+            if (todosEl) todosEl.textContent = todosCount;
+
+            // Фильтры
+            restoreLegendFilters();
+            applyLegendFilters(true);
         }
     });
     myCalendar.render();
 });
 
+// ============================================================
+// ПРОСМОТР ДНЯ
+// ============================================================
 function openMyDayModal(dateStr, dateObj) {
     mySelectedDateStr = dateStr;
-
     const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
                     'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
     const days = ['воскресенье', 'понедельник', 'вторник', 'среда',
                   'четверг', 'пятница', 'суббота'];
-
     const d = dateObj || new Date(dateStr);
-    const dateLabel = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${days[d.getDay()]}`;
+    const weekNum = getISOWeek(d);
 
-    document.getElementById('myDayModalTitle').textContent = dateLabel;
+    document.getElementById('myDayModalTitle').innerHTML =
+        `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${days[d.getDay()]}
+         <span class="badge bg-secondary ms-2" style="font-size: 11px;">неделя ${weekNum}</span>`;
 
     const eventsList = document.getElementById('myDayModalEvents');
     const events = myCalendar.getEvents().filter(ev => {
-        const evStart = ev.startStr.split('T')[0];
-        return evStart === dateStr;
+        if (ev.display === 'none') return false;
+        return ev.startStr.split('T')[0] === dateStr;
     });
 
     if (events.length === 0) {
@@ -298,17 +562,31 @@ function openMyDayModal(dateStr, dateObj) {
             </div>
         `;
     } else {
+        const order = { personal: 0, project_event: 1, task: 2, todo: 3 };
+        events.sort((a, b) => {
+            const ta = (a.extendedProps && a.extendedProps.type) || 'project_event';
+            const tb = (b.extendedProps && b.extendedProps.type) || 'project_event';
+            return (order[ta] ?? 99) - (order[tb] ?? 99);
+        });
+
         eventsList.innerHTML = events.map(ev => {
-            const props = ev.extendedProps;
+            const props = ev.extendedProps || {};
             const timeLabel = ev.allDay ? 'Весь день' :
                 (ev.start ? ev.start.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'}) : '');
             const color = ev.backgroundColor || '#5b5bd6';
+
+            let badge = '';
+            if (props.type === 'todo') {
+                badge = props.done
+                    ? '<span class="badge bg-success ms-2">Выполнено</span>'
+                    : '<span class="badge bg-info ms-2">To-Do</span>';
+            }
 
             return `
                 <div class="d-flex align-items-center gap-2 p-2 mb-2 rounded" style="background: var(--bg-tertiary);">
                     <div style="width: 4px; height: 36px; border-radius: 2px; background: ${color};"></div>
                     <div class="flex-grow-1">
-                        <div class="fw-bold small">${ev.title}</div>
+                        <div class="fw-bold small">${ev.title}${badge}</div>
                         <div class="text-muted" style="font-size: 11px;">
                             ${timeLabel}
                             ${props.description ? ' · ' + props.description : ''}
@@ -320,18 +598,15 @@ function openMyDayModal(dateStr, dateObj) {
             `;
         }).join('');
     }
-
     new bootstrap.Modal(document.getElementById('myDayModal')).show();
 }
 
 function createMyEventFromDay() {
     bootstrap.Modal.getInstance(document.getElementById('myDayModal')).hide();
-
     if (mySelectedDateStr) {
         document.getElementById('myStartTimeField').value = mySelectedDateStr + 'T10:00';
         document.getElementById('myStartDateField').value = mySelectedDateStr;
     }
-
     setTimeout(() => {
         new bootstrap.Modal(document.getElementById('createPersonalEventModal')).show();
     }, 300);

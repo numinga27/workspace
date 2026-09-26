@@ -14,7 +14,6 @@
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
-    <!-- Сохраняем hash до его очистки, чтобы избежать прыжка браузера -->
     <script>
         window.__initialHash = window.location.hash;
         if (window.location.hash) {
@@ -71,9 +70,7 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        html {
-            scroll-padding-top: calc(var(--header-height) + 20px);
-        }
+        html { scroll-padding-top: calc(var(--header-height) + 20px); }
 
         body {
             background-color: var(--bg-primary);
@@ -87,9 +84,7 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* ============================================================ */
         /* HEADER */
-        /* ============================================================ */
         .header {
             height: var(--header-height);
             background: var(--bg-secondary);
@@ -109,6 +104,7 @@
             align-items: center;
             gap: 8px;
             letter-spacing: -0.01em;
+            flex-shrink: 0;
         }
         .header .logo-icon {
             width: 30px;
@@ -183,9 +179,144 @@
             border-color: var(--border-medium);
         }
 
-        /* ============================================================ */
+        /* ГЛОБАЛЬНЫЙ ПОИСК */
+        .global-search-wrap {
+            position: relative;
+            width: 300px;
+            margin-left: 24px;
+        }
+        .global-search-input {
+            padding-left: 34px !important;
+            padding-right: 52px !important;
+            background: var(--bg-tertiary) !important;
+            border-color: var(--border-light) !important;
+            height: 36px;
+            font-size: 13px;
+        }
+        .global-search-input:focus {
+            background: var(--bg-secondary) !important;
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 3px rgba(91, 91, 214, 0.12) !important;
+        }
+        .global-search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-tertiary);
+            font-size: 14px;
+            pointer-events: none;
+        }
+        .global-search-kbd {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            padding: 2px 6px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-medium);
+            border-radius: 4px;
+            color: var(--text-tertiary);
+            pointer-events: none;
+            font-family: inherit;
+            font-weight: 600;
+        }
+        .global-search-input:focus ~ .global-search-kbd { display: none; }
+
+        .global-search-results {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin-top: 6px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            max-height: 480px;
+            overflow-y: auto;
+            z-index: 1060;
+        }
+        .global-search-results.show { display: block; }
+
+        .global-search-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            text-decoration: none;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-light);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        .global-search-item:last-child { border-bottom: none; }
+        .global-search-item:hover,
+        .global-search-item.active { background: var(--bg-tertiary); }
+        .global-search-item .gs-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+        .global-search-item .gs-content { flex: 1; min-width: 0; }
+        .global-search-item .gs-title {
+            font-weight: 600;
+            font-size: 13.5px;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .global-search-item .gs-subtitle {
+            font-size: 11.5px;
+            color: var(--text-tertiary);
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .global-search-empty,
+        .global-search-loading {
+            padding: 24px;
+            text-align: center;
+            color: var(--text-tertiary);
+            font-size: 13px;
+        }
+        .global-search-hint {
+            padding: 8px 14px;
+            font-size: 11px;
+            color: var(--text-tertiary);
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .global-search-hint kbd {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-medium);
+            border-radius: 3px;
+            padding: 1px 5px;
+            font-size: 10px;
+            font-weight: 600;
+            font-family: inherit;
+        }
+
+        .gs-icon.type-project { background: #e0e7ff; color: #4f46e5; }
+        .gs-icon.type-task { background: #fef3c7; color: #d97706; }
+        .gs-icon.type-todo { background: #cffafe; color: #0891b2; }
+        .gs-icon.type-customer { background: #dbeafe; color: #1e40af; }
+        .gs-icon.type-supplier { background: #fef9c3; color: #a16207; }
+        .gs-icon.type-contact { background: #fff7ed; color: #c2410c; }
+
         /* SIDEBAR */
-        /* ============================================================ */
         .sidebar {
             position: fixed;
             top: var(--header-height);
@@ -205,14 +336,9 @@
             background: rgba(255,255,255,0.1);
             border-radius: 2px;
         }
-        .sidebar::-webkit-scrollbar-thumb:hover {
-            background: rgba(255,255,255,0.2);
-        }
+        .sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
-        .sidebar .nav-section {
-            padding: 0 12px;
-            margin-bottom: 20px;
-        }
+        .sidebar .nav-section { padding: 0 12px; margin-bottom: 20px; }
         .sidebar .nav-section .section-title {
             font-size: 11px;
             font-weight: 600;
@@ -236,14 +362,8 @@
             font-size: 13.5px;
             font-weight: 500;
         }
-        .sidebar .nav-item:hover {
-            background: var(--sidebar-bg-hover);
-            color: #fff;
-        }
-        .sidebar .nav-item.active {
-            background: var(--sidebar-bg-active);
-            color: #fff;
-        }
+        .sidebar .nav-item:hover { background: var(--sidebar-bg-hover); color: #fff; }
+        .sidebar .nav-item.active { background: var(--sidebar-bg-active); color: #fff; }
         .sidebar .nav-item i {
             font-size: 16px;
             width: 18px;
@@ -260,12 +380,8 @@
             border-radius: 4px;
             font-weight: 600;
         }
-        .sidebar .nav-item.active .badge {
-            background: var(--accent);
-            color: #fff;
-        }
+        .sidebar .nav-item.active .badge { background: var(--accent); color: #fff; }
 
-        /* Красный пульсирующий бейдж */
         .nav-badge-count {
             margin-left: auto;
             min-width: 18px;
@@ -282,16 +398,25 @@
             box-shadow: 0 0 0 2px var(--sidebar-bg);
             animation: pulse-badge 2s ease-in-out infinite;
         }
-
         @keyframes pulse-badge {
-            0%, 100% { 
-                transform: scale(1);
-                box-shadow: 0 0 0 2px var(--sidebar-bg);
-            }
-            50% { 
-                transform: scale(1.08);
-                box-shadow: 0 0 0 2px var(--sidebar-bg), 0 0 8px rgba(220, 38, 38, 0.4);
-            }
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 2px var(--sidebar-bg); }
+            50% { transform: scale(1.08); box-shadow: 0 0 0 2px var(--sidebar-bg), 0 0 8px rgba(220, 38, 38, 0.4); }
+        }
+
+        .nav-badge-new {
+            margin-left: auto;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            background: var(--accent);
+            color: white;
+            border-radius: 9px;
+            font-size: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 0 2px var(--sidebar-bg);
         }
 
         .sidebar .project-tree { padding: 0 12px; }
@@ -309,14 +434,8 @@
             font-weight: 500;
             margin-bottom: 1px;
         }
-        .sidebar .project-tree .tree-item:hover {
-            background: var(--sidebar-bg-hover);
-            color: #fff;
-        }
-        .sidebar .project-tree .tree-item.active {
-            background: var(--sidebar-bg-active);
-            color: #fff;
-        }
+        .sidebar .project-tree .tree-item:hover { background: var(--sidebar-bg-hover); color: #fff; }
+        .sidebar .project-tree .tree-item.active { background: var(--sidebar-bg-active); color: #fff; }
         .sidebar .project-tree .tree-item .expand-icon {
             font-size: 9px;
             transition: transform 0.2s ease;
@@ -328,10 +447,7 @@
             transform: rotate(90deg);
             opacity: 1;
         }
-        .sidebar .project-tree .tree-item .folder-icon {
-            color: #f59e0b;
-            font-size: 15px;
-        }
+        .sidebar .project-tree .tree-item .folder-icon { color: #f59e0b; font-size: 15px; }
         .sidebar .project-tree .tree-item .project-name {
             flex: 1;
             overflow: hidden;
@@ -346,14 +462,8 @@
             border-radius: 4px;
             font-weight: 600;
         }
-        .sidebar .project-tree .tree-children {
-            padding-left: 20px;
-            margin-top: 1px;
-        }
-        .sidebar .project-tree .tree-children .tree-item {
-            font-size: 13px;
-            padding: 5px 10px;
-        }
+        .sidebar .project-tree .tree-children { padding-left: 20px; margin-top: 1px; }
+        .sidebar .project-tree .tree-children .tree-item { font-size: 13px; padding: 5px 10px; }
         .sidebar .project-tree .tree-children .tree-item i {
             font-size: 13px;
             width: 15px;
@@ -369,9 +479,36 @@
             color: #fff;
         }
 
-        /* ============================================================ */
+        .project-search-input {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: #a1a1aa;
+            border-radius: var(--radius-sm);
+            padding: 6px 10px 6px 32px;
+            font-size: 12.5px;
+            margin-bottom: 8px;
+            transition: var(--transition);
+        }
+        .project-search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+        .project-search-input::placeholder { color: #52525b; }
+        .project-search-wrap { position: relative; padding: 0 10px; margin-bottom: 6px; }
+        .project-search-wrap i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #52525b;
+            font-size: 12px;
+            pointer-events: none;
+        }
+
         /* MAIN CONTENT */
-        /* ============================================================ */
         .main-content {
             margin-left: var(--sidebar-width);
             margin-top: var(--header-height);
@@ -386,43 +523,21 @@
             background: var(--border-medium);
             border-radius: 4px;
         }
-        .main-content::-webkit-scrollbar-thumb:hover {
-            background: var(--text-tertiary);
-        }
+        .main-content::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
 
-        /* ============================================================ */
-        /* ANCHOR OFFSET для вкладок проекта */
-        /* ============================================================ */
-        .nav-tabs,
-        .tab-content,
-        [id="tasks"],
-        [id="todo"],
-        [id="reports"],
-        [id="calendar"],
-        [id="files"],
-        [id="chat"] {
+        .nav-tabs, .tab-content,
+        [id="tasks"], [id="todo"], [id="reports"],
+        [id="calendar"], [id="files"], [id="chat"] {
             scroll-margin-top: calc(var(--header-height) + 24px);
         }
 
-        /* ============================================================ */
         /* TYPOGRAPHY */
-        /* ============================================================ */
         h1, h2, h3, h4, h5, h6 { color: var(--text-primary); }
-        h2 {
-            font-size: 26px;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-        }
-        h5 {
-            font-size: 15px;
-            font-weight: 600;
-            letter-spacing: -0.01em;
-        }
+        h2 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+        h5 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
         .text-muted { color: var(--text-secondary) !important; }
 
-        /* ============================================================ */
         /* BUTTONS */
-        /* ============================================================ */
         .btn {
             font-weight: 500;
             border-radius: var(--radius-md);
@@ -465,15 +580,9 @@
             color: var(--text-primary);
             border-color: var(--border-light);
         }
-        .btn-secondary:hover {
-            background: var(--border-light);
-            color: var(--text-primary);
-        }
+        .btn-secondary:hover { background: var(--border-light); color: var(--text-primary); }
 
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
+        .btn-danger { background: var(--danger); color: white; }
         .btn-danger:hover { background: #b91c1c; color: white; }
 
         .btn-outline-danger {
@@ -498,16 +607,19 @@
             border-color: var(--border-medium);
         }
 
-        .btn-sm {
-            padding: 5px 10px;
-            font-size: 12.5px;
-            border-radius: var(--radius-sm);
-        }
+        .btn-sm { padding: 5px 10px; font-size: 12.5px; border-radius: var(--radius-sm); }
         .btn-sm i { font-size: 13px; }
 
-        /* ============================================================ */
+        .btn-link {
+            background: transparent;
+            border: none;
+            color: var(--accent);
+            text-decoration: none;
+            padding: 0;
+        }
+        .btn-link:hover { color: var(--accent-hover); }
+
         /* CARDS */
-        /* ============================================================ */
         .card {
             background: var(--bg-secondary);
             border: 1px solid var(--border-light);
@@ -523,13 +635,9 @@
             font-weight: 600;
             border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
         }
-        .card:hover {
-            box-shadow: var(--shadow-sm);
-        }
+        .card:hover { box-shadow: var(--shadow-sm); }
 
-        /* ============================================================ */
         /* STAT CARDS */
-        /* ============================================================ */
         .stat-card {
             background: var(--bg-secondary);
             border-radius: var(--radius-lg);
@@ -538,10 +646,7 @@
             box-shadow: var(--shadow-xs);
             transition: var(--transition);
         }
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
         .stat-card .stat-icon {
             width: 40px;
             height: 40px;
@@ -559,15 +664,21 @@
             line-height: 1;
             letter-spacing: -0.02em;
         }
-        .stat-card .stat-label {
-            color: var(--text-secondary);
-            font-size: 13px;
-            margin-top: 4px;
+        .stat-card .stat-label { color: var(--text-secondary); font-size: 13px; margin-top: 4px; }
+
+        /* Компактная статистика */
+        .compact-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .compact-stats .badge {
+            font-size: 12px;
+            padding: 5px 10px;
         }
 
-        /* ============================================================ */
         /* PROJECT CARDS */
-        /* ============================================================ */
         .project-card {
             background: var(--bg-secondary);
             border-radius: var(--radius-lg);
@@ -619,14 +730,9 @@
             font-size: 12.5px;
             color: var(--text-secondary);
         }
-        .project-card .project-meta span {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
+        .project-card .project-meta span { display: flex; align-items: center; gap: 4px; }
         .project-card .project-meta i { font-size: 13px; opacity: 0.7; }
 
-        /* Прогресс-бар */
         .progress {
             background-color: var(--bg-tertiary);
             border-radius: 999px;
@@ -639,19 +745,11 @@
             font-weight: 600;
             transition: width 0.6s ease;
         }
-        .progress-bar.bg-success {
-            background: linear-gradient(90deg, #16a34a, #22c55e);
-        }
-        .progress-bar.bg-warning {
-            background: linear-gradient(90deg, #f59e0b, #fbbf24);
-        }
-        .progress-bar.bg-info {
-            background: linear-gradient(90deg, #0891b2, #06b6d4);
-        }
+        .progress-bar.bg-success { background: linear-gradient(90deg, #16a34a, #22c55e); }
+        .progress-bar.bg-warning { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .progress-bar.bg-info { background: linear-gradient(90deg, #0891b2, #06b6d4); }
 
-        /* ============================================================ */
         /* BADGES */
-        /* ============================================================ */
         .badge {
             font-weight: 600;
             padding: 4px 9px;
@@ -660,30 +758,29 @@
             letter-spacing: 0.01em;
         }
         .badge.bg-primary { background: var(--accent) !important; }
-        .badge.bg-secondary {
-            background: var(--bg-tertiary) !important;
-            color: var(--text-secondary) !important;
+        .badge.bg-secondary { background: var(--bg-tertiary) !important; color: var(--text-secondary) !important; }
+        .badge.bg-success { background: var(--success-light) !important; color: var(--success) !important; }
+        .badge.bg-warning { background: var(--warning-light) !important; color: #92400e !important; }
+        .badge.bg-danger { background: var(--danger-light) !important; color: var(--danger) !important; }
+        .badge.bg-info { background: var(--info-light) !important; color: var(--info) !important; }
+        .badge.bg-guest { background: #fff7ed !important; color: #c2410c !important; border: 1px solid #fed7aa; }
+
+        .badge-new {
+            background: var(--accent) !important;
+            color: white !important;
+            font-size: 9px !important;
+            padding: 3px 7px !important;
+            border-radius: 4px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            animation: pulse-new 2s ease-in-out infinite;
         }
-        .badge.bg-success {
-            background: var(--success-light) !important;
-            color: var(--success) !important;
-        }
-        .badge.bg-warning {
-            background: var(--warning-light) !important;
-            color: #92400e !important;
-        }
-        .badge.bg-danger {
-            background: var(--danger-light) !important;
-            color: var(--danger) !important;
-        }
-        .badge.bg-info {
-            background: var(--info-light) !important;
-            color: var(--info) !important;
+        @keyframes pulse-new {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
 
-        /* ============================================================ */
         /* FORMS */
-        /* ============================================================ */
         .form-control, .form-select {
             border: 1px solid var(--border-medium);
             border-radius: var(--radius-md);
@@ -698,28 +795,12 @@
             box-shadow: 0 0 0 3px rgba(91, 91, 214, 0.12);
             outline: none;
         }
-        .form-control::placeholder {
-            color: var(--text-tertiary);
-        }
-        .form-label {
-            font-weight: 500;
-            font-size: 13px;
-            color: var(--text-primary);
-            margin-bottom: 6px;
-        }
-        .form-control-sm, .form-select-sm {
-            padding: 6px 10px;
-            font-size: 12.5px;
-            border-radius: var(--radius-sm);
-        }
-        .form-check-input:checked {
-            background-color: var(--accent);
-            border-color: var(--accent);
-        }
+        .form-control::placeholder { color: var(--text-tertiary); }
+        .form-label { font-weight: 500; font-size: 13px; color: var(--text-primary); margin-bottom: 6px; }
+        .form-control-sm, .form-select-sm { padding: 6px 10px; font-size: 12.5px; border-radius: var(--radius-sm); }
+        .form-check-input:checked { background-color: var(--accent); border-color: var(--accent); }
 
-        /* ============================================================ */
         /* ALERTS */
-        /* ============================================================ */
         .alert {
             border-radius: var(--radius-md);
             border: 1px solid transparent;
@@ -730,57 +811,76 @@
             gap: 10px;
         }
         .alert i { font-size: 17px; flex-shrink: 0; }
-        .alert-success {
-            background: var(--success-light);
-            color: #14532d;
-            border-color: #bbf7d0;
-        }
-        .alert-danger {
-            background: var(--danger-light);
-            color: #7f1d1d;
-            border-color: #fecaca;
-        }
-        .alert-warning {
-            background: var(--warning-light);
-            color: #78350f;
-            border-color: #fde68a;
-        }
-        .alert-info {
-            background: var(--info-light);
-            color: #164e63;
-            border-color: #a5f3fc;
-        }
-        .alert-secondary {
-            background: var(--bg-tertiary);
-            color: var(--text-secondary);
-            border-color: var(--border-light);
-        }
+        .alert-success { background: var(--success-light); color: #14532d; border-color: #bbf7d0; }
+        .alert-danger { background: var(--danger-light); color: #7f1d1d; border-color: #fecaca; }
+        .alert-warning { background: var(--warning-light); color: #78350f; border-color: #fde68a; }
+        .alert-info { background: var(--info-light); color: #164e63; border-color: #a5f3fc; }
+        .alert-secondary { background: var(--bg-tertiary); color: var(--text-secondary); border-color: var(--border-light); }
 
-        /* ============================================================ */
         /* TASK CARDS */
-        /* ============================================================ */
         .task-card {
             border-left: 3px solid var(--border-medium);
             transition: var(--transition);
             border-radius: var(--radius-md);
         }
-        .task-card.completed {
-            border-left-color: var(--success);
-            background: #f0fdf4;
-        }
+        .task-card.completed { border-left-color: var(--success); background: #f0fdf4; }
         .task-card.in_progress { border-left-color: var(--warning); }
-        .task-card:hover {
-            box-shadow: var(--shadow-sm);
-            transform: translateX(2px);
-        }
+        .task-card:hover { box-shadow: var(--shadow-sm); transform: translateX(2px); }
         .task-card.border-danger {
             border: 2px solid var(--danger) !important;
             border-left-width: 3px;
         }
+        .task-card.unread {
+            border-left-color: var(--accent) !important;
+            background: #f5f6ff;
+        }
 
-        /* ============================================================ */
+        /* ТАБЛИЧНЫЙ ВИД ЗАДАЧ */
+        .tasks-table { font-size: 13.5px; }
+        .tasks-table thead th {
+            background: var(--bg-tertiary);
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            padding: 10px 12px;
+            border-bottom: 2px solid var(--border-light);
+            white-space: nowrap;
+        }
+        .tasks-table tbody td {
+            padding: 12px;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .tasks-table tbody tr { transition: background 0.15s ease; }
+        .tasks-table tbody tr:hover { background: var(--bg-tertiary); }
+        .tasks-table .table-success-light { background: #f0fdf4; }
+        .tasks-table .table-danger-light { background: #fef2f2; }
+        .tasks-table .table-unread { background: #f5f6ff; }
+
+        .tasks-table .status-select {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-color: var(--border-light);
+            min-width: 110px;
+        }
+        .tasks-table .status-select[data-status="new"] { background: #f4f4f5; }
+        .tasks-table .status-select[data-status="in_progress"] { background: #fffbeb; color: #92400e; }
+        .tasks-table .status-select[data-status="completed"] { background: #f0fdf4; color: #065f46; }
+
+        .tasks-table .action-btn {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .tasks-table .action-btn:hover { background: var(--bg-tertiary); border-color: var(--accent); }
+
         /* CHAT */
-        /* ============================================================ */
         .chat-box {
             height: 300px;
             overflow-y: auto;
@@ -808,13 +908,8 @@
             margin-left: 8px;
         }
 
-        /* ============================================================ */
         /* EMPTY STATES */
-        /* ============================================================ */
-        .empty-state {
-            text-align: center;
-            padding: 64px 20px;
-        }
+        .empty-state { text-align: center; padding: 64px 20px; }
         .empty-state-icon {
             width: 72px;
             height: 72px;
@@ -827,19 +922,10 @@
             color: var(--text-tertiary);
             margin-bottom: 20px;
         }
-        .empty-state h5 {
-            color: var(--text-primary);
-            margin-bottom: 8px;
-        }
-        .empty-state p {
-            color: var(--text-secondary);
-            font-size: 13.5px;
-            margin-bottom: 20px;
-        }
+        .empty-state h5 { color: var(--text-primary); margin-bottom: 8px; }
+        .empty-state p { color: var(--text-secondary); font-size: 13.5px; margin-bottom: 20px; }
 
-        /* ============================================================ */
-        /* CALENDAR (FullCalendar) */
-        /* ============================================================ */
+        /* CALENDAR */
         #calendar, #myCalendar {
             --fc-border-color: var(--border-light);
             --fc-today-bg-color: var(--accent-light);
@@ -882,9 +968,7 @@
             color: white;
         }
         #calendar .fc-button-primary:disabled,
-        #myCalendar .fc-button-primary:disabled {
-            opacity: 0.5;
-        }
+        #myCalendar .fc-button-primary:disabled { opacity: 0.5; }
         #calendar .fc-daygrid-day-number,
         #calendar .fc-col-header-cell-cushion,
         #myCalendar .fc-daygrid-day-number,
@@ -902,9 +986,7 @@
             letter-spacing: 0.04em;
         }
         #calendar .fc-day-today,
-        #myCalendar .fc-day-today {
-            background: var(--accent-light) !important;
-        }
+        #myCalendar .fc-day-today { background: var(--accent-light) !important; }
         #calendar .fc-event,
         #myCalendar .fc-event {
             border-radius: 4px;
@@ -915,25 +997,96 @@
             border: none;
         }
         #calendar .fc-event:hover,
-        #myCalendar .fc-event:hover {
-            opacity: 0.9;
-        }
+        #myCalendar .fc-event:hover { opacity: 0.9; }
         #calendar .fc-list-event:hover td,
-        #myCalendar .fc-list-event:hover td {
+        #myCalendar .fc-list-event:hover td { background: var(--bg-tertiary); }
+
+        .fc-daygrid-day { cursor: pointer; transition: background 0.15s ease; }
+        .fc-daygrid-day:hover { background: rgba(91, 91, 214, 0.04) !important; }
+
+        /* Метка ISO-недели в понедельниках */
+        .fc-week-number-badge {
+            font-size: 9px;
+            color: var(--text-tertiary);
             background: var(--bg-tertiary);
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-weight: 700;
+            margin-left: 4px;
+            display: inline-block;
+            letter-spacing: 0.03em;
+        }
+        .fc-daygrid-day-top {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 4px;
         }
 
-        .fc-daygrid-day {
+        /* ИНТЕРАКТИВНАЯ ЛЕГЕНДА КАЛЕНДАРЯ */
+        .legend-item {
             cursor: pointer;
-            transition: background 0.15s ease;
+            user-select: none;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid transparent;
         }
-        .fc-daygrid-day:hover {
-            background: rgba(91, 91, 214, 0.04) !important;
+        .legend-item:hover { background: var(--bg-tertiary); border-color: var(--border-light); }
+        .legend-item.legend-disabled {
+            opacity: 0.35;
+            text-decoration: line-through;
+            text-decoration-color: var(--danger);
         }
+        .legend-item.legend-disabled:hover { opacity: 0.6; }
 
-        /* ============================================================ */
+        /* СВОРАЧИВАЕМЫЕ ФОРМЫ */
+        .collapse-icon {
+            transition: transform 0.2s ease;
+            display: inline-block;
+            font-size: 12px;
+            margin-left: 4px;
+        }
+        [aria-expanded="true"] .collapse-icon { transform: rotate(180deg); }
+        [aria-expanded="true"] .collapse-label-closed { display: none; }
+        [aria-expanded="false"] .collapse-label-open { display: none; }
+
+        /* ПОДСВЕТКА НОВОЙ ЗАДАЧИ */
+        @keyframes highlight-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(91, 91, 214, 0.6); background-color: rgba(91, 91, 214, 0.08); }
+            50% { box-shadow: 0 0 0 8px rgba(91, 91, 214, 0); background-color: rgba(91, 91, 214, 0.15); }
+            100% { box-shadow: 0 0 0 0 rgba(91, 91, 214, 0); background-color: transparent; }
+        }
+        .highlight-new {
+            animation: highlight-pulse 1.5s ease-in-out 2;
+            border-left-color: var(--accent) !important;
+            position: relative;
+            z-index: 1;
+        }
+        .highlight-new::before {
+            content: '✨ Новая';
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            background: var(--accent);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            animation: fadeInUp 0.3s ease-out;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in-up { animation: fadeInUp 0.3s ease-out; }
+
         /* TOGGLE MOBILE */
-        /* ============================================================ */
         .sidebar-toggle {
             display: none;
             background: none;
@@ -954,6 +1107,10 @@
         }
         .sidebar-overlay.show { display: block; }
 
+        @media (max-width: 992px) {
+            .global-search-wrap { width: 200px; margin-left: 12px; }
+        }
+
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.open { transform: translateX(0); }
@@ -962,11 +1119,25 @@
             .sidebar-toggle { display: block; }
             .header .logo span { display: none; }
             h2 { font-size: 22px; }
+            .global-search-wrap { display: none; }
+
+            .tasks-table thead { display: none; }
+            .tasks-table, .tasks-table tbody, .tasks-table tr, .tasks-table td {
+                display: block;
+                width: 100%;
+            }
+            .tasks-table tr {
+                background: white;
+                border: 1px solid var(--border-light);
+                border-radius: var(--radius-md);
+                margin-bottom: 12px;
+                padding: 8px;
+                box-shadow: var(--shadow-xs);
+            }
+            .tasks-table td { border: none; padding: 6px 8px; }
         }
 
-        /* ============================================================ */
         /* UTILITY */
-        /* ============================================================ */
         .text-truncate-2 {
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -974,25 +1145,7 @@
             overflow: hidden;
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .fade-in-up {
-            animation: fadeInUp 0.3s ease-out;
-        }
-
-        /* Nav tabs */
-        .nav-tabs {
-            border-bottom: 1px solid var(--border-light);
-            gap: 4px;
-        }
+        .nav-tabs { border-bottom: 1px solid var(--border-light); gap: 4px; }
         .nav-tabs .nav-link {
             border: none;
             color: var(--text-secondary);
@@ -1003,37 +1156,24 @@
             transition: var(--transition);
             position: relative;
         }
-        .nav-tabs .nav-link:hover {
-            color: var(--text-primary);
-            background: var(--bg-tertiary);
-        }
+        .nav-tabs .nav-link:hover { color: var(--text-primary); background: var(--bg-tertiary); }
         .nav-tabs .nav-link.active {
             color: var(--accent);
             background: transparent;
             border-bottom: 2px solid var(--accent);
             font-weight: 600;
         }
-        .nav-tabs .nav-link .badge {
-            margin-left: 6px;
-        }
+        .nav-tabs .nav-link .badge { margin-left: 6px; }
 
-        /* Bootstrap overrides */
         .modal-content {
             border-radius: var(--radius-lg);
             border: none;
             box-shadow: var(--shadow-lg);
         }
-        .modal-header {
-            border-bottom: 1px solid var(--border-light);
-            padding: 16px 20px;
-        }
+        .modal-header { border-bottom: 1px solid var(--border-light); padding: 16px 20px; }
         .modal-body { padding: 20px; }
-        .modal-footer {
-            border-top: 1px solid var(--border-light);
-            padding: 14px 20px;
-        }
+        .modal-footer { border-top: 1px solid var(--border-light); padding: 14px 20px; }
 
-        /* Dropdown */
         .dropdown-menu {
             border-radius: var(--radius-md);
             border: 1px solid var(--border-light);
@@ -1041,20 +1181,10 @@
             padding: 4px;
             font-size: 13.5px;
         }
-        .dropdown-item {
-            border-radius: var(--radius-sm);
-            padding: 7px 10px;
-            color: var(--text-primary);
-        }
-        .dropdown-item:hover {
-            background: var(--bg-tertiary);
-        }
-        .dropdown-item.text-danger:hover {
-            background: var(--danger-light);
-            color: var(--danger) !important;
-        }
+        .dropdown-item { border-radius: var(--radius-sm); padding: 7px 10px; color: var(--text-primary); }
+        .dropdown-item:hover { background: var(--bg-tertiary); }
+        .dropdown-item.text-danger:hover { background: var(--danger-light); color: var(--danger) !important; }
 
-        /* Цветные точки */
         .color-dot {
             display: inline-block;
             width: 32px;
@@ -1064,35 +1194,41 @@
             transition: all 0.15s;
             cursor: pointer;
         }
-        .color-dot.selected {
-            border-color: var(--text-primary);
-            transform: scale(1.1);
-        }
-        .color-dot:hover {
-            transform: scale(1.05);
-        }
+        .color-dot.selected { border-color: var(--text-primary); transform: scale(1.1); }
+        .color-dot:hover { transform: scale(1.05); }
 
-        /* Backgrounds */
         .bg-success-subtle { background-color: #f0fdf4 !important; }
         .bg-warning-subtle { background-color: #fffbeb !important; }
         .bg-danger-subtle { background-color: #fef2f2 !important; }
         .bg-info-subtle { background-color: #f0f9ff !important; }
+        .bg-guest-subtle { background-color: #fff7ed !important; }
     </style>
 </head>
 <body>
-    <!-- ============================================================ -->
     <!-- HEADER -->
-    <!-- ============================================================ -->
     <header class="header">
         <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Меню">
             <i class="bi bi-list"></i>
         </button>
         <div class="logo">
-            <div class="logo-icon">
-                <i class="bi bi-hexagon-fill"></i>
-            </div>
+            <div class="logo-icon"><i class="bi bi-hexagon-fill"></i></div>
             <span>Workspace</span>
         </div>
+
+        {% if session.user_id %}
+        <div class="global-search-wrap">
+            <input type="text"
+                   id="globalSearchInput"
+                   class="form-control form-control-sm global-search-input"
+                   placeholder="Поиск..."
+                   autocomplete="off"
+                   aria-label="Глобальный поиск">
+            <i class="bi bi-search global-search-icon"></i>
+            <kbd class="global-search-kbd">⌘K</kbd>
+            <div id="globalSearchResults" class="global-search-results"></div>
+        </div>
+        {% endif %}
+
         <div class="header-right">
             <div class="user-info">
                 <div class="avatar">
@@ -1103,7 +1239,7 @@
                     <div class="user-role">{{ session.user_role }}</div>
                 </div>
             </div>
-            <a href="{{ url_for('logout') }}" class="header-icon-btn" title="Выйти">
+            <a href="{{ url_for('auth.logout') }}" class="header-icon-btn" title="Выйти">
                 <i class="bi bi-box-arrow-right"></i>
             </a>
         </div>
@@ -1111,24 +1247,24 @@
 
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-    <!-- ============================================================ -->
     <!-- SIDEBAR -->
-    <!-- ============================================================ -->
     <nav class="sidebar" id="sidebar">
         <div class="nav-section">
             <div class="section-title">Основное</div>
-            <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+            <a href="{{ url_for('dashboard.dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard.dashboard' %}active{% endif %}">
                 <i class="bi bi-grid-1x2-fill"></i>
                 <span>Дашборд</span>
             </a>
-            <a href="{{ url_for('my_tasks') }}" class="nav-item {% if request.endpoint == 'my_tasks' %}active{% endif %}">
+            <a href="{{ url_for('tasks.my_tasks') }}" class="nav-item {% if request.endpoint == 'tasks.my_tasks' %}active{% endif %}">
                 <i class="bi bi-check2-square"></i>
                 <span>Мои задачи</span>
-                {% if my_overdue_count and my_overdue_count > 0 %}
-                    <span class="nav-badge-count">{{ my_overdue_count }}</span>
+                {% if unread_tasks_count and unread_tasks_count > 0 %}
+                    <span class="nav-badge-new" title="{{ unread_tasks_count }} новых задач">{{ unread_tasks_count }}</span>
+                {% elif my_overdue_count and my_overdue_count > 0 %}
+                    <span class="nav-badge-count" title="{{ my_overdue_count }} просроченных">{{ my_overdue_count }}</span>
                 {% endif %}
             </a>
-            <a href="{{ url_for('my_calendar') }}" class="nav-item {% if request.endpoint == 'my_calendar' %}active{% endif %}">
+            <a href="{{ url_for('calendar.my_calendar') }}" class="nav-item {% if request.endpoint == 'calendar.my_calendar' %}active{% endif %}">
                 <i class="bi bi-calendar3"></i>
                 <span>Мой календарь</span>
             </a>
@@ -1136,24 +1272,50 @@
 
         <div class="nav-section">
             <div class="section-title">Управление</div>
-            <a href="{{ url_for('customers_list') }}" class="nav-item {% if request.endpoint in ['customers_list', 'create_customer', 'edit_customer'] %}active{% endif %}">
+            <a href="{{ url_for('customers.customers_list') }}" class="nav-item {% if request.endpoint and request.endpoint.startswith('customers.') %}active{% endif %}">
                 <i class="bi bi-buildings"></i>
                 <span>Заказчики</span>
             </a>
-            <a href="{{ url_for('create_project') }}" class="nav-item {% if request.endpoint == 'create_project' %}active{% endif %}">
+            <a href="{{ url_for('suppliers.suppliers_list') }}"
+               class="nav-item {% if request.endpoint and request.endpoint.startswith('suppliers.') and 'subcontractor' not in request.endpoint %}active{% endif %}">
+                <i class="bi bi-truck"></i>
+                <span>Поставщики</span>
+            </a>
+            <a href="{{ url_for('suppliers.subcontractors_list') }}"
+               class="nav-item {% if request.endpoint and 'subcontractor' in request.endpoint %}active{% endif %}">
+                <i class="bi bi-people-fill"></i>
+                <span>Субподрядчики</span>
+            </a>
+            <a href="{{ url_for('projects.create_project') }}" class="nav-item {% if request.endpoint == 'projects.create_project' %}active{% endif %}">
                 <i class="bi bi-plus-square"></i>
                 <span>Создать проект</span>
             </a>
         </div>
 
         <div class="nav-section">
-            <div class="section-title">Проекты</div>
-            <div class="project-tree">
+            <div class="section-title">
+                Проекты
+                {% if projects %}<span style="float:right; color:#71717a; font-weight:600;">{{ projects|length }}</span>{% endif %}
+            </div>
+
+            {% if projects and projects|length > 3 %}
+            <div class="project-search-wrap">
+                <input type="text"
+                       class="project-search-input"
+                       placeholder="Поиск проектов..."
+                       id="projectSearch"
+                       oninput="filterProjects(this.value)">
+                <i class="bi bi-search"></i>
+            </div>
+            {% endif %}
+
+            <div class="project-tree" id="projectTree">
                 {% if projects %}
                     {% for project in projects %}
                         {% set current_pid = request.view_args.get('project_id') if request.view_args else None %}
                         {% set is_current = current_pid and current_pid|int == project.id %}
                         {% set project_unread = unread_counts.get(project.id, 0) %}
+
                         <div class="tree-item {% if is_current %}active{% endif %}"
                              onclick="toggleProject('{{ project.id }}')">
                             <span class="expand-icon {% if is_current %}expanded{% endif %}" id="expand-{{ project.id }}">▶</span>
@@ -1170,55 +1332,34 @@
                         </div>
                         <div class="tree-children" id="children-{{ project.id }}"
                              style="display: {% if is_current %}block{% else %}none{% endif %};">
-                            <a href="{{ url_for('view_project', project_id=project.id) }}"
-                               class="tree-item project-tab-link"
-                               data-tab="dashboard"
-                               data-project-id="{{ project.id }}">
-                                <i class="bi bi-grid"></i>
-                                <span>Дашборд</span>
+                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}"
+                               class="tree-item project-tab-link" data-tab="dashboard" data-project-id="{{ project.id }}">
+                                <i class="bi bi-grid"></i><span>Дашборд</span>
                             </a>
-                            <a href="{{ url_for('view_project', project_id=project.id) }}#tasks" 
-                               class="tree-item project-tab-link" 
-                               data-tab="tasks"
-                               data-project-id="{{ project.id }}">
-                                <i class="bi bi-list-task"></i>
-                                <span>Задачи</span>
+                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}#tasks"
+                               class="tree-item project-tab-link" data-tab="tasks" data-project-id="{{ project.id }}">
+                                <i class="bi bi-list-task"></i><span>Задачи</span>
                                 <span class="badge">{{ project.tasks|length }}</span>
                             </a>
-                            <a href="{{ url_for('view_project', project_id=project.id) }}#todo" 
-                               class="tree-item project-tab-link" 
-                               data-tab="todo"
-                               data-project-id="{{ project.id }}">
-                                <i class="bi bi-check2-square"></i>
-                                <span>To-Do</span>
+                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}#todo"
+                               class="tree-item project-tab-link" data-tab="todo" data-project-id="{{ project.id }}">
+                                <i class="bi bi-check2-square"></i><span>To-Do</span>
                             </a>
-                            <a href="{{ url_for('view_project', project_id=project.id) }}#reports" 
-                               class="tree-item project-tab-link" 
-                               data-tab="reports"
-                               data-project-id="{{ project.id }}">
-                                <i class="bi bi-file-earmark-text"></i>
-                                <span>Отчёты</span>
+                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}#reports"
+                               class="tree-item project-tab-link" data-tab="reports" data-project-id="{{ project.id }}">
+                                <i class="bi bi-file-earmark-text"></i><span>Отчёты</span>
                             </a>
-                            <a href="{{ url_for('view_project', project_id=project.id) }}#calendar" 
-                               class="tree-item project-tab-link" 
-                               data-tab="calendar"
-                               data-project-id="{{ project.id }}">
-                                <i class="bi bi-calendar3"></i>
-                                <span>Календарь</span>
+                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}#calendar"
+                               class="tree-item project-tab-link" data-tab="calendar" data-project-id="{{ project.id }}">
+                                <i class="bi bi-calendar3"></i><span>Календарь</span>
                             </a>
-                            <a href="{{ url_for('view_project', project_id=project.id) }}#files" 
-                               class="tree-item project-tab-link" 
-                               data-tab="files"
-                               data-project-id="{{ project.id }}">
-                                <i class="bi bi-folder"></i>
-                                <span>Файлы</span>
+                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}#files"
+                               class="tree-item project-tab-link" data-tab="files" data-project-id="{{ project.id }}">
+                                <i class="bi bi-folder"></i><span>Файлы</span>
                             </a>
-                            <a href="{{ url_for('view_project', project_id=project.id) }}?mark_read=1#chat" 
-                               class="tree-item project-tab-link" 
-                               data-tab="chat"
-                               data-project-id="{{ project.id }}">
-                                <i class="bi bi-chat-dots"></i>
-                                <span>Чат</span>
+                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}?mark_read=1#chat"
+                               class="tree-item project-tab-link" data-tab="chat" data-project-id="{{ project.id }}">
+                                <i class="bi bi-chat-dots"></i><span>Чат</span>
                                 {% if project_unread > 0 %}
                                     <span class="nav-badge-count">{{ project_unread }}</span>
                                 {% else %}
@@ -1226,10 +1367,9 @@
                                 {% endif %}
                             </a>
                             {% if session.user_role == 'admin' or (user_role and user_role in ['admin', 'manager']) %}
-                            <a href="{{ url_for('project_settings', project_id=project.id) }}"
-                               class="tree-item {% if request.endpoint == 'project_settings' and is_current %}active{% endif %}">
-                                <i class="bi bi-gear"></i>
-                                <span>Настройки</span>
+                            <a href="{{ url_for('team.project_settings', project_id=project.id) }}"
+                               class="tree-item {% if request.endpoint == 'team.project_settings' and is_current %}active{% endif %}">
+                                <i class="bi bi-gear"></i><span>Настройки</span>
                             </a>
                             {% endif %}
                         </div>
@@ -1238,7 +1378,7 @@
                     <div style="padding: 12px 10px; font-size: 12.5px; color: #52525b; text-align: center;">
                         Нет проектов
                     </div>
-                    <a href="{{ url_for('create_project') }}" class="btn btn-primary btn-sm w-100 mt-2">
+                    <a href="{{ url_for('projects.create_project') }}" class="btn btn-primary btn-sm w-100 mt-2">
                         <i class="bi bi-plus-lg"></i> Создать проект
                     </a>
                 {% endif %}
@@ -1246,9 +1386,7 @@
         </div>
     </nav>
 
-    <!-- ============================================================ -->
     <!-- MAIN CONTENT -->
-    <!-- ============================================================ -->
     <main class="main-content" id="mainContent">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -1265,14 +1403,9 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- ============================================================ -->
     <!-- SCRIPTS -->
-    <!-- ============================================================ -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // ============================================================
-        // SIDEBAR
-        // ============================================================
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('sidebarOverlay').classList.toggle('show');
@@ -1281,30 +1414,39 @@
         function toggleProject(projectId) {
             const children = document.getElementById('children-' + projectId);
             const expand = document.getElementById('expand-' + projectId);
+            if (!children || !expand) return;
             if (children.style.display === 'none') {
                 children.style.display = 'block';
-                if (expand) expand.classList.add('expanded');
+                expand.classList.add('expanded');
             } else {
                 children.style.display = 'none';
-                if (expand) expand.classList.remove('expanded');
+                expand.classList.remove('expanded');
             }
         }
 
-        // ============================================================
-        // ПЛАВНАЯ ПРОКРУТКА К ВКЛАДКАМ С УЧЁТОМ ХЕДЕРА
-        // ============================================================
+        function filterProjects(query) {
+            const q = query.toLowerCase().trim();
+            document.querySelectorAll('#projectTree .tree-item').forEach(el => {
+                const name = (el.querySelector('.project-name')?.textContent || '').toLowerCase();
+                if (el.querySelector('.project-name')) {
+                    el.style.display = (!q || name.includes(q)) ? '' : 'none';
+                    const pid = el.getAttribute('onclick')?.match(/'(\d+)'/)?.[1];
+                    if (pid) {
+                        const children = document.getElementById('children-' + pid);
+                        if (children) children.style.display = 'none';
+                    }
+                }
+            });
+        }
+
         function scrollToTabs() {
             const tabsContainer = document.querySelector('.nav-tabs');
             const mainContent = document.querySelector('.main-content');
             if (!tabsContainer || !mainContent) return;
-
             const headerHeight = 56;
             const tabsRect = tabsContainer.getBoundingClientRect();
             const mainRect = mainContent.getBoundingClientRect();
-
-            // Позиция вкладок внутри скролл-контейнера
             const offsetInContainer = tabsRect.top - mainRect.top + mainContent.scrollTop;
-
             mainContent.scrollTo({
                 top: Math.max(0, offsetInContainer - headerHeight - 16),
                 behavior: 'smooth'
@@ -1314,44 +1456,26 @@
         function activateTab(targetId) {
             const tabLink = document.querySelector(`.nav-tabs a[href="#${targetId}"]`);
             if (tabLink) {
-                // Сначала переключаем вкладку
-                if (typeof bootstrap !== 'undefined') {
-                    const tab = new bootstrap.Tab(tabLink);
-                    tab.show();
-                } else {
-                    tabLink.click();
-                }
-                // Потом скроллим к вкладкам с учётом хедера
+                if (typeof bootstrap !== 'undefined') new bootstrap.Tab(tabLink).show();
+                else tabLink.click();
                 setTimeout(scrollToTabs, 50);
             }
-            if (history.replaceState) {
-                history.replaceState(null, null, '#' + targetId);
-            }
+            if (history.replaceState) history.replaceState(null, null, '#' + targetId);
             updateSidebarActive(targetId);
         }
 
         function updateSidebarActive(tabId) {
-            document.querySelectorAll('.project-tab-link').forEach(el => {
-                el.classList.remove('active');
-            });
-
+            document.querySelectorAll('.project-tab-link').forEach(el => el.classList.remove('active'));
             const activeLink = document.querySelector(`.project-tab-link[data-tab="${tabId}"]`);
-            if (activeLink) {
-                activeLink.classList.add('active');
-            }
+            if (activeLink) activeLink.classList.add('active');
         }
 
-        // ============================================================
-        // AJAX: ОТМЕТКА ЧАТА КАК ПРОЧИТАННОГО
-        // ============================================================
         function markChatAsRead(projectId) {
             fetch(`/project/${projectId}/mark_read`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
+                headers: { 'Content-Type': 'application/json' }
             })
-            .then(response => response.json())
+            .then(r => r.json())
             .then(data => {
                 if (data.success) {
                     const chatLink = document.querySelector(`.project-tab-link[data-tab="chat"][data-project-id="${projectId}"]`);
@@ -1372,9 +1496,183 @@
             .catch(err => console.error('Ошибка отметки чата:', err));
         }
 
-        // ============================================================
+        // ГЛОБАЛЬНЫЙ ПОИСК
+        (function() {
+            const input = document.getElementById('globalSearchInput');
+            const resultsBox = document.getElementById('globalSearchResults');
+            if (!input || !resultsBox) return;
+
+            let searchTimeout = null;
+            let activeIndex = -1;
+            let currentResults = [];
+
+            document.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                    e.preventDefault();
+                    input.focus();
+                    input.select();
+                }
+                if (e.key === 'Escape' && document.activeElement === input) {
+                    closeResults();
+                    input.blur();
+                }
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    input.focus();
+                }
+            });
+
+            input.addEventListener('input', function() {
+                const q = this.value.trim();
+                if (q.length < 2) { closeResults(); return; }
+                clearTimeout(searchTimeout);
+                resultsBox.innerHTML = '<div class="global-search-loading">Поиск...</div>';
+                resultsBox.classList.add('show');
+                searchTimeout = setTimeout(() => doSearch(q), 250);
+            });
+
+            input.addEventListener('keydown', function(e) {
+                if (!resultsBox.classList.contains('show')) return;
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    activeIndex = Math.min(activeIndex + 1, currentResults.length - 1);
+                    updateActiveItem();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    activeIndex = Math.max(activeIndex - 1, 0);
+                    updateActiveItem();
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (activeIndex >= 0 && currentResults[activeIndex]) {
+                        window.location.href = currentResults[activeIndex].url;
+                    }
+                }
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.global-search-wrap')) closeResults();
+            });
+
+            function doSearch(q) {
+                fetch('/api/search?q=' + encodeURIComponent(q))
+                    .then(r => r.json())
+                    .then(data => {
+                        currentResults = data;
+                        activeIndex = -1;
+                        renderResults(data, q);
+                    })
+                    .catch(err => {
+                        console.error('Search error:', err);
+                        resultsBox.innerHTML = '<div class="global-search-empty">Ошибка поиска</div>';
+                    });
+            }
+
+            function renderResults(results, query) {
+                if (!results || results.length === 0) {
+                    resultsBox.innerHTML = `
+                        <div class="global-search-empty">
+                            <i class="bi bi-search" style="font-size: 24px; display: block; margin-bottom: 6px; opacity: 0.4;"></i>
+                            Ничего не найдено по запросу «${escapeHtml(query)}»
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = `
+                    <div class="global-search-hint">
+                        <span><kbd>↑</kbd> <kbd>↓</kbd> навигация</span>
+                        <span><kbd>Enter</kbd> открыть</span>
+                        <span><kbd>Esc</kbd> закрыть</span>
+                    </div>
+                `;
+
+                html += results.map((r, i) => `
+                    <a href="${r.url}" class="global-search-item" data-index="${i}">
+                        <div class="gs-icon type-${r.type}"><i class="bi bi-${r.icon}"></i></div>
+                        <div class="gs-content">
+                            <div class="gs-title">${escapeHtml(r.title)}</div>
+                            <div class="gs-subtitle">${escapeHtml(r.subtitle)}</div>
+                        </div>
+                        <i class="bi bi-arrow-right text-muted" style="font-size: 12px;"></i>
+                    </a>
+                `).join('');
+
+                resultsBox.innerHTML = html;
+                resultsBox.classList.add('show');
+
+                resultsBox.querySelectorAll('.global-search-item').forEach((el, i) => {
+                    el.addEventListener('mouseenter', () => {
+                        activeIndex = i;
+                        updateActiveItem();
+                    });
+                });
+            }
+
+            function updateActiveItem() {
+                resultsBox.querySelectorAll('.global-search-item').forEach((el, i) => {
+                    el.classList.toggle('active', i === activeIndex);
+                });
+                const activeEl = resultsBox.querySelector('.global-search-item.active');
+                if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
+            }
+
+            function closeResults() {
+                resultsBox.classList.remove('show');
+                resultsBox.innerHTML = '';
+                activeIndex = -1;
+                currentResults = [];
+            }
+
+            function escapeHtml(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+        })();
+
+        // СОХРАНЕНИЕ СОСТОЯНИЯ COLLAPSE
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.collapse').forEach(el => {
+                if (!el.id) return;
+                const key = 'collapse_' + el.id;
+                if (localStorage.getItem(key) === 'open') {
+                    el.classList.add('show');
+                    const toggler = document.querySelector(`[data-bs-target="#${el.id}"]`);
+                    if (toggler) toggler.setAttribute('aria-expanded', 'true');
+                }
+                el.addEventListener('shown.bs.collapse', () => localStorage.setItem(key, 'open'));
+                el.addEventListener('hidden.bs.collapse', () => localStorage.setItem(key, 'closed'));
+            });
+        });
+
+        // ПОДСВЕТКА НОВОЙ ЗАДАЧИ / TO-DO
+        document.addEventListener('DOMContentLoaded', function() {
+            const params = new URLSearchParams(window.location.search);
+            const createdTaskId = params.get('created');
+            const createdTodoId = params.get('created_todo');
+
+            let targetEl = null;
+            if (createdTaskId) targetEl = document.querySelector(`[data-task-id="${createdTaskId}"]`);
+            else if (createdTodoId) targetEl = document.querySelector(`[data-todo-id="${createdTodoId}"]`);
+
+            if (targetEl) {
+                setTimeout(() => {
+                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    targetEl.classList.add('highlight-new');
+                    setTimeout(() => targetEl.classList.remove('highlight-new'), 3000);
+                }, 400);
+
+                if (history.replaceState) {
+                    const cleanSearch = window.location.search.replace(/[?&](created|created_todo)=[^&]+/g, '').replace(/^&/, '?');
+                    history.replaceState(null, null, window.location.pathname + cleanSearch + window.location.hash);
+                }
+            }
+        });
+
         // ИНИЦИАЛИЗАЦИЯ
-        // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
             document.addEventListener('click', function(e) {
                 const sidebar = document.getElementById('sidebar');
@@ -1397,24 +1695,18 @@
                 });
             });
 
-            // --- Активация вкладки из hash при загрузке ---
             const hash = window.__initialHash || window.location.hash;
             const isProjectPage = window.location.pathname.match(/^\/project\/\d+$/);
 
             if (isProjectPage) {
                 if (hash && hash.length > 1) {
                     const targetId = hash.substring(1);
-                    setTimeout(() => {
-                        activateTab(targetId);
-                    }, 100);
+                    setTimeout(() => activateTab(targetId), 100);
                 } else {
-                    setTimeout(() => {
-                        updateSidebarActive('dashboard');
-                    }, 100);
+                    setTimeout(() => updateSidebarActive('dashboard'), 100);
                 }
             }
 
-            // --- Обработка кликов по ссылкам вкладок ---
             document.querySelectorAll('.project-tab-link').forEach(link => {
                 link.addEventListener('click', function(e) {
                     const href = this.getAttribute('href');
@@ -1422,15 +1714,12 @@
                     const projectId = this.dataset.projectId;
                     const hashIndex = href.indexOf('#');
 
-                    if (tabId === 'chat' && projectId) {
-                        markChatAsRead(projectId);
-                    }
+                    if (tabId === 'chat' && projectId) markChatAsRead(projectId);
 
                     if (hashIndex > 0) {
                         const path = href.substring(0, hashIndex);
                         const cleanPath = path.split('?')[0];
                         const currentPath = window.location.pathname;
-
                         if (cleanPath === currentPath) {
                             e.preventDefault();
                             activateTab(tabId);
@@ -1446,26 +1735,27 @@
                 });
             });
 
-            // --- Обновление подсветки при переключении вкладок вручную ---
             document.querySelectorAll('.nav-tabs .nav-link').forEach(tabBtn => {
                 tabBtn.addEventListener('shown.bs.tab', function(e) {
                     const href = this.getAttribute('href');
                     if (href && href.startsWith('#')) {
                         const tabId = href.substring(1);
                         updateSidebarActive(tabId);
-                        if (history.replaceState) {
-                            history.replaceState(null, null, '#' + tabId);
-                        }
-
+                        if (history.replaceState) history.replaceState(null, null, '#' + tabId);
                         if (tabId === 'chat') {
                             const projectMatch = window.location.pathname.match(/^\/project\/(\d+)$/);
-                            if (projectMatch) {
-                                markChatAsRead(projectMatch[1]);
-                            }
+                            if (projectMatch) markChatAsRead(projectMatch[1]);
                         }
                     }
                 });
             });
+
+            const activeProject = document.querySelector('.project-tree .tree-item.active');
+            if (activeProject) {
+                setTimeout(() => {
+                    activeProject.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                }, 300);
+            }
         });
     </script>
 </body>

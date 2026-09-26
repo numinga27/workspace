@@ -2,7 +2,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm">
+        <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-arrow-left"></i> Назад
         </a>
         <h2 class="mt-2 mb-1">
@@ -12,7 +12,7 @@
             {{ employee.email }} · {{ employee.company }}
         </p>
     </div>
-    <a href="{{ url_for('employee_report_view', project_id=employee_projects[0].id if employee_projects else 0, user_id=employee.id) if employee_projects else '#' }}"
+    <a href="{{ url_for('pdf.employee_report_view', project_id=employee_projects[0].id if employee_projects else 0, user_id=employee.id) if employee_projects else '#' }}"
        class="btn btn-outline-info"
        {% if not employee_projects %}disabled{% endif %}>
         <i class="bi bi-person-badge"></i> Полный отчёт
@@ -66,7 +66,7 @@
     <ul class="mb-0 mt-1">
         {% for t in overdue %}
         <li>
-            <a href="{{ url_for('view_task', task_id=t.id) }}">{{ t.title }}</a>
+            <a href="{{ url_for('tasks.view_task', task_id=t.id) }}">{{ t.title }}</a>
             — просрочено на <strong>{{ t.days_overdue }} дн.</strong>
             (проект: {{ t.project.name }})
         </li>
@@ -81,7 +81,7 @@
     <ul class="mb-0 mt-1">
         {% for t in urgent %}
         <li>
-            <a href="{{ url_for('view_task', task_id=t.id) }}">{{ t.title }}</a>
+            <a href="{{ url_for('tasks.view_task', task_id=t.id) }}">{{ t.title }}</a>
             — до {{ t.due_date.strftime('%d.%m.%Y') }}
             ({{ (t.due_date - now).days }} дн. осталось)
             (проект: {{ t.project.name }})
@@ -133,7 +133,7 @@
             <div class="flex-grow-1">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <a href="{{ url_for('view_task', task_id=task.id) }}" class="text-decoration-none text-dark fw-bold">
+                        <a href="{{ url_for('tasks.view_task', task_id=task.id) }}" class="text-decoration-none text-dark fw-bold">
                             {{ task.title }}
                         </a>
                         <div class="d-flex gap-2 mt-1 flex-wrap small">

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="mb-3">
-    <a href="{{ url_for('view_project', project_id=project.id) }}" class="btn btn-outline-secondary btn-sm">
+    <a href="{{ url_for('projects.view_project', project_id=project.id) }}" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-arrow-left"></i> Назад к проекту
     </a>
 </div>
@@ -16,7 +16,7 @@
                 <i class="bi bi-person-plus"></i> Пригласить участника
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ url_for('invite_user', project_id=project.id) }}" class="row g-2">
+                <form method="POST" action="{{ url_for('team.invite_user', project_id=project.id) }}" class="row g-2">
                     <div class="col-md-6">
                         <input type="email" class="form-control" name="email" placeholder="Email пользователя" required>
                     </div>
@@ -77,7 +77,7 @@
                                     {% if member.user.id == project.created_by %}
                                         <span class="badge bg-danger">Руководитель проекта</span>
                                     {% else %}
-                                        <form method="POST" action="{{ url_for('change_member_role', project_id=project.id, member_id=member.id) }}" class="d-inline">
+                                        <form method="POST" action="{{ url_for('team.change_member_role', project_id=project.id, member_id=member.id) }}" class="d-inline">
                                             <select name="role" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
                                                 <option value="member" {% if member.role_in_project == 'member' %}selected{% endif %}>Участник</option>
                                                 <option value="logistic" {% if member.role_in_project == 'logistic' %}selected{% endif %}>Логистик</option>
@@ -89,25 +89,25 @@
                                     {% endif %}
                                 </td>
                                 <td class="text-center">
-                                    <a href="{{ url_for('user_all_tasks', user_id=member.user.id) }}"
+                                    <a href="{{ url_for('tasks.user_all_tasks', user_id=member.user.id) }}"
                                        class="badge bg-secondary text-decoration-none"
                                        title="Все задачи сотрудника">
                                         <i class="bi bi-list-check"></i>
                                     </a>
                                 </td>
                                 <td class="text-center">
-                                    <a href="{{ url_for('employee_report_view', project_id=project.id, user_id=member.user.id) }}"
+                                    <a href="{{ url_for('pdf.employee_report_view', project_id=project.id, user_id=member.user.id) }}"
                                        class="btn btn-sm btn-outline-info"
                                        title="Отчёт по сотруднику">
                                         <i class="bi bi-person-badge"></i>
                                     </a>
-                                    <a href="{{ url_for('employee_report_pdf', project_id=project.id, user_id=member.user.id) }}"
+                                    <a href="{{ url_for('pdf.employee_report_pdf', project_id=project.id, user_id=member.user.id) }}"
                                        class="btn btn-sm btn-outline-danger"
                                        title="PDF-отчёт по сотруднику">
                                         <i class="bi bi-file-pdf"></i>
                                     </a>
                                     {% if member.user.id != project.created_by %}
-                                    <form method="POST" action="{{ url_for('remove_member', project_id=project.id, member_id=member.id) }}" class="d-inline">
+                                    <form method="POST" action="{{ url_for('team.remove_member', project_id=project.id, member_id=member.id) }}" class="d-inline">
                                         <button type="submit" class="btn btn-sm btn-outline-danger" 
                                                 onclick="return confirm('Удалить участника из проекта?')"
                                                 title="Удалить из проекта">
@@ -172,10 +172,10 @@
                 <p><strong>Заказчик:</strong> {{ project.customer.name }}</p>
                 {% endif %}
                 <hr>
-                <a href="{{ url_for('view_project', project_id=project.id) }}" class="btn btn-primary w-100">
+                <a href="{{ url_for('projects.view_project', project_id=project.id) }}" class="btn btn-primary w-100">
                     <i class="bi bi-eye"></i> Перейти к проекту
                 </a>
-                <a href="{{ url_for('edit_project', project_id=project.id) }}" class="btn btn-outline-warning w-100 mt-2">
+                <a href="{{ url_for('projects.edit_project', project_id=project.id) }}" class="btn btn-outline-warning w-100 mt-2">
                     <i class="bi bi-pencil"></i> Редактировать проект
                 </a>
             </div>

@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- Заголовок -->
+<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+    <div>
+        <a href="{{ url_for('customers.customers_list') }}" class="btn btn-outline-secondary btn-sm mb-2">
+            <i class="bi bi-arrow-left"></i> К списку заказчиков
+        </a>
+        <h2 class="mb-1">
+            <i class="bi bi-buildings text-info"></i> {{ customer.name }}
+        </h2>
+        <p class="text-muted mb-0">
+            {% if customer.inn %}
+                ИНН: <strong>{{ customer.inn }}</strong>
+            {% else %}
+                ИНН не указан
+            {% endif %}
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('customers.edit_customer', customer_id=customer.id) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-pencil"></i> Редактировать
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Левая колонка: контакты + проекты -->
+    <div class="col-md-7">
+
+        <!-- Контактные лица -->
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>
+                    <i class="bi bi-people-fill"></i>
+                    Контактные лица ({{ customer.contacts|length }})
+                </span>
+                <button type="button" class="btn btn-primary btn-sm"
+                        data-bs-toggle="collapse" data-bs-target="#addContactForm">
+                    <i class="bi bi-plus-lg"></i> Добавить
+                </button>
+            </div>
+            <div class="card-body">
+
+                <!-- Форма добавления (свёрнута) -->
+                <div class="collapse mb-3" id="addContactForm">
+                    <div class="card" style="background: var(--bg-tertiary);">
+                        <div class="card-body">
+                            <h6 class="mb-3">Новое контактное лицо</h6>
+                            <form method="POST" action="{{ url_for('contacts.create_contact') }}">
+                                <input type="hidden" name="owner_type" value="customer">
+                                <input type="hidden" name="owner_id" value="{{ customer.id }}">
+
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label small">ФИО *</label>
+                                        <input type="text" name="full_name" class="form-control"
+                                               placeholder="Иванов Иван Иванович" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small">Должность</label>
+                                        <input type="text" name="position" class="form-control"
+                                               placeholder="Директор по закупкам">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small">Телефон</label>
+                                        <input type="tel" name="phone" class="form-control"
+                                               placeholder="+7 (___) ___-__-__">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small">Email</label>
+                                        <input type="email" name="email" class="form-control"
+                                               placeholder="contact@example.com">
+                                    </div>
+                                </div>
+
+                                <div class="text-end mt-2">
+                                    <button type="submit" class="btn btn-primary btn-sm">
+                                        <i class="bi bi-check-circle"></i> Добавить контакт
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Список контактов -->
+                {% if customer.contacts %}
+                    {% for c in customer.contacts %}
+                    <div class="card mb-2" style="background: var(--bg-tertiary); border: 1px solid var(--border-light);">
+                        <div class="card-body py-2">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div>
+                                        <strong>{{ c.full_name }}</strong>
+                                        {% if c.position %}
+                                            <span class="text-muted">· {{ c.position }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="small text-muted mt-1">
+                                        {% if c.phone %}
+                                            <i class="bi bi-telephone"></i> {{ c.phone }}
+                                        {% endif %}
+                                        {% if c.email %}
+                                            {% if c.phone %} · {% endif %}
+                                            <i class="bi bi-envelope"></i> {{ c.email }}
+                                        {% endif %}
+                                        {% if not c.phone and not c.email %}
+                                            <span class="text-muted fst-italic">контакты не указаны</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if c.user_id %}
+                                    <div class="mt-1">
+                                        <span class="badge bg-guest">
+                                            <i class="bi bi-person-badge"></i> Гость в системе
+                                        </span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <form method="POST" action="{{ url_for('contacts.delete_contact', contact_id=c.id) }}"
+                                      onsubmit="return confirm('Удалить контактное лицо?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                            style="width: 32px; height: 32px; padding: 0;">
+                                        <i class="bi bi-trash-fill text-danger"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-people" style="font-size: 32px; opacity: 0.3; display: block; margin-bottom: 8px;"></i>
+                        Контактных лиц пока нет.<br>
+                        <small>Нажмите «Добавить», чтобы создать первое контактное лицо.</small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Проекты заказчика -->
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-folder-fill text-info"></i>
+                Проекты заказчика ({{ customer.projects|length }})
+            </div>
+            <div class="card-body">
+                {% if customer.projects %}
+                    {% for p in customer.projects %}
+                    <a href="{{ url_for('projects.view_project', project_id=p.id) }}"
+                       class="d-flex justify-content-between align-items-center p-2 mb-2 rounded text-decoration-none"
+                       style="background: var(--bg-tertiary); color: var(--text-primary);">
+                        <span>
+                            <i class="bi bi-folder-fill text-warning"></i>
+                            {{ p.name }}
+                        </span>
+                        <span class="badge bg-secondary">{{ p.completion_percentage }}%</span>
+                    </a>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-3 small">
+                        Заказчик ещё не привязан ни к одному проекту.<br>
+                        <small>Укажите заказчика при создании или редактировании проекта.</small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Правая колонка: реквизиты -->
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-info-circle"></i> Реквизиты
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="small text-muted">Наименование</div>
+                    <div class="fw-bold">{{ customer.name }}</div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="small text-muted">ИНН</div>
+                    <div>{{ customer.inn or '—' }}</div>
+                </div>
+
+                {% if customer.contact_person %}
+                <div class="mb-3">
+                    <div class="small text-muted">Контактное лицо (основное)</div>
+                    <div>{{ customer.contact_person }}</div>
+                </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <div class="small text-muted">Телефон</div>
+                    <div>
+                        {% if customer.phone %}
+                            <a href="tel:{{ customer.phone }}">{{ customer.phone }}</a>
+                        {% else %}—{% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="small text-muted">Email</div>
+                    <div>
+                        {% if customer.email %}
+                            <a href="mailto:{{ customer.email }}">{{ customer.email }}</a>
+                        {% else %}—{% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="small text-muted">Адрес</div>
+                    <div>{{ customer.address or '—' }}</div>
+                </div>
+
+                <hr>
+
+                <div class="small text-muted">
+                    <div><strong>Добавлен:</strong> {{ customer.created_at.strftime('%d.%m.%Y %H:%M') }}</div>
+                    <div><strong>ID:</strong> #{{ customer.id }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Подсказка -->
+        <div class="card mt-3" style="border-left: 3px solid var(--info);">
+            <div class="card-body">
+                <h6 style="color: var(--info);">
+                    <i class="bi bi-lightbulb"></i> Как это работает
+                </h6>
+                <ul class="small text-muted mb-0 ps-3">
+                    <li>Добавьте контактных лиц заказчика</li>
+                    <li>Привяжите заказчика к проекту</li>
+                    <li>В проекте при создании задачи выберите контактное лицо из выпадающего списка</li>
+                    <li>Контакт автоматически станет <strong>гостем</strong> в проекте — увидит только свою задачу</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

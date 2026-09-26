@@ -2,7 +2,7 @@
 {% block content %}
 
 <!-- ============================================================ -->
-<!-- ЗАГОЛОВОК -->
+<!-- ЗАГОЛОВОК ПРОЕКТА -->
 <!-- ============================================================ -->
 <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
     <div>
@@ -34,33 +34,48 @@
         </div>
 
         {% if project.customer %}
-            <span class="badge bg-info">
+            <a href="{{ url_for('customers.view_customer', customer_id=project.customer.id) }}"
+               class="badge bg-info text-decoration-none" title="Открыть карточку заказчика">
                 <i class="bi bi-buildings"></i> {{ project.customer.name }}
                 {% if project.customer.inn %} · ИНН: {{ project.customer.inn }}{% endif %}
-            </span>
+            </a>
+        {% endif %}
+
+        {% if project.supplier %}
+            <a href="{{ url_for('suppliers.view_supplier', supplier_id=project.supplier.id) }}"
+               class="badge bg-warning text-dark text-decoration-none" title="Открыть карточку поставщика">
+                <i class="bi bi-truck"></i> {{ project.supplier.name }}
+                {% if project.supplier.inn %} · ИНН: {{ project.supplier.inn }}{% endif %}
+            </a>
+        {% endif %}
+
+        {% if project.subcontractor %}
+            <a href="{{ url_for('suppliers.view_subcontractor', supplier_id=project.subcontractor.id) }}"
+               class="badge text-decoration-none"
+               style="background: #6366f1; color: white;"
+               title="Открыть карточку субподрядчика">
+                <i class="bi bi-people-fill"></i> {{ project.subcontractor.name }}
+                {% if project.subcontractor.inn %} · ИНН: {{ project.subcontractor.inn }}{% endif %}
+            </a>
         {% endif %}
     </div>
 
     {% if can_manage %}
     <div class="d-flex flex-wrap gap-2 justify-content-end">
-        <a href="{{ url_for('project_report_pdf', project_id=project.id) }}"
-           class="btn btn-outline-secondary btn-sm"
-           title="Скачать PDF-отчёт по проекту">
+        <a href="{{ url_for('pdf.project_report_pdf', project_id=project.id) }}"
+           class="btn btn-outline-secondary btn-sm" title="Скачать PDF-отчёт по проекту">
             <i class="bi bi-file-earmark-pdf-fill text-danger"></i> PDF-отчёт
         </a>
-        <a href="{{ url_for('edit_project', project_id=project.id) }}"
-           class="btn btn-outline-secondary btn-sm"
-           title="Редактировать проект">
+        <a href="{{ url_for('projects.edit_project', project_id=project.id) }}"
+           class="btn btn-outline-secondary btn-sm" title="Редактировать проект">
             <i class="bi bi-pencil-fill text-warning"></i> Редактировать
         </a>
-        <a href="{{ url_for('project_settings', project_id=project.id) }}"
-           class="btn btn-outline-secondary btn-sm"
-           title="Управление командой">
+        <a href="{{ url_for('team.project_settings', project_id=project.id) }}"
+           class="btn btn-outline-secondary btn-sm" title="Управление командой">
             <i class="bi bi-gear-fill text-primary"></i> Команда
         </a>
         <button type="button" class="btn btn-outline-secondary btn-sm"
-                data-bs-toggle="modal" data-bs-target="#deleteProjectModal"
-                title="Удалить проект">
+                data-bs-toggle="modal" data-bs-target="#deleteProjectModal" title="Удалить проект">
             <i class="bi bi-trash-fill text-danger"></i> Удалить
         </button>
     </div>
@@ -75,7 +90,7 @@
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form method="POST" action="{{ url_for('delete_project', project_id=project.id) }}">
+                <form method="POST" action="{{ url_for('projects.delete_project', project_id=project.id) }}">
                     <div class="modal-body">
                         <p class="fw-bold" style="color: var(--danger);">
                             Внимание! Это действие нельзя отменить.
@@ -108,6 +123,32 @@
         </div>
     </div>
     {% endif %}
+</div>
+
+<!-- ============================================================ -->
+<!-- КОМПАКТНАЯ СТАТИСТИКА -->
+<!-- ============================================================ -->
+<div class="compact-stats">
+    <span class="badge bg-secondary">
+        <i class="bi bi-list-task"></i> Всего: {{ tasks|length }}
+    </span>
+    <span class="badge bg-success">
+        <i class="bi bi-check-circle-fill"></i> Завершено: {{ tasks|selectattr('status', 'equalto', 'completed')|list|length }}
+    </span>
+    <span class="badge bg-warning text-dark">
+        <i class="bi bi-clock-fill"></i> В работе: {{ tasks|selectattr('status', 'equalto', 'in_progress')|list|length }}
+    </span>
+    {% if overdue_milestones or overdue_tasks %}
+    <span class="badge bg-danger">
+        <i class="bi bi-exclamation-triangle-fill"></i> Просрочено: {{ overdue_milestones|length + overdue_tasks|length }}
+    </span>
+    {% endif %}
+    <span class="badge bg-info">
+        <i class="bi bi-people-fill"></i> Участников: {{ members|length }}
+    </span>
+    <span class="badge bg-primary">
+        <i class="bi bi-graph-up"></i> Прогресс: {{ project.completion_percentage }}%
+    </span>
 </div>
 
 <!-- ============================================================ -->
@@ -150,7 +191,7 @@
         <ul class="mb-0 mt-1">
             {% for t in overdue_tasks[:5] %}
             <li>
-                <a href="{{ url_for('view_task', task_id=t.id) }}">{{ t.title }}</a>
+                <a href="{{ url_for('tasks.view_task', task_id=t.id) }}">{{ t.title }}</a>
                 — дедлайн {{ t.due_date.strftime('%d.%m.%Y') }},
                 просрочено на <span class="badge bg-danger">{{ t.days_overdue }} дн.</span>
                 {% if t.assignee %}({{ t.assignee.first_name }} {{ t.assignee.last_name }}){% endif %}
@@ -172,31 +213,115 @@
     <div class="card-body">
         <h6 class="mb-3" style="color: var(--info); display: flex; align-items: center; gap: 8px;">
             <i class="bi bi-buildings-fill"></i> Заказчик
+            <a href="{{ url_for('customers.view_customer', customer_id=project.customer.id) }}"
+               class="ms-auto small text-decoration-none">
+                Открыть карточку <i class="bi bi-arrow-right"></i>
+            </a>
         </h6>
         <div class="row small">
             <div class="col-md-4 mb-2">
-                <div class="text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Наименование</div>
+                <div class="text-muted" style="font-size: 11px; text-transform: uppercase;">Наименование</div>
                 <div style="font-weight: 600;">{{ project.customer.name }}</div>
             </div>
             <div class="col-md-2 mb-2">
-                <div class="text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">ИНН</div>
+                <div class="text-muted" style="font-size: 11px; text-transform: uppercase;">ИНН</div>
                 <div style="font-weight: 600;">{{ project.customer.inn or '—' }}</div>
             </div>
             <div class="col-md-3 mb-2">
-                <div class="text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Контактное лицо</div>
-                <div style="font-weight: 600;">{{ project.customer.contact_person or '—' }}</div>
+                <div class="text-muted" style="font-size: 11px; text-transform: uppercase;">Контактных лиц</div>
+                <div style="font-weight: 600;">{{ project.customer.contacts|length }}</div>
             </div>
             <div class="col-md-3 mb-2">
-                <div class="text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Телефон</div>
-                <div style="font-weight: 600;">{{ project.customer.phone or '—' }}</div>
+                <div class="text-muted" style="font-size: 11px; text-transform: uppercase;">Контакты</div>
+                <div>
+                    {% for c in project.customer.contacts %}
+                    <span class="badge bg-secondary me-1 mb-1">{{ c.full_name }}</span>
+                    {% else %}
+                    <span class="text-muted small">не указаны</span>
+                    {% endfor %}
+                </div>
             </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- КАРТОЧКА ПОСТАВЩИКА -->
+<!-- ============================================================ -->
+{% if project.supplier %}
+<div class="card mb-4" style="border-left: 3px solid var(--warning);">
+    <div class="card-body">
+        <h6 class="mb-3" style="color: var(--warning); display: flex; align-items: center; gap: 8px;">
+            <i class="bi bi-truck"></i> Поставщик
+            <a href="{{ url_for('suppliers.view_supplier', supplier_id=project.supplier.id) }}"
+               class="ms-auto small text-decoration-none">
+                Открыть карточку <i class="bi bi-arrow-right"></i>
+            </a>
+        </h6>
+        <div class="row small">
             <div class="col-md-4 mb-2">
-                <div class="text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Email</div>
-                <div style="font-weight: 600;">{{ project.customer.email or '—' }}</div>
+                <div class="text-muted" style="font-size: 11px; text-transform: uppercase;">Наименование</div>
+                <div style="font-weight: 600;">{{ project.supplier.name }}</div>
             </div>
-            <div class="col-md-8 mb-2">
-                <div class="text-muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Адрес</div>
-                <div style="font-weight: 600;">{{ project.customer.address or '—' }}</div>
+            <div class="col-md-2 mb-2">
+                <div class="text-muted" style="font-size: 11px; text-transform: uppercase;">ИНН</div>
+                <div style="font-weight: 600;">{{ project.supplier.inn or '—' }}</div>
+            </div>
+            <div class="col-md-3 mb-2">
+                <div class="text-muted" style="font-size: 11px; text-transform: uppercase;">Контактных лиц</div>
+                <div style="font-weight: 600;">{{ project.supplier.contacts|length }}</div>
+            </div>
+            <div class="col-md-3 mb-2">
+                <div class="text-muted" style="font-size: 11px; text-transform: uppercase;">Контакты</div>
+                <div>
+                    {% for c in project.supplier.contacts %}
+                    <span class="badge bg-secondary me-1 mb-1">{{ c.full_name }}</span>
+                    {% else %}
+                    <span class="text-muted small">не указаны</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- КАРТОЧКА СУБПОДРЯДЧИКА -->
+<!-- ============================================================ -->
+{% if project.subcontractor %}
+<div class="card mb-4" style="border-left: 3px solid #6366f1;">
+    <div class="card-body">
+        <h6 class="mb-3" style="color: #6366f1; display: flex; align-items: center; gap: 8px;">
+            <i class="bi bi-people-fill"></i> Субподрядчик
+            <a href="{{ url_for('suppliers.view_subcontractor', supplier_id=project.subcontractor.id) }}"
+               class="ms-auto small text-decoration-none">
+                Открыть карточку <i class="bi bi-arrow-right"></i>
+            </a>
+        </h6>
+        <div class="row small">
+            <div class="col-md-4 mb-2">
+                <div class="text-muted" style="font-size: 11px; text-transform: uppercase;">Наименование</div>
+                <div style="font-weight: 600;">{{ project.subcontractor.name }}</div>
+            </div>
+            <div class="col-md-2 mb-2">
+                <div class="text-muted" style="font-size: 11px; text-transform: uppercase;">ИНН</div>
+                <div style="font-weight: 600;">{{ project.subcontractor.inn or '—' }}</div>
+            </div>
+            <div class="col-md-3 mb-2">
+                <div class="text-muted" style="font-size: 11px; text-transform: uppercase;">Контактных лиц</div>
+                <div style="font-weight: 600;">{{ project.subcontractor.contacts|length }}</div>
+            </div>
+            <div class="col-md-3 mb-2">
+                <div class="text-muted" style="font-size: 11px; text-transform: uppercase;">Контакты</div>
+                <div>
+                    {% for c in project.subcontractor.contacts %}
+                    <span class="badge bg-secondary me-1 mb-1">{{ c.full_name }}</span>
+                    {% else %}
+                    <span class="text-muted small">не указаны</span>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
@@ -235,11 +360,8 @@
                     {% if m.due_date %}
                         <small class="d-block {% if m.is_overdue %}text-danger fw-bold{% else %}text-muted{% endif %}">
                             {{ m.due_date.strftime('%d.%m.%Y') }}
-                            {% if m.is_overdue %}
-                                <br>+{{ m.days_overdue }} дн.
-                            {% elif m.days_left is not none and m.days_left <= 3 %}
-                                <br>Осталось: {{ m.days_left }} дн.
-                            {% endif %}
+                            {% if m.is_overdue %}<br>+{{ m.days_overdue }} дн.
+                            {% elif m.days_left is not none and m.days_left <= 3 %}<br>Осталось: {{ m.days_left }} дн.{% endif %}
                         </small>
                     {% endif %}
                 </div>
@@ -249,31 +371,36 @@
 
         {% if can_manage %}
         <hr style="margin: 20px 0 16px;">
-        <form method="POST" action="{{ url_for('create_milestone', project_id=project.id) }}" class="row g-2">
-            <div class="col-md-5">
-                <input type="text" class="form-control form-control-sm" name="name"
-                       placeholder="Название вехи (напр. 'Фундамент завершён')" required>
-            </div>
-            <div class="col-md-3">
-                <input type="date" class="form-control form-control-sm" name="due_date">
-            </div>
-            <div class="col-md-3">
-                <input type="text" class="form-control form-control-sm" name="description" placeholder="Описание">
-            </div>
-            <div class="col-md-1">
-                <button type="submit" class="btn btn-sm btn-primary w-100" title="Добавить веху">
-                    <i class="bi bi-plus-lg"></i>
-                </button>
-            </div>
-        </form>
+        <button class="btn btn-sm btn-outline-primary mb-2" type="button"
+                data-bs-toggle="collapse" data-bs-target="#newMilestoneForm" aria-expanded="false">
+            <i class="bi bi-plus-lg"></i> Добавить веху
+            <i class="bi bi-chevron-down collapse-icon"></i>
+        </button>
+        <div class="collapse" id="newMilestoneForm">
+            <form method="POST" action="{{ url_for('projects.create_milestone', project_id=project.id) }}" class="row g-2">
+                <div class="col-md-5">
+                    <input type="text" class="form-control form-control-sm" name="name" placeholder="Название вехи" required>
+                </div>
+                <div class="col-md-3">
+                    <input type="date" class="form-control form-control-sm" name="due_date">
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control form-control-sm" name="description" placeholder="Описание">
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-sm btn-primary w-100">
+                        <i class="bi bi-plus-lg"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
 
         {% if milestones %}
         <div class="mt-3">
             {% for m in milestones %}
-            <div class="d-flex align-items-center small mb-1 p-2 rounded
-                {% if m.is_overdue %}bg-danger-subtle border border-danger{% endif %}"
-                style="{% if not m.is_overdue %}background: var(--bg-tertiary);{% endif %}">
-                <form method="POST" action="{{ url_for('toggle_milestone', milestone_id=m.id) }}" class="me-2">
+            <div class="d-flex align-items-center small mb-1 p-2 rounded {% if m.is_overdue %}bg-danger-subtle border border-danger{% endif %}"
+                 style="{% if not m.is_overdue %}background: var(--bg-tertiary);{% endif %}">
+                <form method="POST" action="{{ url_for('projects.toggle_milestone', milestone_id=m.id) }}" class="me-2">
                     <button type="submit" class="btn btn-sm {% if m.is_completed %}btn-success{% elif m.is_overdue %}btn-danger{% else %}btn-outline-secondary{% endif %}"
                             style="width: 32px; height: 32px; padding: 0;">
                         {% if m.is_completed %}<i class="bi bi-check-lg"></i>
@@ -287,15 +414,12 @@
                     {% if m.due_date %}
                         <small class="text-muted">
                             · до {{ m.due_date.strftime('%d.%m.%Y') }}
-                            {% if m.is_overdue %}
-                                <span class="badge bg-danger ms-1">просрочено {{ m.days_overdue }} дн.</span>
-                            {% elif m.days_left is not none and m.days_left <= 3 %}
-                                <span class="badge bg-warning ms-1">осталось {{ m.days_left }} дн.</span>
-                            {% endif %}
+                            {% if m.is_overdue %}<span class="badge bg-danger ms-1">просрочено {{ m.days_overdue }} дн.</span>
+                            {% elif m.days_left is not none and m.days_left <= 3 %}<span class="badge bg-warning ms-1">осталось {{ m.days_left }} дн.</span>{% endif %}
                         </small>
                     {% endif %}
                 </span>
-                <form method="POST" action="{{ url_for('delete_milestone', milestone_id=m.id) }}">
+                <form method="POST" action="{{ url_for('projects.delete_milestone', milestone_id=m.id) }}">
                     <button type="submit" class="btn btn-sm btn-outline-secondary"
                             style="width: 32px; height: 32px; padding: 0;"
                             onclick="return confirm('Удалить веху?')">
@@ -307,59 +431,6 @@
         </div>
         {% endif %}
         {% endif %}
-    </div>
-</div>
-
-<!-- ============================================================ -->
-<!-- СТАТИСТИКА -->
-<!-- ============================================================ -->
-<div class="row g-3 mb-4">
-    <div class="col">
-        <div class="stat-card">
-            <div class="stat-icon" style="background: var(--accent-light); color: var(--accent);">
-                <i class="bi bi-list-task"></i>
-            </div>
-            <div class="stat-number">{{ tasks|length }}</div>
-            <div class="stat-label">Всего задач</div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="stat-card">
-            <div class="stat-icon" style="background: var(--success-light); color: var(--success);">
-                <i class="bi bi-check-circle-fill"></i>
-            </div>
-            <div class="stat-number">{{ tasks|selectattr('status', 'equalto', 'completed')|list|length }}</div>
-            <div class="stat-label">Завершено</div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="stat-card">
-            <div class="stat-icon" style="background: var(--warning-light); color: #b45309;">
-                <i class="bi bi-clock-fill"></i>
-            </div>
-            <div class="stat-number">{{ tasks|selectattr('status', 'equalto', 'in_progress')|list|length }}</div>
-            <div class="stat-label">В работе</div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="stat-card {% if overdue_milestones or overdue_tasks %}border-danger{% endif %}">
-            <div class="stat-icon" style="background: var(--danger-light); color: var(--danger);">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-            </div>
-            <div class="stat-number" style="color: var(--danger);">
-                {{ overdue_milestones|length + overdue_tasks|length }}
-            </div>
-            <div class="stat-label">Просрочено</div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="stat-card">
-            <div class="stat-icon" style="background: #fce4ec; color: #be185d;">
-                <i class="bi bi-people-fill"></i>
-            </div>
-            <div class="stat-number">{{ members|length }}</div>
-            <div class="stat-label">Участников</div>
-        </div>
     </div>
 </div>
 
@@ -407,22 +478,404 @@
             <!-- ЗАДАЧИ -->
             <!-- ============================================ -->
             <div class="tab-pane fade show active" id="tasks" role="tabpanel">
+
+                <!-- ФИЛЬТР ЗАДАЧ -->
+                <div class="card mb-3">
+                    <div class="card-body py-2">
+                        <form method="GET" action="{{ url_for('projects.view_project', project_id=project.id) }}" class="row g-2 align-items-end">
+                            <input type="hidden" name="_tab" value="tasks">
+                            <div class="col-md-3">
+                                <label class="form-label small mb-1">Исполнитель</label>
+                                <select name="filter_assignee" class="form-select form-select-sm">
+                                    <option value="">Все</option>
+                                    <option value="unassigned" {% if filter_assignee == 'unassigned' %}selected{% endif %}>— Не назначен —</option>
+                                    {% for m in members %}
+                                    <option value="{{ m.user.id }}" {% if filter_assignee == m.user.id|string %}selected{% endif %}>
+                                        {{ m.user.first_name }} {{ m.user.last_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small mb-1">Статус</label>
+                                <select name="filter_status" class="form-select form-select-sm">
+                                    <option value="">Все</option>
+                                    <option value="new" {% if filter_status == 'new' %}selected{% endif %}>🆕 Новая</option>
+                                    <option value="in_progress" {% if filter_status == 'in_progress' %}selected{% endif %}>🔄 В работе</option>
+                                    <option value="completed" {% if filter_status == 'completed' %}selected{% endif %}>✅ Завершена</option>
+                                    <option value="overdue" {% if filter_status == 'overdue' %}selected{% endif %}>⚠️ Просрочена</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small mb-1">Дедлайн с</label>
+                                <input type="date" name="filter_due_from" class="form-control form-control-sm" value="{{ filter_due_from or '' }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small mb-1">по</label>
+                                <input type="date" name="filter_due_to" class="form-control form-control-sm" value="{{ filter_due_to or '' }}">
+                            </div>
+                            <div class="col-md-3 d-flex gap-1">
+                                <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                                    <i class="bi bi-funnel"></i> Применить
+                                </button>
+                                {% if filter_assignee or filter_status or filter_due_from or filter_due_to %}
+                                <a href="{{ url_for('projects.view_project', project_id=project.id) }}?_tab=tasks"
+                                   class="btn btn-outline-secondary btn-sm" title="Сбросить">
+                                    <i class="bi bi-x-lg"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
                 {% if can_manage %}
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <i class="bi bi-plus-circle"></i> Новая задача
+                <!-- СВОРАЧИВАЕМАЯ ФОРМА НОВОЙ ЗАДАЧИ -->
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-plus-circle"></i> Новая задача</span>
+                        <button class="btn btn-sm btn-link text-decoration-none p-0"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#newTaskForm"
+                                aria-expanded="false">
+                            <span class="collapse-label-closed">Развернуть</span>
+                            <span class="collapse-label-open" style="display:none;">Свернуть</span>
+                            <i class="bi bi-chevron-down collapse-icon"></i>
+                        </button>
+                    </div>
+                    <div class="collapse" id="newTaskForm">
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('projects.create_task', project_id=project.id) }}">
+                                <div class="row g-2">
+                                    <div class="col-md-5">
+                                        <input type="text" class="form-control" name="title" placeholder="Название задачи" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select class="form-select" name="assigned_to">
+                                            <option value="">Назначить...</option>
+                                            <option value="user:{{ user.id }}">
+                                                👤 Я — {{ user.first_name }} {{ user.last_name }}
+                                            </option>
+                                            {% if members %}
+                                            <optgroup label="Команда проекта">
+                                                {% for m in members %}
+                                                <option value="user:{{ m.user.id }}">
+                                                    {{ m.user.first_name }} {{ m.user.last_name }}
+                                                </option>
+                                                {% endfor %}
+                                            </optgroup>
+                                            {% endif %}
+                                            {% if project.customer and project.customer.contacts %}
+                                            <optgroup label="Заказчик: {{ project.customer.name }}">
+                                                {% for c in project.customer.contacts %}
+                                                <option value="contact:{{ c.id }}">
+                                                    {{ c.full_name }}{% if c.position %} — {{ c.position }}{% endif %}
+                                                </option>
+                                                {% endfor %}
+                                            </optgroup>
+                                            {% endif %}
+                                            {% if project.supplier and project.supplier.contacts %}
+                                            <optgroup label="Поставщик: {{ project.supplier.name }}">
+                                                {% for c in project.supplier.contacts %}
+                                                <option value="contact:{{ c.id }}">
+                                                    {{ c.full_name }}{% if c.position %} — {{ c.position }}{% endif %}
+                                                </option>
+                                                {% endfor %}
+                                            </optgroup>
+                                            {% endif %}
+                                            {% if project.subcontractor and project.subcontractor.contacts %}
+                                            <optgroup label="Субподрядчик: {{ project.subcontractor.name }}">
+                                                {% for c in project.subcontractor.contacts %}
+                                                <option value="contact:{{ c.id }}">
+                                                    {{ c.full_name }}{% if c.position %} — {{ c.position }}{% endif %}
+                                                </option>
+                                                {% endfor %}
+                                            </optgroup>
+                                            {% endif %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="date" class="form-control" name="due_date">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="bi bi-plus-lg"></i> Создать
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="row g-2 mt-1">
+                                    <div class="col-md-8">
+                                        <input type="text" class="form-control" name="description" placeholder="Описание (опционально)">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <select class="form-select" name="milestone_id">
+                                            <option value="">Веха (опц.)</option>
+                                            {% for m in milestones %}
+                                            <option value="{{ m.id }}">{{ m.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- ТАБЛИЧНЫЙ ВИД ЗАДАЧ -->
+                {% if tasks %}
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table table-hover tasks-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="min-width: 240px;">Задача</th>
+                                    <th style="width: 140px;">Исполнитель</th>
+                                    <th style="width: 110px;">Дедлайн</th>
+                                    <th style="width: 130px;">Статус</th>
+                                    <th style="width: 140px;">Прогресс</th>
+                                    <th style="width: 120px;" class="text-end">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for task in tasks %}
+                                <tr data-task-id="{{ task.id }}"
+                                    class="{% if task.is_overdue %}table-danger-light{% elif task.status == 'completed' %}table-success-light{% endif %}">
+                                    <td>
+                                        <a href="{{ url_for('tasks.view_task', task_id=task.id) }}"
+                                           class="text-decoration-none text-dark fw-bold d-block">
+                                            {{ task.title }}
+                                        </a>
+                                        {% if task.description %}
+                                        <small class="text-muted d-block mt-1" style="font-size: 12px;">
+                                            {{ task.description[:80] }}{% if task.description|length > 80 %}…{% endif %}
+                                        </small>
+                                        {% endif %}
+                                        <div class="d-flex gap-1 mt-1 flex-wrap">
+                                            {% if task.milestone %}
+                                            <span class="badge bg-info" style="font-size: 10px;">
+                                                <i class="bi bi-flag-fill"></i> {{ task.milestone.name }}
+                                            </span>
+                                            {% endif %}
+                                            {% if task.subtasks %}
+                                            <span class="badge bg-secondary" style="font-size: 10px;">
+                                                <i class="bi bi-diagram-3"></i> {{ task.subtasks|length }} подзадач
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        {% if task.is_overdue %}
+                                        <form method="POST" action="{{ url_for('tasks.update_task_comment', task_id=task.id) }}" class="mt-2">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-warning-subtle" style="padding: 2px 6px;">
+                                                    <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 11px;"></i>
+                                                </span>
+                                                <input type="text" name="comment" class="form-control"
+                                                       placeholder="Причина просрочки..."
+                                                       value="{{ task.comment or '' }}" style="font-size: 11px;">
+                                                <button type="submit" class="btn btn-outline-secondary" style="padding: 2px 6px;">
+                                                    <i class="bi bi-save" style="font-size: 10px;"></i>
+                                                </button>
+                                            </div>
+                                        </form>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if task.assignee %}
+                                        <div class="d-flex align-items-center gap-1">
+                                            <i class="bi bi-person-circle text-muted"></i>
+                                            <span class="small">{{ task.assignee.first_name }} {{ task.assignee.last_name }}</span>
+                                        </div>
+                                        {% else %}
+                                        <span class="text-muted small fst-italic">не назначен</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if task.due_date %}
+                                            <div class="small {% if task.is_overdue %}text-danger fw-bold{% endif %}">
+                                                <i class="bi bi-calendar-event"></i>
+                                                {{ task.due_date.strftime('%d.%m.%Y') }}
+                                            </div>
+                                            {% if task.is_overdue %}
+                                                <span class="badge bg-danger" style="font-size: 10px;">+{{ task.days_overdue }} дн.</span>
+                                            {% elif task.status != 'completed' %}
+                                                {% set days_left = (task.due_date - now).days %}
+                                                {% if days_left <= 3 and days_left >= 0 %}
+                                                    <span class="badge bg-warning text-dark" style="font-size: 10px;">{{ days_left }} дн.</span>
+                                                {% endif %}
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted small">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('tasks.update_task_status', task_id=task.id) }}">
+                                            <select name="status" class="form-select form-select-sm status-select"
+                                                    onchange="this.form.submit()" data-status="{{ task.status }}">
+                                                <option value="new" {% if task.status == 'new' %}selected{% endif %}>🆕 Новая</option>
+                                                <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>🔄 В работе</option>
+                                                <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>✅ Завершена</option>
+                                            </select>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        {% if task.subtasks %}
+                                            {% set completed_subtasks = task.subtasks|selectattr('status', 'equalto', 'completed')|list|length %}
+                                            {% set total_subtasks = task.subtasks|length %}
+                                            {% set subtask_percentage = (completed_subtasks / total_subtasks * 100)|int %}
+                                            <div class="d-flex justify-content-between small mb-1">
+                                                <span class="fw-bold" style="font-size: 11px;">{{ subtask_percentage }}%</span>
+                                                <span class="text-muted" style="font-size: 11px;">{{ completed_subtasks }}/{{ total_subtasks }}</span>
+                                            </div>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar
+                                                    {% if subtask_percentage == 100 %}bg-success
+                                                    {% elif subtask_percentage >= 50 %}bg-info
+                                                    {% else %}bg-secondary{% endif %}"
+                                                     style="width: {{ subtask_percentage }}%;"></div>
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted small fst-italic">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-flex gap-1 justify-content-end">
+                                            <a href="{{ url_for('tasks.view_task', task_id=task.id) }}"
+                                               class="btn btn-sm btn-outline-secondary action-btn" title="Открыть">
+                                                <i class="bi bi-eye-fill text-info"></i>
+                                            </a>
+                                            <a href="{{ url_for('tasks.view_task', task_id=task.id) }}"
+                                               class="btn btn-sm btn-outline-secondary action-btn"
+                                               title="Открыть и редактировать"
+                                               onclick="sessionStorage.setItem('openEditTask','1');">
+                                                <i class="bi bi-pencil text-primary"></i>
+                                            </a>
+                                            {% if can_manage %}
+                                            <form method="POST" action="{{ url_for('tasks.delete_task', task_id=task.id) }}" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary action-btn"
+                                                        onclick="return confirm('Удалить задачу?')" title="Удалить">
+                                                    <i class="bi bi-trash-fill text-danger"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="bi bi-list-task"></i>
+                    </div>
+                    <h5>
+                        {% if filter_assignee or filter_status or filter_due_from or filter_due_to %}
+                            По фильтрам ничего не найдено
+                        {% else %}
+                            Задач пока нет
+                        {% endif %}
+                    </h5>
+                    {% if filter_assignee or filter_status or filter_due_from or filter_due_to %}
+                    <a href="{{ url_for('projects.view_project', project_id=project.id) }}?_tab=tasks"
+                       class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg"></i> Сбросить фильтры
+                    </a>
+                    {% elif can_manage %}
+                    <p>Создайте первую задачу и назначьте исполнителя</p>
+                    <button type="button" class="btn btn-primary"
+                            data-bs-toggle="collapse" data-bs-target="#newTaskForm">
+                        <i class="bi bi-plus-lg"></i> Создать первую задачу
+                    </button>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- ============================================ -->
+            <!-- TO-DO -->
+            <!-- ============================================ -->
+            <div class="tab-pane fade" id="todo" role="tabpanel">
+                <div class="card mb-3">
+                    <div class="card-body py-2">
+                        <form method="GET" action="{{ url_for('projects.view_project', project_id=project.id) }}" class="row g-2 align-items-end">
+                            <input type="hidden" name="_tab" value="todo">
+                            <div class="col-md-3">
+                                <label class="form-label small mb-1">Исполнитель</label>
+                                <select name="todo_filter_assignee" class="form-select form-select-sm">
+                                    <option value="">Все</option>
+                                    <option value="unassigned" {% if todo_filter_assignee == 'unassigned' %}selected{% endif %}>— Не назначен —</option>
+                                    {% for m in members %}
+                                    <option value="{{ m.user.id }}" {% if todo_filter_assignee == m.user.id|string %}selected{% endif %}>
+                                        {{ m.user.first_name }} {{ m.user.last_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small mb-1">Статус</label>
+                                <select name="todo_filter_status" class="form-select form-select-sm">
+                                    <option value="">Все</option>
+                                    <option value="new" {% if todo_filter_status == 'new' %}selected{% endif %}>⚪ Не начато</option>
+                                    <option value="done" {% if todo_filter_status == 'done' %}selected{% endif %}>✅ Выполнено</option>
+                                    <option value="overdue" {% if todo_filter_status == 'overdue' %}selected{% endif %}>⚠️ Просрочено</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small mb-1">Дедлайн с</label>
+                                <input type="date" name="todo_filter_due_from" class="form-control form-control-sm" value="{{ todo_filter_due_from or '' }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small mb-1">по</label>
+                                <input type="date" name="todo_filter_due_to" class="form-control form-control-sm" value="{{ todo_filter_due_to or '' }}">
+                            </div>
+                            <div class="col-md-3 d-flex gap-1">
+                                <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                                    <i class="bi bi-funnel"></i> Применить
+                                </button>
+                                {% if todo_filter_assignee or todo_filter_status or todo_filter_due_from or todo_filter_due_to %}
+                                <a href="{{ url_for('projects.view_project', project_id=project.id) }}?_tab=todo"
+                                   class="btn btn-outline-secondary btn-sm" title="Сбросить">
+                                    <i class="bi bi-x-lg"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-check2-square"></i> To-Do лист проекта</span>
+                        {% if todo_stats and todo_stats.total > 0 %}
+                        <div class="d-flex gap-2 small">
+                            <span class="badge bg-success">✅ {{ todo_stats.done }}</span>
+                            <span class="badge bg-danger">⚠️ {{ todo_stats.overdue }}</span>
+                            <span class="badge bg-secondary">⚪ {{ todo_stats.new }}</span>
+                        </div>
+                        {% endif %}
                     </div>
                     <div class="card-body">
-                        <form method="POST" action="{{ url_for('create_task', project_id=project.id) }}">
-                            <div class="row g-2">
+                        <button class="btn btn-sm btn-outline-primary mb-2"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#newTodoForm"
+                                aria-expanded="false">
+                            <i class="bi bi-plus-lg"></i> Добавить To-Do
+                            <i class="bi bi-chevron-down collapse-icon"></i>
+                        </button>
+                        <div class="collapse" id="newTodoForm">
+                            <form method="POST" action="{{ url_for('todos.create_todo', project_id=project.id) }}" class="row g-2 mb-3 p-2 rounded" style="background: var(--bg-tertiary);">
                                 <div class="col-md-5">
-                                    <input type="text" class="form-control" name="title" placeholder="Название задачи" required>
+                                    <input type="text" class="form-control" name="title" placeholder="Что нужно сделать?" required>
                                 </div>
                                 <div class="col-md-3">
                                     <select class="form-select" name="assigned_to">
-                                        <option value="">Назначить...</option>
-                                        {% for u in all_users %}
-                                        <option value="{{ u.id }}">{{ u.first_name }} {{ u.last_name }}</option>
+                                        <option value="">Кто делает?</option>
+                                        {% for m in members %}
+                                        <option value="{{ m.user.id }}">{{ m.user.first_name }} {{ m.user.last_name }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -431,185 +884,18 @@
                                 </div>
                                 <div class="col-md-2">
                                     <button type="submit" class="btn btn-primary w-100">
-                                        <i class="bi bi-plus-lg"></i> Создать
+                                        <i class="bi bi-plus-lg"></i> Добавить
                                     </button>
                                 </div>
-                            </div>
-                            <div class="row g-2 mt-1">
-                                <div class="col-md-8">
-                                    <input type="text" class="form-control" name="description" placeholder="Описание (опционально)">
-                                </div>
-                                <div class="col-md-4">
-                                    <select class="form-select" name="milestone_id">
-                                        <option value="">Веха (опц.)</option>
-                                        {% for m in milestones %}
-                                        <option value="{{ m.id }}">{{ m.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                {% endif %}
-
-                {% for task in tasks %}
-                <div class="card task-card mb-3 {% if task.status == 'completed' %}completed{% elif task.status == 'in_progress' %}in_progress{% endif %} {% if task.is_overdue %}border-danger{% endif %}">
-                    <div class="card-body">
-                        <div class="row align-items-start g-2">
-                            <div class="col-md-7">
-                                <a href="{{ url_for('view_task', task_id=task.id) }}" class="text-decoration-none text-dark">
-                                    <strong>{{ task.title }}</strong>
-                                </a>
-                                {% if task.description %}<br><small class="text-muted">{{ task.description }}</small>{% endif %}
-                                <div class="d-flex gap-2 mt-2 flex-wrap">
-                                    {% if task.assignee %}
-                                    <span class="badge bg-secondary">
-                                        <i class="bi bi-person-fill"></i> {{ task.assignee.first_name }} {{ task.assignee.last_name }}
-                                    </span>
-                                    {% endif %}
-                                    {% if task.milestone %}
-                                    <span class="badge bg-info">
-                                        <i class="bi bi-flag-fill"></i> {{ task.milestone.name }}
-                                    </span>
-                                    {% endif %}
-                                    {% if task.subtasks %}
-                                    <span class="badge bg-secondary">
-                                        <i class="bi bi-diagram-3"></i> {{ task.subtasks|length }} подзадач
-                                    </span>
-                                    {% endif %}
-                                </div>
-                                {% if task.due_date %}
-                                    <div class="mt-2 small {% if task.is_overdue %}text-danger fw-bold{% else %}text-muted{% endif %}">
-                                        <i class="bi bi-calendar-event"></i> Дедлайн: {{ task.due_date.strftime('%d.%m.%Y') }}
-                                        {% if task.is_overdue %}
-                                            <span class="badge bg-danger ms-1">
-                                                <i class="bi bi-exclamation-triangle"></i>
-                                                Просрочена на {{ task.days_overdue }} дн.
-                                            </span>
-                                        {% elif task.status != 'completed' %}
-                                            {% set days_left = (task.due_date - now).days %}
-                                            {% if days_left <= 3 and days_left >= 0 %}
-                                                <span class="badge bg-warning ms-1">
-                                                    <i class="bi bi-clock"></i> Осталось {{ days_left }} дн.
-                                                </span>
-                                            {% endif %}
-                                        {% endif %}
-                                    </div>
-                                {% endif %}
-
-                                <!-- Комментарий к просроченной задаче -->
-                                {% if task.is_overdue %}
-                                <form method="POST" action="{{ url_for('update_task_comment', task_id=task.id) }}" class="mt-2">
-                                    <div class="input-group input-group-sm">
-                                        <span class="input-group-text bg-warning-subtle">
-                                            <i class="bi bi-exclamation-triangle-fill text-warning"></i>
-                                        </span>
-                                        <input type="text" name="comment" class="form-control"
-                                               placeholder="Причина просрочки..."
-                                               value="{{ task.comment or '' }}"
-                                               style="font-size: 12px;">
-                                        <button type="submit" class="btn btn-outline-secondary">
-                                            <i class="bi bi-save" style="font-size: 11px;"></i>
-                                        </button>
-                                    </div>
-                                </form>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-5">
-                                <div class="d-flex gap-1 justify-content-end align-items-center">
-                                    <form method="POST" action="{{ url_for('update_task_status', task_id=task.id) }}" class="d-inline">
-                                        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()" style="width: auto;">
-                                            <option value="new" {% if task.status == 'new' %}selected{% endif %}>🆕 Новая</option>
-                                            <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>🔄 В работе</option>
-                                            <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>✅ Завершена</option>
-                                        </select>
-                                    </form>
-                                    <a href="{{ url_for('view_task', task_id=task.id) }}" class="btn btn-sm btn-outline-secondary" title="Открыть">
-                                        <i class="bi bi-eye-fill text-info"></i>
-                                    </a>
-                                    {% if can_manage %}
-                                    <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" class="d-inline">
-                                        <button type="submit" class="btn btn-sm btn-outline-secondary"
-                                                onclick="return confirm('Удалить задачу?')" title="Удалить">
-                                            <i class="bi bi-trash-fill text-danger"></i>
-                                        </button>
-                                    </form>
-                                    {% endif %}
-                                </div>
-                            </div>
+                            </form>
                         </div>
-                        {% if task.subtasks %}
-                        {% set completed_subtasks = task.subtasks|selectattr('status', 'equalto', 'completed')|list|length %}
-                        {% set total_subtasks = task.subtasks|length %}
-                        {% set subtask_percentage = (completed_subtasks / total_subtasks * 100)|int %}
-                        <div class="mt-3">
-                            <div class="d-flex justify-content-between small mb-1">
-                                <span class="text-muted">Прогресс подзадач</span>
-                                <span class="fw-bold">{{ subtask_percentage }}% ({{ completed_subtasks }}/{{ total_subtasks }})</span>
-                            </div>
-                            <div class="progress" style="height: 4px;">
-                                <div class="progress-bar bg-info" style="width: {{ subtask_percentage }}%;"></div>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-                {% else %}
-                <div class="empty-state">
-                    <div class="empty-state-icon">
-                        <i class="bi bi-list-task"></i>
-                    </div>
-                    <h5>Задач пока нет</h5>
-                    <p>Создайте первую задачу и назначьте исполнителя</p>
-                </div>
-                {% endfor %}
-            </div>
-
-            <!-- ============================================ -->
-            <!-- TO-DO -->
-            <!-- ============================================ -->
-            <div class="tab-pane fade" id="todo" role="tabpanel">
-                <div class="card mb-3">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <span><i class="bi bi-check2-square"></i> To-Do лист проекта</span>
-                        {% if todo_stats and todo_stats.total > 0 %}
-                        <div class="d-flex gap-2 small">
-                            <span class="badge bg-success" title="Выполнено">✅ {{ todo_stats.done }}</span>
-                            <span class="badge bg-danger" title="Просрочено">⚠️ {{ todo_stats.overdue }}</span>
-                            <span class="badge bg-secondary" title="Не начато">⚪ {{ todo_stats.new }}</span>
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="card-body">
-                        <form method="POST" action="{{ url_for('create_todo', project_id=project.id) }}" class="row g-2 mb-3">
-                            <div class="col-md-5">
-                                <input type="text" class="form-control" name="title"
-                                       placeholder="Что нужно сделать?" required>
-                            </div>
-                            <div class="col-md-3">
-                                <select class="form-select" name="assigned_to">
-                                    <option value="">Кто делает?</option>
-                                    {% for m in members %}
-                                    <option value="{{ m.user.id }}">{{ m.user.first_name }} {{ m.user.last_name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <input type="date" class="form-control" name="due_date">
-                            </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="bi bi-plus-lg"></i> Добавить
-                                </button>
-                            </div>
-                        </form>
 
                         <ul class="list-group list-group-flush">
                             {% for todo in todos %}
-                            <li class="list-group-item px-0 {% if todo.is_done %}bg-success-subtle{% elif todo.is_overdue %}bg-danger-subtle{% endif %}">
+                            <li class="list-group-item px-0 {% if todo.is_done %}bg-success-subtle{% elif todo.is_overdue %}bg-danger-subtle{% endif %}"
+                                data-todo-id="{{ todo.id }}">
                                 <div class="d-flex align-items-start gap-2">
-                                    <form method="POST" action="{{ url_for('toggle_todo', todo_id=todo.id) }}">
+                                    <form method="POST" action="{{ url_for('todos.toggle_todo', todo_id=todo.id) }}">
                                         <button type="submit" class="btn btn-sm {% if todo.is_done %}btn-success{% else %}btn-outline-secondary{% endif %}"
                                                 style="width: 32px; height: 32px; padding: 0;">
                                             {% if todo.is_done %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-circle"></i>{% endif %}
@@ -631,44 +917,30 @@
                                                 {% if todo.is_overdue %}· +{{ todo.days_overdue }} дн.{% endif %}
                                             </span>
                                             {% endif %}
-                                            {% if todo.is_done and todo.done_at %}
-                                            <span class="badge bg-success">
-                                                ✔ {{ todo.done_at.strftime('%d.%m %H:%M') }}
-                                            </span>
-                                            {% endif %}
                                         </div>
-
-                                        <!-- Комментарий к просроченной To-Do -->
-                                        {% if todo.is_overdue %}
-                                        <form method="POST" action="{{ url_for('update_todo_comment', todo_id=todo.id) }}"
-                                              class="mt-2">
-                                            <div class="input-group input-group-sm">
-                                                <span class="input-group-text bg-warning-subtle">
-                                                    <i class="bi bi-exclamation-triangle-fill text-warning"></i>
-                                                </span>
-                                                <input type="text" name="comment" class="form-control"
-                                                       placeholder="Причина просрочки..."
-                                                       value="{{ todo.comment or '' }}"
-                                                       style="font-size: 12px;">
-                                                <button type="submit" class="btn btn-outline-secondary">
-                                                    <i class="bi bi-save" style="font-size: 11px;"></i>
-                                                </button>
-                                            </div>
-                                        </form>
-                                        {% elif todo.comment %}
+                                        {% if todo.comment %}
                                         <div class="mt-2 p-2 rounded" style="background: var(--bg-tertiary); font-size: 12px;">
                                             <i class="bi bi-chat-text text-muted"></i> {{ todo.comment }}
                                         </div>
                                         {% endif %}
                                     </div>
-                                    {% if can_manage %}
-                                    <form method="POST" action="{{ url_for('delete_todo', todo_id=todo.id) }}">
-                                        <button type="submit" class="btn btn-sm btn-outline-secondary"
-                                                style="width: 32px; height: 32px; padding: 0;">
-                                            <i class="bi bi-trash-fill text-danger"></i>
+                                    <div class="d-flex gap-1">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                                                style="width: 32px; height: 32px; padding: 0;"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editTodoModal{{ todo.id }}"
+                                                title="Редактировать">
+                                            <i class="bi bi-pencil text-primary"></i>
                                         </button>
-                                    </form>
-                                    {% endif %}
+                                        {% if can_manage %}
+                                        <form method="POST" action="{{ url_for('todos.delete_todo', todo_id=todo.id) }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                                    style="width: 32px; height: 32px; padding: 0;">
+                                                <i class="bi bi-trash-fill text-danger"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </li>
                             {% else %}
@@ -689,60 +961,65 @@
                 <div class="card mb-3">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <span><i class="bi bi-file-earmark-text"></i> Отчёты по проекту</span>
-                        <a href="{{ url_for('project_report_pdf', project_id=project.id) }}"
+                        <a href="{{ url_for('pdf.project_report_pdf', project_id=project.id) }}"
                            class="btn btn-outline-secondary btn-sm">
                             <i class="bi bi-file-earmark-pdf-fill text-danger"></i> Скачать PDF
                         </a>
                     </div>
                     <div class="card-body">
-                        <form method="POST" action="{{ url_for('create_report', project_id=project.id) }}" class="mb-4">
-                            <div class="row g-2">
-                                <div class="col-md-8">
-                                    <input type="text" class="form-control" name="title"
-                                           placeholder="Заголовок отчёта" required>
+                        <button class="btn btn-sm btn-outline-primary mb-3"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#newReportForm"
+                                aria-expanded="false">
+                            <i class="bi bi-plus-lg"></i> Создать отчёт
+                            <i class="bi bi-chevron-down collapse-icon"></i>
+                        </button>
+                        <div class="collapse" id="newReportForm">
+                            <form method="POST" action="{{ url_for('reports.create_report', project_id=project.id) }}" class="mb-4 p-3 rounded" style="background: var(--bg-tertiary);">
+                                <div class="row g-2">
+                                    <div class="col-md-8">
+                                        <input type="text" class="form-control" name="title" placeholder="Заголовок отчёта" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <select class="form-select" name="milestone_id">
+                                            <option value="">Веха (опц.)</option>
+                                            {% for m in milestones %}
+                                            <option value="{{ m.id }}">{{ m.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label">Статус / причина срыва</label>
+                                        <select name="reason" class="form-select">
+                                            <option value="on_track">✅ Всё по плану</option>
+                                            <option value="delay_supply">⚠️ Задержка поставки</option>
+                                            <option value="scope_change">📝 Изменение ТЗ</option>
+                                            <option value="contractor">👷 Проблема с подрядчиком</option>
+                                            <option value="force_majeure">🚨 Форс-мажор</option>
+                                            <option value="budget">💰 Проблемы с бюджетом</option>
+                                            <option value="other">❓ Другое</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Задержка (дней)</label>
+                                        <input type="number" name="delay_days" class="form-control" value="0" min="0">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Причина подробно</label>
+                                        <input type="text" name="reason_detail" class="form-control">
+                                    </div>
+                                    <div class="col-12">
+                                        <textarea class="form-control" name="content" rows="3" placeholder="Содержание..."></textarea>
+                                    </div>
+                                    <div class="col-12 text-end">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-save"></i> Сохранить отчёт
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="col-md-4">
-                                    <select class="form-select" name="milestone_id">
-                                        <option value="">Веха (опц.)</option>
-                                        {% for m in milestones %}
-                                        <option value="{{ m.id }}">{{ m.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-
-                                <div class="col-md-5">
-                                    <label class="form-label">Статус / причина срыва</label>
-                                    <select name="reason" class="form-select">
-                                        <option value="on_track">✅ Всё по плану</option>
-                                        <option value="delay_supply">⚠️ Задержка поставки</option>
-                                        <option value="scope_change">📝 Изменение ТЗ</option>
-                                        <option value="contractor">👷 Проблема с подрядчиком</option>
-                                        <option value="force_majeure">🚨 Форс-мажор</option>
-                                        <option value="budget">💰 Проблемы с бюджетом</option>
-                                        <option value="other">❓ Другое</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Задержка (дней)</label>
-                                    <input type="number" name="delay_days" class="form-control" value="0" min="0">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Причина подробно</label>
-                                    <input type="text" name="reason_detail" class="form-control"
-                                           placeholder="Кратко опишите причину">
-                                </div>
-
-                                <div class="col-12">
-                                    <textarea class="form-control" name="content" rows="3"
-                                              placeholder="Содержание отчёта..."></textarea>
-                                </div>
-                                <div class="col-12 text-end">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-save"></i> Сохранить отчёт
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
+                            </form>
+                        </div>
 
                         {% for r in reports %}
                         <div class="card mb-2" style="background: var(--bg-tertiary); border: 1px solid var(--border-light);">
@@ -764,7 +1041,7 @@
                                         </small>
                                     </div>
                                     {% if can_manage or r.author_id == user.id %}
-                                    <form method="POST" action="{{ url_for('delete_report', report_id=r.id) }}">
+                                    <form method="POST" action="{{ url_for('reports.delete_report', report_id=r.id) }}">
                                         <button type="submit" class="btn btn-sm btn-outline-secondary"
                                                 style="width: 32px; height: 32px; padding: 0;"
                                                 onclick="return confirm('Удалить отчёт?')">
@@ -798,7 +1075,6 @@
             <!-- КАЛЕНДАРЬ -->
             <!-- ============================================ -->
             <div class="tab-pane fade" id="calendar" role="tabpanel">
-
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <span><i class="bi bi-calendar3"></i> Календарь событий</span>
@@ -810,64 +1086,60 @@
                         {% endif %}
                     </div>
                     <div class="card-body">
-                        <div class="d-flex flex-wrap gap-3 mb-3 small text-muted">
-                            <span><span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #5b5bd6; vertical-align: middle;"></span> События проекта</span>
-                            <span><span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #8b5cf6; vertical-align: middle;"></span> Личные</span>
-                            <span><span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #dc2626; vertical-align: middle;"></span> Просроченные задачи</span>
-                            <span><span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #16a34a; vertical-align: middle;"></span> Завершено</span>
+                        <!-- ИНТЕРАКТИВНАЯ ЛЕГЕНДА -->
+                        <div class="d-flex flex-wrap gap-2 mb-3 small text-muted" id="calendarLegendProject">
+                            <span class="legend-item" data-type="project_event" onclick="toggleLegendFilterProject(this)">
+                                <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #5b5bd6; vertical-align: middle;"></span>
+                                События проекта
+                            </span>
+                            <span class="legend-item" data-type="personal" onclick="toggleLegendFilterProject(this)">
+                                <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #8b5cf6; vertical-align: middle;"></span>
+                                Личные
+                            </span>
+                            <span class="legend-item" data-type="task-new" onclick="toggleLegendFilterProject(this)">
+                                <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #a1a1aa; vertical-align: middle;"></span>
+                                Новые задачи
+                            </span>
+                            <span class="legend-item" data-type="task-progress" onclick="toggleLegendFilterProject(this)">
+                                <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #f59e0b; vertical-align: middle;"></span>
+                                В работе
+                            </span>
+                            <span class="legend-item" data-type="overdue" onclick="toggleLegendFilterProject(this)">
+                                <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #dc2626; vertical-align: middle;"></span>
+                                Просрочено
+                            </span>
+                            <span class="legend-item" data-type="completed" onclick="toggleLegendFilterProject(this)">
+                                <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #16a34a; vertical-align: middle;"></span>
+                                Завершено
+                            </span>
+                            <span class="legend-item" data-type="milestone" onclick="toggleLegendFilterProject(this)">
+                                <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #8b5cf6; vertical-align: middle;"></span>
+                                Вехи
+                            </span>
+                            <span class="legend-item" data-type="todo" onclick="toggleLegendFilterProject(this)">
+                                <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #0891b2; vertical-align: middle;"></span>
+                                To-Do
+                            </span>
                         </div>
-                        <div class="small text-muted mb-3">
-                            <i class="bi bi-info-circle"></i>
-                            Клик по дню — просмотр и создание события
+
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <div class="small text-muted">
+                                <i class="bi bi-info-circle"></i> Клик по цвету — скрыть/показать тип.
+                            </div>
+                            <div class="d-flex gap-1 align-items-center">
+                                <div class="small text-muted" id="project-calendar-filter-count">
+                                    Показано: <strong>0</strong>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary"
+                                        onclick="resetLegendFiltersProject()" title="Показать все типы">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </button>
+                            </div>
                         </div>
+
                         <div id="calendar"></div>
                     </div>
                 </div>
-
-                <h5 class="mb-3"><i class="bi bi-list-ul"></i> Общие события ({{ events|length }})</h5>
-                {% for e in events %}
-                <div class="card mb-2 {% if e.start_time < now %}opacity-50{% endif %}">
-                    <div class="card-body py-2 d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center gap-3">
-                            <div style="width: 4px; height: 40px; border-radius: 2px; background: {{ e.color_hex }};"></div>
-                            <div>
-                                <strong>{{ e.title }}</strong>
-                                <br>
-                                <small class="text-muted">
-                                    <i class="bi bi-calendar-event"></i>
-                                    {% if e.all_day %}
-                                        {{ e.start_time.strftime('%d.%m.%Y') }} (весь день)
-                                    {% else %}
-                                        {{ e.start_time.strftime('%d.%m.%Y %H:%M') }}
-                                        {% if e.end_time %} — {{ e.end_time.strftime('%H:%M') }}{% endif %}
-                                    {% endif %}
-                                    {% if e.creator %} · {{ e.creator.first_name }} {{ e.creator.last_name }}{% endif %}
-                                </small>
-                                {% if e.description %}
-                                <br><small class="text-muted">{{ e.description }}</small>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% if can_manage or e.created_by == user.id %}
-                        <form method="POST" action="{{ url_for('delete_event', event_id=e.id) }}">
-                            <button type="submit" class="btn btn-outline-secondary btn-sm"
-                                    style="width: 32px; height: 32px; padding: 0;"
-                                    onclick="return confirm('Удалить событие?')">
-                                <i class="bi bi-trash-fill text-danger"></i>
-                            </button>
-                        </form>
-                        {% endif %}
-                    </div>
-                </div>
-                {% else %}
-                <div class="empty-state">
-                    <div class="empty-state-icon">
-                        <i class="bi bi-calendar-x"></i>
-                    </div>
-                    <h5>Событий пока нет</h5>
-                    <p>Создайте первое событие в календаре</p>
-                </div>
-                {% endfor %}
             </div>
 
             <!-- ============================================ -->
@@ -876,39 +1148,49 @@
             <div class="tab-pane fade" id="files" role="tabpanel">
                 <div class="card mb-3">
                     <div class="card-body">
-                        <form method="POST" action="{{ url_for('create_folder', project_id=project.id) }}" class="row g-2 mb-2">
-                            <div class="col-md-8">
-                                <input type="text" class="form-control" name="name" placeholder="Название папки" required>
-                            </div>
-                            <div class="col-md-4">
-                                <button type="submit" class="btn btn-outline-secondary w-100">
-                                    <i class="bi bi-folder-plus text-warning"></i> Создать папку
-                                </button>
-                            </div>
-                        </form>
-                        <form method="POST" action="{{ url_for('upload_file', project_id=project.id) }}"
-                              enctype="multipart/form-data" class="row g-2">
-                            <div class="col-md-8">
-                                <input type="file" class="form-control" name="file" required>
-                            </div>
-                            <div class="col-md-4">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="bi bi-upload"></i> Загрузить
-                                </button>
-                            </div>
-                        </form>
+                        <button class="btn btn-sm btn-outline-primary mb-3"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#fileActionsForm"
+                                aria-expanded="false">
+                            <i class="bi bi-plus-lg"></i> Загрузить / создать папку
+                            <i class="bi bi-chevron-down collapse-icon"></i>
+                        </button>
+                        <div class="collapse" id="fileActionsForm">
+                            <form method="POST" action="{{ url_for('files.create_folder', project_id=project.id) }}" class="row g-2 mb-2">
+                                <div class="col-md-8">
+                                    <input type="text" class="form-control" name="name" placeholder="Название папки" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="submit" class="btn btn-outline-secondary w-100">
+                                        <i class="bi bi-folder-plus text-warning"></i> Создать папку
+                                    </button>
+                                </div>
+                            </form>
+                            <form method="POST" action="{{ url_for('files.upload_file', project_id=project.id) }}"
+                                  enctype="multipart/form-data" class="row g-2">
+                                <div class="col-md-8">
+                                    <input type="file" class="form-control" name="file" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="bi bi-upload"></i> Загрузить
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
 
                 {% for folder in folders %}
                 <div class="card mb-2">
                     <div class="card-body py-2 d-flex justify-content-between align-items-center">
-                        <a href="{{ url_for('view_folder', folder_id=folder.id) }}" class="text-decoration-none">
+                        <a href="{{ url_for('files.view_folder', folder_id=folder.id) }}" class="text-decoration-none">
                             <i class="bi bi-folder-fill text-warning"></i> <strong>{{ folder.name }}</strong>
                             <span class="badge bg-secondary ms-2">{{ folder.files|length }}</span>
                         </a>
                         {% if can_manage %}
-                        <form method="POST" action="{{ url_for('delete_folder', folder_id=folder.id) }}">
+                        <form method="POST" action="{{ url_for('files.delete_folder', folder_id=folder.id) }}">
                             <button type="submit" class="btn btn-sm btn-outline-secondary"
                                     style="width: 32px; height: 32px; padding: 0;"
                                     onclick="return confirm('Удалить папку?')">
@@ -925,12 +1207,12 @@
                     <div class="card-body py-2 d-flex justify-content-between align-items-center">
                         <div>
                             <i class="bi bi-file-earmark"></i>
-                            <a href="{{ url_for('download_file', file_id=file.id) }}" class="text-decoration-none">
+                            <a href="{{ url_for('files.download_file', file_id=file.id) }}" class="text-decoration-none">
                                 {{ file.original_name }}
                             </a>
                             <small class="text-muted">({{ (file.file_size / 1024)|round(1) }} KB)</small>
                         </div>
-                        <form method="POST" action="{{ url_for('delete_file', file_id=file.id) }}">
+                        <form method="POST" action="{{ url_for('files.delete_file', file_id=file.id) }}">
                             <button type="submit" class="btn btn-sm btn-outline-secondary"
                                     style="width: 32px; height: 32px; padding: 0;">
                                 <i class="bi bi-trash-fill text-danger"></i>
@@ -953,9 +1235,7 @@
             <!-- ============================================ -->
             <div class="tab-pane fade" id="chat" role="tabpanel">
                 <div class="card">
-                    <div class="card-header">
-                        <i class="bi bi-chat-dots"></i> Чат проекта
-                    </div>
+                    <div class="card-header"><i class="bi bi-chat-dots"></i> Чат проекта</div>
                     <div class="card-body">
                         <div id="chatBox" class="chat-box mb-3" style="height: 400px;">
                             {% for msg in messages %}
@@ -968,7 +1248,7 @@
                             <div class="text-muted text-center py-5">Сообщений пока нет</div>
                             {% endfor %}
                         </div>
-                        <form method="POST" action="{{ url_for('send_message', project_id=project.id) }}">
+                        <form method="POST" action="{{ url_for('chat.send_message', project_id=project.id) }}">
                             <div class="input-group">
                                 <input type="text" class="form-control" name="message" placeholder="Напишите сообщение..." required>
                                 <button class="btn btn-primary" type="submit">
@@ -990,7 +1270,7 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-people-fill"></i> Команда ({{ members|length }})</span>
                 {% if can_manage %}
-                <a href="{{ url_for('project_settings', project_id=project.id) }}" class="btn btn-sm btn-outline-secondary">
+                <a href="{{ url_for('team.project_settings', project_id=project.id) }}" class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-gear-fill text-primary"></i>
                 </a>
                 {% endif %}
@@ -999,85 +1279,43 @@
                 {% for m in members %}
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div class="flex-grow-1" style="min-width: 0;">
-                        <a href="{{ url_for('employee_report_view', project_id=project.id, user_id=m.user.id) }}"
-                           class="text-decoration-none text-dark fw-bold small d-block"
-                           title="Отчёт по сотруднику в этом проекте">
+                        <a href="{{ url_for('pdf.employee_report_view', project_id=project.id, user_id=m.user.id) }}"
+                           class="text-decoration-none text-dark fw-bold small d-block">
                             <i class="bi bi-person-circle"></i>
                             {{ m.user.first_name }} {{ m.user.last_name }}
                             {% if m.user.id == project.created_by %}
                             <span class="badge bg-primary" style="font-size: 9px;">Создатель</span>
                             {% endif %}
                         </a>
-                        <a href="{{ url_for('user_all_tasks', user_id=m.user.id) }}"
-                           class="text-muted small text-decoration-none ms-4"
-                           title="Все задачи сотрудника по всем проектам">
+                        <a href="{{ url_for('tasks.user_all_tasks', user_id=m.user.id) }}"
+                           class="text-muted small text-decoration-none ms-4">
                             <i class="bi bi-list-check"></i> все задачи
                         </a>
                     </div>
-                    <div class="d-flex flex-column align-items-end gap-1">
-                        <span class="badge
-                            {% if m.role_in_project == 'admin' %}bg-danger
-                            {% elif m.role_in_project == 'manager' %}bg-warning text-dark
-                            {% elif m.role_in_project == 'chief_engineer' %}bg-info
-                            {% elif m.role_in_project == 'logistic' %}bg-success
-                            {% else %}bg-secondary{% endif %}">
-                            {{ m.role_display }}
-                        </span>
-                        <a href="{{ url_for('employee_report_pdf', project_id=project.id, user_id=m.user.id) }}"
-                           class="btn btn-sm btn-outline-secondary p-0 px-1"
-                           style="font-size: 10px; height: 22px;"
-                           title="PDF-отчёт по сотруднику">
-                            <i class="bi bi-file-pdf-fill text-danger"></i>
-                        </a>
-                    </div>
+                    <span class="badge
+                        {% if m.role_in_project == 'admin' %}bg-danger
+                        {% elif m.role_in_project == 'manager' %}bg-warning text-dark
+                        {% elif m.role_in_project == 'chief_engineer' %}bg-info
+                        {% elif m.role_in_project == 'logistic' %}bg-success
+                        {% else %}bg-secondary{% endif %}">
+                        {{ m.role_display }}
+                    </span>
                 </div>
                 {% endfor %}
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <i class="bi bi-folder-fill text-warning"></i> Другие проекты
-            </div>
-            <div class="card-body">
-                {% set has_others = false %}
-                {% for p in projects %}
-                    {% if p.id != project.id %}
-                        {% set has_others = true %}
-                        <a href="{{ url_for('view_project', project_id=p.id) }}" class="text-decoration-none">
-                            <div class="d-flex justify-content-between align-items-center p-2 mb-1 rounded" style="background: var(--bg-tertiary);">
-                                <span class="text-truncate" style="color: var(--text-primary);">
-                                    <i class="bi bi-folder-fill text-warning"></i> {{ p.name }}
-                                </span>
-                                <span class="badge bg-secondary">{{ p.completion_percentage }}%</span>
-                            </div>
-                        </a>
-                    {% endif %}
-                {% endfor %}
-                {% if not has_others %}
-                <div class="text-muted text-center small py-3">
-                    <i class="bi bi-folder" style="font-size: 24px; display: block; margin-bottom: 4px; opacity: 0.3;"></i>
-                    Нет других проектов
-                </div>
-                {% endif %}
-                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm w-100 mt-2">
-                    <i class="bi bi-grid"></i> Все проекты
-                </a>
             </div>
         </div>
     </div>
 </div>
 
 <!-- ============================================================ -->
-<!-- МОДАЛЬНОЕ ОКНО: ПРОСМОТР ДНЯ -->
+<!-- МОДАЛЬНЫЕ ОКНА -->
 <!-- ============================================================ -->
 <div class="modal fade" id="dayModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
-                    <i class="bi bi-calendar-event"></i>
-                    <span id="dayModalTitle">Дата</span>
+                    <i class="bi bi-calendar-event"></i> <span id="dayModalTitle">Дата</span>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -1085,9 +1323,7 @@
                 <div id="dayModalEvents"></div>
             </div>
             <div class="modal-footer d-flex justify-content-between">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    Закрыть
-                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
                 {% if can_manage %}
                 <button type="button" class="btn btn-primary" onclick="createEventFromDay()">
                     <i class="bi bi-plus-lg"></i> Добавить событие
@@ -1098,69 +1334,46 @@
     </div>
 </div>
 
-<!-- ============================================================ -->
-<!-- МОДАЛЬНОЕ ОКНО: СОЗДАНИЕ СОБЫТИЯ -->
-<!-- ============================================================ -->
 {% if can_manage %}
 <div class="modal fade" id="createEventModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">
-                    <i class="bi bi-calendar-plus"></i> Новое событие проекта
-                </h5>
+                <h5 class="modal-title"><i class="bi bi-calendar-plus"></i> Новое событие проекта</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ url_for('create_event', project_id=project.id) }}">
+            <form method="POST" action="{{ url_for('calendar.create_event', project_id=project.id) }}">
                 <div class="modal-body">
-                    <p class="text-muted small">
-                        <i class="bi bi-info-circle"></i> Это событие увидят все участники проекта.
-                    </p>
-
                     <div class="mb-3">
                         <label class="form-label">Название *</label>
-                        <input type="text" name="title" class="form-control"
-                               placeholder="Например: Планёрка по проекту" required>
+                        <input type="text" name="title" class="form-control" placeholder="Например: Планёрка" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Описание</label>
-                        <textarea name="description" class="form-control" rows="2"
-                                  placeholder="Повестка или заметки..."></textarea>
+                        <textarea name="description" class="form-control" rows="2"></textarea>
                     </div>
-
                     <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" name="all_day" id="allDayCheck"
-                               onchange="toggleTimeFields()">
-                        <label class="form-check-label" for="allDayCheck">
-                            Весь день (без указания времени)
-                        </label>
+                        <input class="form-check-input" type="checkbox" name="all_day" id="allDayCheck" onchange="toggleTimeFields()">
+                        <label class="form-check-label" for="allDayCheck">Весь день</label>
                     </div>
-
                     <div class="row g-2">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Начало *</label>
-                            <input type="datetime-local" name="start_time" id="startTimeField"
-                                   class="form-control" required>
-                            <input type="date" name="start_time" id="startDateField"
-                                   class="form-control" style="display: none;">
+                            <input type="datetime-local" name="start_time" id="startTimeField" class="form-control" required>
+                            <input type="date" name="start_time" id="startDateField" class="form-control" style="display: none;">
                         </div>
                         <div class="col-md-6 mb-3" id="endTimeBlock">
                             <label class="form-label">Окончание</label>
                             <input type="datetime-local" name="end_time" class="form-control">
                         </div>
                     </div>
-
                     <div class="mb-3">
                         <label class="form-label">Цвет</label>
                         <div class="d-flex gap-2">
                             {% for color, hex in [('blue', '#5b5bd6'), ('green', '#16a34a'), ('red', '#dc2626'), ('orange', '#f59e0b'), ('purple', '#8b5cf6'), ('teal', '#0891b2')] %}
                             <label style="cursor: pointer;">
-                                <input type="radio" name="color" value="{{ color }}"
-                                       {% if loop.first %}checked{% endif %}
-                                       style="display: none;"
-                                       onchange="updateColorSelection(this)">
-                                <span class="color-dot {% if loop.first %}selected{% endif %}"
-                                      style="background: {{ hex }};"></span>
+                                <input type="radio" name="color" value="{{ color }}" {% if loop.first %}checked{% endif %} style="display: none;" onchange="updateColorSelection(this)">
+                                <span class="color-dot {% if loop.first %}selected{% endif %}" style="background: {{ hex }};"></span>
                             </label>
                             {% endfor %}
                         </div>
@@ -1168,15 +1381,60 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle"></i> Создать
-                    </button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Создать</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 {% endif %}
+
+{% for todo in todos %}
+<div class="modal fade" id="editTodoModal{{ todo.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('todos.edit_todo', todo_id=todo.id) }}">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-pencil"></i> Редактировать To-Do</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Название *</label>
+                        <input type="text" name="title" class="form-control" value="{{ todo.title }}" required>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Исполнитель</label>
+                            <select name="assigned_to" class="form-select">
+                                <option value="">— Не назначен —</option>
+                                {% for m in members %}
+                                <option value="{{ m.user.id }}" {% if todo.assigned_to == m.user.id %}selected{% endif %}>
+                                    {{ m.user.first_name }} {{ m.user.last_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Дедлайн</label>
+                            <input type="date" name="due_date" class="form-control"
+                                   value="{{ todo.due_date.strftime('%Y-%m-%d') if todo.due_date else '' }}">
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Комментарий</label>
+                            <input type="text" name="comment" class="form-control" value="{{ todo.comment or '' }}">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
 
 <!-- ============================================================ -->
 <!-- SCRIPTS -->
@@ -1185,10 +1443,129 @@
 let calendarInitialized = false;
 let currentCalendar = null;
 let selectedDateStr = null;
+let __prevFilterStateProject = null;
+
+const LEGEND_FILTER_KEY_PROJECT = 'calendarLegendFilters_project_{{ project.id }}';
+const ALL_TYPES_PROJECT = ['personal', 'project_event', 'task-new', 'task-progress', 'overdue', 'completed', 'milestone', 'todo'];
+
+// ============================================================
+// ISO-НОМЕР НЕДЕЛИ
+// ============================================================
+function getISOWeek(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const week = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return week;
+}
+
+function getLegendFiltersProject() {
+    try {
+        return JSON.parse(localStorage.getItem(LEGEND_FILTER_KEY_PROJECT) || '{}');
+    } catch (e) { return {}; }
+}
+
+function saveLegendFiltersProject(state) {
+    localStorage.setItem(LEGEND_FILTER_KEY_PROJECT, JSON.stringify(state));
+}
+
+function restoreLegendFiltersProject() {
+    const state = getLegendFiltersProject();
+    const enabledCount = ALL_TYPES_PROJECT.filter(t => state[t] !== false).length;
+    if (enabledCount === 0) {
+        localStorage.removeItem(LEGEND_FILTER_KEY_PROJECT);
+        __prevFilterStateProject = null;
+        document.querySelectorAll('#calendarLegendProject .legend-item').forEach(el => {
+            el.classList.remove('legend-disabled');
+        });
+        return;
+    }
+    document.querySelectorAll('#calendarLegendProject .legend-item').forEach(el => {
+        const type = el.dataset.type;
+        if (state[type] === false) el.classList.add('legend-disabled');
+        else el.classList.remove('legend-disabled');
+    });
+}
+
+function toggleLegendFilterProject(el) {
+    const type = el.dataset.type;
+    const state = getLegendFiltersProject();
+    const isDisabled = el.classList.toggle('legend-disabled');
+    state[type] = !isDisabled;
+    saveLegendFiltersProject(state);
+
+    const enabledCount = ALL_TYPES_PROJECT.filter(t => state[t] !== false).length;
+    if (enabledCount === 0) {
+        const countEl = document.getElementById('project-calendar-filter-count');
+        if (countEl) countEl.innerHTML = '<span class="text-warning">⚠ Все типы скрыты</span>';
+        return;
+    }
+    applyLegendFiltersProject();
+}
+
+function resetLegendFiltersProject() {
+    localStorage.removeItem(LEGEND_FILTER_KEY_PROJECT);
+    __prevFilterStateProject = null;
+    document.querySelectorAll('#calendarLegendProject .legend-item').forEach(el => {
+        el.classList.remove('legend-disabled');
+    });
+    applyLegendFiltersProject(true);
+}
+
+function applyLegendFiltersProject(force) {
+    if (!currentCalendar) return;
+    const state = getLegendFiltersProject();
+
+    const stateStr = JSON.stringify(state);
+    if (!force && __prevFilterStateProject === stateStr) return;
+    __prevFilterStateProject = stateStr;
+
+    const enabledCount = ALL_TYPES_PROJECT.filter(t => state[t] !== false).length;
+    if (enabledCount === 0) {
+        currentCalendar.getEvents().forEach(ev => {
+            if (ev.display === 'none') ev.setProp('display', 'auto');
+        });
+        return;
+    }
+
+    let visible = 0;
+    currentCalendar.getEvents().forEach(ev => {
+        const props = ev.extendedProps || {};
+        const type = props.type || 'project_event';
+        const color = ev.backgroundColor || '';
+
+        let legendType = null;
+        if (type === 'personal' || type === 'personal_event') legendType = 'personal';
+        else if (type === 'project_event') legendType = 'project_event';
+        else if (type === 'milestone') legendType = 'milestone';
+        else if (type === 'todo') {
+            if (color === '#dc2626') legendType = 'overdue';
+            else if (color === '#16a34a') legendType = 'completed';
+            else legendType = 'todo';
+        } else if (type === 'task') {
+            if (color === '#a1a1aa') legendType = 'task-new';
+            else if (color === '#f59e0b') legendType = 'task-progress';
+            else if (color === '#dc2626') legendType = 'overdue';
+            else if (color === '#16a34a') legendType = 'completed';
+            else legendType = 'task-new';
+        }
+
+        const shouldHide = legendType && state[legendType] === false;
+        const currentDisplay = ev.display;
+
+        if (shouldHide && currentDisplay !== 'none') ev.setProp('display', 'none');
+        else if (!shouldHide && currentDisplay === 'none') ev.setProp('display', 'auto');
+
+        if (!shouldHide) visible++;
+    });
+
+    const countEl = document.getElementById('project-calendar-filter-count');
+    if (countEl) countEl.innerHTML = `Показано: <strong>${visible}</strong>`;
+}
 
 function initCalendar() {
     if (calendarInitialized) return;
-
     const calendarEl = document.getElementById('calendar');
     if (!calendarEl || typeof FullCalendar === 'undefined') return;
 
@@ -1197,48 +1574,57 @@ function initCalendar() {
         locale: 'ru',
         height: 'auto',
         firstDay: 1,
+
+        // ← НОВОЕ: заголовок с номером недели
+        titleFormat: function(dateInfo) {
+            const d = dateInfo.date.marker;
+            const week = getISOWeek(d);
+            const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                                'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+            return `${monthNames[d.getMonth()]} ${d.getFullYear()} · неделя ${week}`;
+        },
+
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,listWeek'
         },
-        buttonText: {
-            today: 'Сегодня',
-            month: 'Месяц',
-            week: 'Неделя',
-            list: 'Список'
-        },
-        events: '{{ url_for("events_json", project_id=project.id) }}',
-
-        dateClick: function(info) {
-            openDayModal(info.dateStr, info.date);
-        },
-
+        buttonText: { today: 'Сегодня', month: 'Месяц', week: 'Неделя', list: 'Список' },
+        events: '{{ url_for("calendar.events_json", project_id=project.id) }}',
+        dateClick: function(info) { openDayModal(info.dateStr, info.date); },
         eventClick: function(info) {
             info.jsEvent.stopPropagation();
-
-            if (info.event.url) {
-                window.location.href = info.event.url;
-                info.jsEvent.preventDefault();
-                return;
-            }
+            if (info.event.url) { window.location.href = info.event.url; info.jsEvent.preventDefault(); return; }
             const props = info.event.extendedProps;
             let msg = info.event.title;
             if (props.description) msg += '\n\n' + props.description;
-            if (props.creator) msg += '\n\nСоздал: ' + props.creator;
-            if (props.assignee) msg += '\n\nИсполнитель: ' + props.assignee;
             alert(msg);
         },
-
         eventDidMount: function(info) {
             const props = info.event.extendedProps;
             let tooltip = info.event.title;
             if (props.description) tooltip += '\n' + props.description;
             info.el.title = tooltip;
         },
-
         dayCellDidMount: function(arg) {
             arg.el.style.cursor = 'pointer';
+
+            // ← НОВОЕ: метка недели в понедельниках
+            const date = arg.date;
+            if (date.getDay() === 1) {
+                const weekNum = getISOWeek(date);
+                const badge = document.createElement('div');
+                badge.className = 'fc-week-number-badge';
+                badge.textContent = `Н${weekNum}`;
+                badge.title = `ISO-неделя ${weekNum}`;
+
+                const dayTop = arg.el.querySelector('.fc-daygrid-day-top');
+                if (dayTop) dayTop.appendChild(badge);
+            }
+        },
+        eventsSet: function() {
+            restoreLegendFiltersProject();
+            applyLegendFiltersProject(true);
         }
     });
     calendar.render();
@@ -1247,64 +1633,49 @@ function initCalendar() {
 
 function openDayModal(dateStr, dateObj) {
     selectedDateStr = dateStr;
-
-    const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-                    'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
-    const days = ['воскресенье', 'понедельник', 'вторник', 'среда',
-                  'четверг', 'пятница', 'суббота'];
-
+    const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+    const days = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
     const d = dateObj || new Date(dateStr);
-    const dateLabel = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${days[d.getDay()]}`;
+    const weekNum = getISOWeek(d);
 
-    document.getElementById('dayModalTitle').textContent = dateLabel;
+    // ← НОВОЕ: номер недели в заголовке модалки
+    document.getElementById('dayModalTitle').innerHTML =
+        `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${days[d.getDay()]}
+         <span class="badge bg-secondary ms-2" style="font-size: 11px;">неделя ${weekNum}</span>`;
 
     const eventsList = document.getElementById('dayModalEvents');
     const events = currentCalendar.getEvents().filter(ev => {
-        const evStart = ev.startStr.split('T')[0];
-        return evStart === dateStr;
+        if (ev.display === 'none') return false;
+        return ev.startStr.split('T')[0] === dateStr;
     });
 
     if (events.length === 0) {
-        eventsList.innerHTML = `
-            <div class="text-center py-4 text-muted">
-                <i class="bi bi-calendar-x" style="font-size: 36px; opacity: 0.3; display: block; margin-bottom: 8px;"></i>
-                Нет событий на этот день
-            </div>
-        `;
+        eventsList.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-calendar-x" style="font-size: 36px; opacity: 0.3; display: block; margin-bottom: 8px;"></i>Нет событий</div>';
     } else {
         eventsList.innerHTML = events.map(ev => {
             const props = ev.extendedProps;
-            const timeLabel = ev.allDay ? 'Весь день' :
-                (ev.start ? ev.start.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'}) : '');
+            const timeLabel = ev.allDay ? 'Весь день' : (ev.start ? ev.start.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'}) : '');
             const color = ev.backgroundColor || '#5b5bd6';
-
-            return `
-                <div class="d-flex align-items-center gap-2 p-2 mb-2 rounded" style="background: var(--bg-tertiary);">
-                    <div style="width: 4px; height: 36px; border-radius: 2px; background: ${color};"></div>
-                    <div class="flex-grow-1">
-                        <div class="fw-bold small">${ev.title}</div>
-                        <div class="text-muted" style="font-size: 11px;">${timeLabel}${props.description ? ' · ' + props.description : ''}</div>
-                    </div>
-                    ${ev.url ? `<a href="${ev.url}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-box-arrow-up-right"></i></a>` : ''}
+            return `<div class="d-flex align-items-center gap-2 p-2 mb-2 rounded" style="background: var(--bg-tertiary);">
+                <div style="width: 4px; height: 36px; border-radius: 2px; background: ${color};"></div>
+                <div class="flex-grow-1">
+                    <div class="fw-bold small">${ev.title}</div>
+                    <div class="text-muted" style="font-size: 11px;">${timeLabel}${props.description ? ' · ' + props.description : ''}</div>
                 </div>
-            `;
+                ${ev.url ? `<a href="${ev.url}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-box-arrow-up-right"></i></a>` : ''}
+            </div>`;
         }).join('');
     }
-
     new bootstrap.Modal(document.getElementById('dayModal')).show();
 }
 
 function createEventFromDay() {
     bootstrap.Modal.getInstance(document.getElementById('dayModal')).hide();
-
     if (selectedDateStr) {
         document.getElementById('startTimeField').value = selectedDateStr + 'T10:00';
         document.getElementById('startDateField').value = selectedDateStr;
     }
-
-    setTimeout(() => {
-        new bootstrap.Modal(document.getElementById('createEventModal')).show();
-    }, 300);
+    setTimeout(() => new bootstrap.Modal(document.getElementById('createEventModal')).show(), 300);
 }
 
 function toggleTimeFields() {
@@ -1312,18 +1683,13 @@ function toggleTimeFields() {
     const dateField = document.getElementById('startDateField');
     const timeField = document.getElementById('startTimeField');
     const endBlock = document.getElementById('endTimeBlock');
-
     if (checked) {
-        dateField.style.display = 'block';
-        dateField.required = true;
-        timeField.style.display = 'none';
-        timeField.required = false;
+        dateField.style.display = 'block'; dateField.required = true;
+        timeField.style.display = 'none'; timeField.required = false;
         endBlock.style.display = 'none';
     } else {
-        dateField.style.display = 'none';
-        dateField.required = false;
-        timeField.style.display = 'block';
-        timeField.required = true;
+        dateField.style.display = 'none'; dateField.required = false;
+        timeField.style.display = 'block'; timeField.required = true;
         endBlock.style.display = 'block';
     }
 }
@@ -1334,24 +1700,44 @@ function updateColorSelection(radio) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    const hash = window.location.hash;
+    const params = new URLSearchParams(window.location.search);
+    const hash = window.__initialHash || window.location.hash;
+
     if (hash) {
         const tab = document.querySelector(`[href="${hash}"]`);
-        if (tab && typeof bootstrap !== 'undefined') {
-            new bootstrap.Tab(tab).show();
-        }
+        if (tab && typeof bootstrap !== 'undefined') new bootstrap.Tab(tab).show();
+    }
+    const urlTab = params.get('_tab');
+    if (urlTab) {
+        const tabLink = document.querySelector(`.nav-tabs a[href="#${urlTab}"]`);
+        if (tabLink && typeof bootstrap !== 'undefined') new bootstrap.Tab(tabLink).show();
     }
 
-    if (hash === '#calendar') {
-        setTimeout(initCalendar, 200);
-    }
+    if (hash === '#calendar') setTimeout(initCalendar, 200);
     const calTab = document.querySelector('#calendar-tab');
-    if (calTab) {
-        calTab.addEventListener('shown.bs.tab', initCalendar, { once: false });
-    }
+    if (calTab) calTab.addEventListener('shown.bs.tab', initCalendar, { once: false });
 
     const chatBox = document.getElementById('chatBox');
     if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+
+    const createdTaskId = params.get('created');
+    const createdTodoId = params.get('created_todo');
+    let targetEl = null;
+    if (createdTaskId) targetEl = document.querySelector(`[data-task-id="${createdTaskId}"]`);
+    else if (createdTodoId) targetEl = document.querySelector(`[data-todo-id="${createdTodoId}"]`);
+
+    if (targetEl) {
+        setTimeout(() => {
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            targetEl.classList.add('highlight-new');
+            setTimeout(() => targetEl.classList.remove('highlight-new'), 3000);
+        }, 400);
+
+        if (history.replaceState) {
+            const cleanSearch = window.location.search.replace(/[?&](created|created_todo)=[^&]+/g, '').replace(/^&/, '?');
+            history.replaceState(null, null, window.location.pathname + cleanSearch + window.location.hash);
+        }
+    }
 });
 </script>
 {% endblock %}

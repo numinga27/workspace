@@ -1,11 +1,8 @@
 #!/usr/bin/env python
-"""
-Скрипт для запуска по cron.
-Проверяет дедлайны и отправляет уведомления исполнителям и руководителям.
+from app import create_app
+from services.email import check_and_send_deadline_notifications
 
-Запуск: python cron_notifications.py
-"""
-from app import app, check_and_send_deadline_notifications
+app = create_app()
 
 if __name__ == '__main__':
     with app.app_context():

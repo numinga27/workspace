@@ -3,7 +3,7 @@
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-7">
         <div class="mb-3">
-            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm">
+            <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left"></i> К дашборду
             </a>
         </div>
@@ -16,7 +16,7 @@
                 <form method="POST">
                     <div class="mb-3">
                         <label class="form-label">Название проекта *</label>
-                        <input type="text" name="name" class="form-control" 
+                        <input type="text" name="name" class="form-control"
                                placeholder="Например: Строительство склада" required autofocus>
                     </div>
 
@@ -26,7 +26,9 @@
                                   placeholder="Краткое описание проекта..."></textarea>
                     </div>
 
-                    <!-- Заказчик -->
+                    <!-- ============================================ -->
+                    <!-- ЗАКАЗЧИК -->
+                    <!-- ============================================ -->
                     <div class="mb-3">
                         <label class="form-label">Заказчик</label>
                         <div class="input-group">
@@ -38,20 +40,70 @@
                                 </option>
                                 {% endfor %}
                             </select>
-                            <a href="{{ url_for('create_customer') }}?next={{ url_for('create_project') }}"
-                               class="btn btn-outline-primary"
+                            <a href="{{ url_for('customers.create_customer') }}?next={{ url_for('projects.create_project') }}"
+                               class="btn btn-outline-info"
                                title="Добавить нового заказчика">
                                 <i class="bi bi-plus-lg"></i>
                             </a>
                         </div>
                         <small class="text-muted">
                             <i class="bi bi-info-circle"></i>
-                            Нажмите <i class="bi bi-plus-lg"></i> справа, чтобы добавить нового заказчика.
-                            После сохранения вы вернётесь на эту форму.
+                            Нажмите <i class="bi bi-plus-lg"></i>, чтобы добавить заказчика.
                         </small>
                     </div>
 
-                    <!-- Даты -->
+                    <!-- ============================================ -->
+                    <!-- ПОСТАВЩИК + СУБПОДРЯДЧИК -->
+                    <!-- ============================================ -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Поставщик</label>
+                            <div class="input-group">
+                                <select name="supplier_id" class="form-select">
+                                    <option value="">— Без поставщика —</option>
+                                    {% for s in suppliers|default([]) %}
+                                    <option value="{{ s.id }}">
+                                        {{ s.name }}{% if s.inn %} (ИНН: {{ s.inn }}){% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <a href="{{ url_for('suppliers.create_supplier') }}?next={{ url_for('projects.create_project') }}"
+                                   class="btn btn-outline-warning"
+                                   title="Добавить нового поставщика">
+                                    <i class="bi bi-plus-lg"></i>
+                                </a>
+                            </div>
+                            <small class="text-muted">
+                                <i class="bi bi-truck"></i> Основной поставщик
+                            </small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Субподрядчик</label>
+                            <div class="input-group">
+                                <select name="subcontractor_id" class="form-select">
+                                    <option value="">— Без субподрядчика —</option>
+                                    {% for s in subcontractors|default([]) %}
+                                    <option value="{{ s.id }}">
+                                        {{ s.name }}{% if s.inn %} (ИНН: {{ s.inn }}){% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <a href="{{ url_for('suppliers.create_subcontractor') }}?next={{ url_for('projects.create_project') }}"
+                                   class="btn btn-outline-primary"
+                                   title="Добавить нового субподрядчика">
+                                    <i class="bi bi-plus-lg"></i>
+                                </a>
+                            </div>
+                            <small class="text-muted">
+                                <i class="bi bi-people-fill"></i> Привлечённый субподрядчик
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- ============================================ -->
+                    <!-- ДАТЫ -->
+                    <!-- ============================================ -->
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Дата старта</label>
@@ -65,7 +117,9 @@
                         </div>
                     </div>
 
-                    <!-- Информация о правах -->
+                    <!-- ============================================ -->
+                    <!-- ИНФО О ПРАВАХ -->
+                    <!-- ============================================ -->
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle"></i>
                         <strong>После создания</strong> вы автоматически становитесь
@@ -73,14 +127,17 @@
                         <ul class="mb-0 mt-1 small">
                             <li>Приглашать участников и назначать им роли</li>
                             <li>Создавать задачи, вехи и To-Do</li>
+                            <li>Назначать задачи на контактных лиц заказчика / поставщика / субподрядчика</li>
                             <li>Загружать файлы и писать отчёты</li>
                             <li>Удалять проект (с подтверждением)</li>
                         </ul>
                     </div>
 
-                    <!-- Кнопки -->
+                    <!-- ============================================ -->
+                    <!-- КНОПКИ -->
+                    <!-- ============================================ -->
                     <div class="d-flex justify-content-between mt-3">
-                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                        <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-secondary">
                             <i class="bi bi-x"></i> Отмена
                         </a>
                         <button type="submit" class="btn btn-primary">

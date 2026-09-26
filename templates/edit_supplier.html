@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+        <div class="mb-3">
+            <a href="{{ view_url }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> К карточке
+            </a>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-header bg-{{ page_color }} {% if page_color == 'warning' %}text-dark{% else %}text-white{% endif %} d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><i class="bi {{ page_icon }}"></i> {{ page_title }}</h4>
+                <a href="{{ view_url }}" class="btn btn-sm btn-light"><i class="bi bi-x"></i></a>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Наименование организации *</label>
+                        <input type="text" name="name" class="form-control"
+                               value="{{ supplier.name }}" required autofocus>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">ИНН</label>
+                            <input type="text" name="inn" class="form-control"
+                                   value="{{ supplier.inn or '' }}"
+                                   pattern="[0-9]{10,12}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Контактное лицо (основное)</label>
+                            <input type="text" name="contact_person" class="form-control"
+                                   value="{{ supplier.contact_person or '' }}">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Телефон</label>
+                            <input type="tel" name="phone" class="form-control"
+                                   value="{{ supplier.phone or '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control"
+                                   value="{{ supplier.email or '' }}">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Адрес</label>
+                        <input type="text" name="address" class="form-control"
+                               value="{{ supplier.address or '' }}">
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        Изменения вступают в силу сразу.
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-3">
+                        <a href="{{ view_url }}" class="btn btn-secondary">
+                            <i class="bi bi-x"></i> Отмена
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Сохранить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-body">
+                <div class="row small text-muted">
+                    <div class="col-md-4 mb-2"><strong>ID:</strong> {{ supplier.id }}</div>
+                    <div class="col-md-4 mb-2"><strong>Создан:</strong> {{ supplier.created_at.strftime('%d.%m.%Y %H:%M') }}</div>
+                    <div class="col-md-4 mb-2"><strong>Тип:</strong> {{ page_title }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

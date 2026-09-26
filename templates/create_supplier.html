@@ -3,24 +3,28 @@
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-7">
         <div class="mb-3">
-            <a href="{{ url_for('customers.customers_list') }}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left"></i> К списку заказчиков
+            <a href="{{ list_url }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> К списку
             </a>
         </div>
 
         <div class="card shadow">
-            <div class="card-header bg-info text-white">
-                <h4 class="mb-0"><i class="bi bi-building-add"></i> Новый заказчик</h4>
+            <div class="card-header bg-{{ page_color }} {% if page_color == 'warning' %}text-dark{% else %}text-white{% endif %}">
+                <h4 class="mb-0">
+                    <i class="bi {{ page_icon }}"></i> {{ page_title }}
+                </h4>
             </div>
             <div class="card-body">
                 <form method="POST">
-                    <!-- Поле для возврата на исходную страницу -->
                     <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
 
                     <div class="mb-3">
-                        <label class="form-label">Наименование организации *</label>
+                        <label class="form-label">
+                            Наименование организации *
+                        </label>
                         <input type="text" name="name" class="form-control"
-                               placeholder="ООО «Ромашка»" required autofocus>
+                               placeholder="{% if page_type == 'subcontractor' %}ООО «Субподрядчик»{% else %}ООО «Поставщик»{% endif %}"
+                               required autofocus>
                     </div>
 
                     <div class="row">
@@ -33,7 +37,7 @@
                             <small class="text-muted">10 цифр — юрлицо, 12 — ИП</small>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Контактное лицо</label>
+                            <label class="form-label">Контактное лицо (основное)</label>
                             <input type="text" name="contact_person" class="form-control"
                                    placeholder="Иванов Иван Иванович">
                         </div>
@@ -58,38 +62,28 @@
                                placeholder="г. Москва, ул. Примерная, д. 1">
                     </div>
 
-                    <!-- Информация о правах -->
+                    <!-- Информация -->
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle"></i>
-                        <strong>Кто видит заказчика:</strong>
+                        <strong>Кто видит {% if page_type == 'subcontractor' %}субподрядчика{% else %}поставщика{% endif %}:</strong>
                         <ul class="mb-0 mt-1 small">
                             <li>Вы и все участники ваших проектов</li>
-                            <li>Если заказчик ещё не привязан ни к одному проекту — его видят все пользователи</li>
-                            <li>Глобальный администратор видит всех заказчиков</li>
+                            <li>Если он ещё не привязан ни к одному проекту — его видят все пользователи</li>
+                            <li>Глобальный администратор видит всех</li>
                         </ul>
                     </div>
 
-                    <!-- Кнопки -->
                     <div class="d-flex justify-content-between mt-3">
-                        <a href="{{ url_for('customers.customers_list') }}" class="btn btn-secondary">
+                        <a href="{{ list_url }}" class="btn btn-secondary">
                             <i class="bi bi-x"></i> Отмена
                         </a>
-                        <button type="submit" class="btn btn-info text-white">
+                        <button type="submit" class="btn btn-{{ page_color }} {% if page_color == 'warning' %}text-dark{% else %}text-white{% endif %}">
                             <i class="bi bi-check-circle"></i> Сохранить
                         </button>
                     </div>
                 </form>
             </div>
         </div>
-
-        <!-- Подсказка если пришли из формы проекта -->
-        {% if request.args.get('next') and 'create_project' in request.args.get('next') %}
-        <div class="alert alert-warning mt-3">
-            <i class="bi bi-lightbulb"></i>
-            После сохранения заказчика вы вернётесь на форму создания проекта —
-            новый заказчик появится в выпадающем списке.
-        </div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}

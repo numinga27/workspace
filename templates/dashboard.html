@@ -6,17 +6,20 @@
         <p class="text-muted mb-0">Ваши проекты</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
-        <a href="{{ url_for('my_tasks') }}" class="btn btn-outline-secondary">
+        <a href="{{ url_for('tasks.my_tasks') }}" class="btn btn-outline-secondary">
             <i class="bi bi-check2-square text-primary"></i> Мои задачи
+            {% if unread_task_ids and unread_task_ids|length > 0 %}
+                <span class="badge bg-primary ms-1">{{ unread_task_ids|length }}</span>
+            {% endif %}
         </a>
-        <a href="{{ url_for('customers_list') }}" class="btn btn-outline-secondary">
+        <a href="{{ url_for('customers.customers_list') }}" class="btn btn-outline-secondary">
             <i class="bi bi-buildings text-info"></i> Заказчики
         </a>
-        <a href="{{ url_for('create_project') }}" class="btn btn-primary">
+        <a href="{{ url_for('projects.create_project') }}" class="btn btn-primary">
             <i class="bi bi-plus-lg"></i> Создать проект
         </a>
         {% if user.role == 'admin' %}
-        <form method="POST" action="{{ url_for('manual_send_notifications') }}" class="d-inline">
+        <form method="POST" action="{{ url_for('admin.manual_send_notifications') }}" class="d-inline">
             <button type="submit" class="btn btn-outline-secondary"
                     onclick="return confirm('Запустить рассылку уведомлений о дедлайнах?')"
                     title="Отправить email всем, у кого приближается дедлайн">
@@ -25,6 +28,74 @@
         </form>
         {% endif %}
     </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ТРЕБУЕТ ВНИМАНИЯ -->
+<!-- ============================================================ -->
+{% if urgent_tasks %}
+<div class="card mb-4">
+    <div class="card-body py-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0">
+                <i class="bi bi-bell-fill text-warning"></i> Требует внимания
+            </h6>
+            <a href="{{ url_for('tasks.my_tasks') }}" class="btn btn-sm btn-outline-secondary">
+                Все задачи <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            {% for t in urgent_tasks[:5] %}
+            <a href="{{ url_for('tasks.view_task', task_id=t.id) }}"
+               class="d-inline-flex align-items-center gap-1 px-2 py-1 rounded text-decoration-none small"
+               style="background: {% if t.id in unread_task_ids %}#eef0ff{% else %}#fef3c7{% endif %};
+                      border: 1px solid {% if t.id in unread_task_ids %}var(--accent){% else %}#fde68a{% endif %};
+                      color: var(--text-primary);"
+               title="{{ t.project.name }}">
+                {% if t.id in unread_task_ids %}
+                    <span class="badge-new" style="font-size: 8px; padding: 2px 4px;">NEW</span>
+                {% endif %}
+                <i class="bi bi-clock-fill text-warning"></i>
+                <strong>{{ t.title[:40] }}{% if t.title|length > 40 %}…{% endif %}</strong>
+                {% if t.due_date %}
+                <span class="badge bg-warning text-dark">{{ (t.due_date - now).days }} дн.</span>
+                {% endif %}
+            </a>
+            {% endfor %}
+            {% if urgent_tasks|length > 5 %}
+            <span class="text-muted small align-self-center">…и ещё {{ urgent_tasks|length - 5 }}</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- Компактная статистика -->
+<!-- ============================================================ -->
+<div class="compact-stats">
+    <span class="badge bg-secondary">
+        <i class="bi bi-folder-fill"></i> Проектов: {{ all_projects|length }}
+    </span>
+    <span class="badge bg-secondary">
+        <i class="bi bi-filter"></i> Показано: {{ projects|length }}
+    </span>
+    {% if my_active_tasks %}
+    <span class="badge bg-info">
+        <i class="bi bi-list-task"></i> Моих активных задач: {{ my_active_tasks|length }}
+    </span>
+    {% endif %}
+    {% if my_overdue_count and my_overdue_count > 0 %}
+    <span class="badge bg-danger">
+        <i class="bi bi-exclamation-triangle-fill"></i> Просрочено: {{ my_overdue_count }}
+    </span>
+    {% endif %}
+    {% if unread_task_ids and unread_task_ids|length > 0 %}
+    <span class="badge bg-primary">
+        <i class="bi bi-bell-fill"></i> Новых задач: {{ unread_task_ids|length }}
+    </span>
+    {% endif %}
 </div>
 
 <!-- Фильтры -->
@@ -69,7 +140,7 @@
             </div>
             {% if filter_customer or filter_start_from or filter_start_to or filter_status %}
             <div class="col-12">
-                <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-outline-secondary">
+                <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-x-lg"></i> Сбросить фильтры
                 </a>
                 <small class="text-muted ms-2">
@@ -86,7 +157,7 @@
 <div class="row g-4">
     {% for project in projects %}
     <div class="col-xl-3 col-lg-4 col-md-6 fade-in-up">
-        <a href="{{ url_for('view_project', project_id=project.id) }}" class="project-card">
+        <a href="{{ url_for('projects.view_project', project_id=project.id) }}" class="project-card">
             <div class="project-header">
                 <div class="project-name">{{ project.name }}</div>
                 <span class="badge {% if project.completion_percentage == 100 %}bg-success{% elif project.completion_percentage >= 50 %}bg-warning{% else %}bg-secondary{% endif %}">
@@ -162,12 +233,12 @@
     </h5>
     {% if filter_customer or filter_start_from or filter_start_to or filter_status %}
         <p>Попробуйте изменить условия фильтрации</p>
-        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+        <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary">
             <i class="bi bi-x-lg"></i> Сбросить фильтры
         </a>
     {% else %}
         <p>Создайте свой первый проект — вы станете его руководителем</p>
-        <a href="{{ url_for('create_project') }}" class="btn btn-primary">
+        <a href="{{ url_for('projects.create_project') }}" class="btn btn-primary">
             <i class="bi bi-plus-lg"></i> Создать первый проект
         </a>
     {% endif %}
