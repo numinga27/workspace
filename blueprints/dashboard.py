@@ -9,8 +9,10 @@ from models import (
 from decorators import login_required
 from utils import (
     get_user_projects, get_available_customers, is_project_guest,
-    # ← НОВОЕ: для уведомлений
     get_unread_task_ids, get_unread_todo_ids,
+    get_available_companies,
+    get_available_suppliers,        # ← НОВОЕ
+    utcnow,
 )
 
 bp = Blueprint('dashboard', __name__)
@@ -26,12 +28,36 @@ def dashboard():
     user = User.query.get(session['user_id'])
     projects = get_user_projects(user)
 
+    # --- Параметры фильтров ---
+    filter_company = request.args.get('company', '')
     filter_customer = request.args.get('customer', '')
+    filter_subcontractor = request.args.get('subcontractor', '')
     filter_start_from = request.args.get('start_from', '')
     filter_start_to = request.args.get('start_to', '')
     filter_status = request.args.get('status', '')
 
     filtered = projects
+
+    # ← фильтр по филиалу
+    if filter_company:
+        if filter_company == '__no_company__':
+            filtered = [p for p in filtered if not p.company_name]
+        else:
+            filtered = [p for p in filtered if p.company_name == filter_company]
+
+    # ← НОВОЕ: фильтр по субподрядчику (many-to-many)
+    if filter_subcontractor:
+        if filter_subcontractor == '__none__':
+            filtered = [p for p in filtered if not p.subcontractors]
+        else:
+            try:
+                sub_id = int(filter_subcontractor)
+                filtered = [
+                    p for p in filtered
+                    if any(s.id == sub_id for s in p.subcontractors)
+                ]
+            except ValueError:
+                pass
 
     if filter_customer:
         filtered = [p for p in filtered if p.customer and str(p.customer.id) == filter_customer]
@@ -54,18 +80,22 @@ def dashboard():
         filtered = [p for p in filtered if p.status == filter_status]
 
     customers = get_available_customers(user)
+    available_companies = get_available_companies(user)
 
-    # ← НОВОЕ: непрочитанные задачи и To-Do для бейджей
+    # ← НОВОЕ: список доступных субподрядчиков для селекта
+    all_suppliers = get_available_suppliers(user)
+    available_subcontractors = [
+        s for s in all_suppliers if s.supplier_type == 'subcontractor'
+    ]
+    available_subcontractors.sort(key=lambda s: s.name.lower())
+
     unread_task_ids = get_unread_task_ids(user.id)
     unread_todo_ids = get_unread_todo_ids(user.id)
 
-    # ← НОВОЕ: задачи пользователя для карточек на дашборде
     my_active_tasks = Task.query.filter_by(assigned_to=user.id)\
         .filter(Task.status.in_(['new', 'in_progress']))\
         .order_by(Task.due_date.asc().nullslast()).all()
 
-    # Срочные (дедлайн ≤ 3 дней)
-    from utils import utcnow
     now = utcnow()
     urgent_tasks = []
     for t in my_active_tasks:
@@ -78,8 +108,12 @@ def dashboard():
                            projects=filtered,
                            all_projects=projects,
                            customers=customers,
+                           available_companies=available_companies,
+                           available_subcontractors=available_subcontractors,   # ← НОВОЕ
                            user=user,
+                           filter_company=filter_company,
                            filter_customer=filter_customer,
+                           filter_subcontractor=filter_subcontractor,
                            filter_start_from=filter_start_from,
                            filter_start_to=filter_start_to,
                            filter_status=filter_status,
@@ -114,21 +148,37 @@ def api_search():
     customer_ids = {p.customer_id for p in projects if p.customer_id}
     supplier_ids = {p.supplier_id for p in projects if p.supplier_id}
 
+    # ← НОВОЕ: собираем ID субподрядчиков из M2M
+    subcontractor_ids = set()
+    for p in projects:
+        for s in p.subcontractors:
+            subcontractor_ids.add(s.id)
+
     results = []
     q_lower = q.lower()
 
     # 1. Проекты
     for p in projects:
         if q_lower in p.name.lower():
+            subtitle = f'Проект · {p.completion_percentage}%'
+            if p.company_name:
+                subtitle = f'{p.company_name} · {p.completion_percentage}%'
+            # ← НОВОЕ: показываем имена субподрядчиков
+            if p.subcontractors:
+                sub_names = ', '.join(s.name for s in p.subcontractors[:2])
+                if len(p.subcontractors) > 2:
+                    sub_names += f' +{len(p.subcontractors) - 2}'
+                subtitle += f' · {sub_names}'
+
             results.append({
                 'type': 'project',
                 'icon': 'folder-fill',
                 'title': p.name,
-                'subtitle': f'Проект · {p.completion_percentage}%',
+                'subtitle': subtitle,
                 'url': url_for('projects.view_project', project_id=p.id),
             })
 
-    # 2. Задачи и 3. To-Do
+    # 2. Задачи
     if project_ids:
         tasks = Task.query.filter(
             Task.project_id.in_(project_ids),
@@ -152,6 +202,7 @@ def api_search():
                 'url': url_for('tasks.view_task', task_id=t.id),
             })
 
+        # 3. To-Do
         todos = Todo.query.filter(
             Todo.project_id.in_(project_ids),
             Todo.title.ilike(f'%{q}%')
@@ -175,7 +226,8 @@ def api_search():
 
     # 4. Заказчики
     if is_admin:
-        customers = Customer.query.filter(Customer.name.ilike(f'%{q}%')).order_by(Customer.name).limit(10).all()
+        customers = Customer.query.filter(Customer.name.ilike(f'%{q}%'))\
+            .order_by(Customer.name).limit(10).all()
     else:
         customers = Customer.query.filter(
             Customer.id.in_(customer_ids),
@@ -192,14 +244,16 @@ def api_search():
             'url': url_for('customers.view_customer', customer_id=c.id),
         })
 
-    # 5. Поставщики
+    # 5. Поставщики + субподрядчики
+    all_supplier_ids = supplier_ids | subcontractor_ids   # ← НОВОЕ: объединяем
     if is_admin:
-        suppliers = Supplier.query.filter(Supplier.name.ilike(f'%{q}%')).order_by(Supplier.name).limit(10).all()
+        suppliers = Supplier.query.filter(Supplier.name.ilike(f'%{q}%'))\
+            .order_by(Supplier.name).limit(10).all()
     else:
         suppliers = Supplier.query.filter(
-            Supplier.id.in_(supplier_ids),
+            Supplier.id.in_(all_supplier_ids),
             Supplier.name.ilike(f'%{q}%')
-        ).order_by(Supplier.name).limit(10).all() if supplier_ids else []
+        ).order_by(Supplier.name).limit(10).all() if all_supplier_ids else []
 
     for s in suppliers:
         contacts_count = len(s.contacts) if s.contacts else 0
@@ -216,14 +270,19 @@ def api_search():
 
     # 6. Контактные лица
     if is_admin:
-        contact_query = ContactPerson.query.filter(ContactPerson.full_name.ilike(f'%{q}%'))
+        contact_query = ContactPerson.query.filter(
+            ContactPerson.full_name.ilike(f'%{q}%')
+        )
     else:
-        if customer_ids or supplier_ids:
-            conditions = []
-            if customer_ids:
-                conditions.append(ContactPerson.customer_id.in_(customer_ids))
-            if supplier_ids:
-                conditions.append(ContactPerson.supplier_id.in_(supplier_ids))
+        conditions = []
+        if customer_ids:
+            conditions.append(ContactPerson.customer_id.in_(customer_ids))
+        if supplier_ids:
+            conditions.append(ContactPerson.supplier_id.in_(supplier_ids))
+        if subcontractor_ids:                                  # ← НОВОЕ
+            conditions.append(ContactPerson.supplier_id.in_(subcontractor_ids))
+
+        if conditions:
             contact_query = ContactPerson.query.filter(
                 ContactPerson.full_name.ilike(f'%{q}%'),
                 or_(*conditions),
@@ -237,12 +296,13 @@ def api_search():
         for c in contacts:
             owner = c.belongs_to
             owner_name = owner.name if owner else '—'
-            owner_label = 'Заказчик' if c.customer_id else ('Субподрядчик' if owner and owner.is_subcontractor else 'Поставщик')
+            owner_label = 'Заказчик' if c.customer_id else (
+                'Субподрядчик' if owner and owner.is_subcontractor else 'Поставщик'
+            )
 
             if c.customer_id:
                 contact_url = url_for('customers.view_customer', customer_id=c.customer_id)
             elif c.supplier_id:
-                # Проверяем, субподрядчик это или поставщик
                 owner_supplier = Supplier.query.get(c.supplier_id)
                 if owner_supplier and owner_supplier.is_subcontractor:
                     contact_url = url_for('suppliers.view_subcontractor', supplier_id=c.supplier_id)

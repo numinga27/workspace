@@ -106,3 +106,63 @@ def view_customer(customer_id):
                            customer=customer,
                            user=user,
                            projects=get_user_projects(user))
+
+
+@bp.route('/customer/<int:customer_id>/delete', methods=['POST'])
+@login_required
+def delete_customer(customer_id):
+    """Удаление заказчика. Разрешено только если нет привязанных проектов
+    и ни один контакт не назначен на задачи."""
+    from models import Project, ContactPerson, Task
+    from extensions import db
+    from flask import current_app
+    import os
+
+    user = User.query.get(session['user_id'])
+    customer = Customer.query.get_or_404(customer_id)
+
+    # Проверка прав: admin или тот, у кого есть проекты с этим заказчиком
+    can_delete = user.role == 'admin'
+    if not can_delete:
+        for member in user.projects:
+            if member.project.customer_id == customer_id:
+                can_delete = True
+                break
+        if not Project.query.filter_by(customer_id=customer_id).first():
+            can_delete = True  # «свободный» заказчик — можно удалять
+
+    if not can_delete:
+        flash('Нет прав на удаление этого заказчика.', 'danger')
+        return redirect(url_for('customers.customers_list'))
+
+    # Проверка 1: есть ли проекты с этим заказчиком?
+    projects_count = Project.query.filter_by(customer_id=customer_id).count()
+    if projects_count > 0:
+        flash(
+            f'Нельзя удалить заказчика: к нему привязано проектов — {projects_count}. '
+            f'Сначала отвяжите его в проектах.',
+            'danger'
+        )
+        return redirect(url_for('customers.view_customer', customer_id=customer_id))
+
+    # Проверка 2: есть ли контакты, назначенные на задачи?
+    contact_user_ids = [
+        c.user_id for c in customer.contacts if c.user_id
+    ]
+    if contact_user_ids:
+        assigned_tasks = Task.query.filter(Task.assigned_to.in_(contact_user_ids)).count()
+        if assigned_tasks > 0:
+            flash(
+                f'Нельзя удалить заказчика: его контакты назначены на {assigned_tasks} задач(и). '
+                f'Сначала переназначьте задачи.',
+                'danger'
+            )
+            return redirect(url_for('customers.view_customer', customer_id=customer_id))
+
+    # Всё чисто — удаляем
+    name = customer.name
+    db.session.delete(customer)
+    db.session.commit()
+
+    flash(f'Заказчик «{name}» удалён.', 'success')
+    return redirect(url_for('customers.customers_list'))

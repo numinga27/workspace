@@ -10,11 +10,13 @@ from decorators import login_required
 from utils import (
     utcnow, check_project_access, check_full_project_access, get_user_role_in_project,
     can_manage_project, get_user_projects, get_available_customers, get_available_suppliers,
+    get_available_companies, get_available_subcontractors,   # ← НОВОЕ
     mark_project_as_read, is_project_guest,
     get_or_create_guest_user, add_guest_to_project,
     _validate_project_member, _validate_task_in_project, _validate_milestone_in_project,
 )
 from services.stats import get_todo_stats
+from services.email import send_guest_credentials
 
 bp = Blueprint('projects', __name__)
 
@@ -29,6 +31,48 @@ def _split_suppliers_by_type(user):
     suppliers = [s for s in all_suppliers if s.supplier_type == 'supplier']
     subcontractors = [s for s in all_suppliers if s.supplier_type == 'subcontractor']
     return suppliers, subcontractors
+
+
+def _validate_subcontractor(user, subcontractor_id):
+    """Проверяет, что пользователь имеет право привязать этого субподрядчика к проекту.
+    Возвращает Supplier или None."""
+    if not subcontractor_id:
+        return None
+    try:
+        sub_id = int(subcontractor_id)
+    except (TypeError, ValueError):
+        return None
+
+    supplier = Supplier.query.get(sub_id)
+    if not supplier:
+        return None
+    if supplier.supplier_type != 'subcontractor':
+        return None
+
+    if user.role == 'admin':
+        return supplier
+
+    allowed = get_available_suppliers(user)
+    allowed_ids = {s.id for s in allowed}
+    if supplier.id in allowed_ids:
+        return supplier
+
+    return None
+
+
+def _collect_subcontractors(user):
+    """Собирает список субподрядчиков из формы (multi-select).
+    Возвращает список Supplier.
+    """
+    raw_ids = request.form.getlist('subcontractor_ids')
+    result = []
+    seen = set()
+    for raw in raw_ids:
+        s = _validate_subcontractor(user, raw)
+        if s and s.id not in seen:
+            result.append(s)
+            seen.add(s.id)
+    return result
 
 
 # ============================================================
@@ -51,7 +95,11 @@ def create_project():
 
         customer_id = request.form.get('customer_id') or None
         supplier_id = request.form.get('supplier_id') or None
-        subcontractor_id = request.form.get('subcontractor_id') or None
+
+        company_name = request.form.get('company_name', '').strip() or None
+
+        # ← НОВОЕ: список субподрядчиков
+        subs = _collect_subcontractors(user)
 
         project = Project(
             name=request.form['name'],
@@ -59,11 +107,15 @@ def create_project():
             created_by=session['user_id'],
             customer_id=int(customer_id) if customer_id else None,
             supplier_id=int(supplier_id) if supplier_id else None,
-            subcontractor_id=int(subcontractor_id) if subcontractor_id else None,
+            # ← legacy-поле: записываем первого, чтобы старое не сломалось
+            subcontractor_id=subs[0].id if subs else None,
+            company_name=company_name,
             start_date=start_date or utcnow(),
             end_date=end_date,
         )
         db.session.add(project)
+        db.session.flush()          # ← важно: получить project.id до M2M
+        project.subcontractors = subs   # ← НОВОЕ: many-to-many
         db.session.commit()
 
         db.session.add(ProjectMember(
@@ -78,12 +130,13 @@ def create_project():
         return redirect(url_for('projects.view_project', project_id=project.id))
 
     # --- GET ---
-    suppliers, subcontractors = _split_suppliers_by_type(user)
+    suppliers, _ = _split_suppliers_by_type(user)
 
     return render_template('create_project.html',
                            customers=get_available_customers(user),
                            suppliers=suppliers,
-                           subcontractors=subcontractors,
+                           available_subcontractors=get_available_subcontractors(user),   # ← НОВОЕ
+                           available_companies=get_available_companies(user),
                            user=user,
                            projects=get_user_projects(user))
 
@@ -97,7 +150,6 @@ def create_project():
 def view_project(project_id):
     user = User.query.get(session['user_id'])
 
-    # Гости не видят проект целиком — редирект на свои задачи
     if is_project_guest(user.id, project_id):
         flash('Вы — гость проекта. Вам доступны только ваши задачи.', 'info')
         return redirect(url_for('tasks.my_tasks'))
@@ -114,9 +166,7 @@ def view_project(project_id):
     members_all = ProjectMember.query.filter_by(project_id=project.id).all()
     members = [m for m in members_all if not m.is_guest]
 
-    # ------------------------------------------------
-    #  ФИЛЬТРЫ ЗАДАЧ
-    # ------------------------------------------------
+    # Фильтры задач
     filter_assignee = request.args.get('filter_assignee', '')
     filter_status = request.args.get('filter_status', '')
     filter_due_from = request.args.get('filter_due_from', '')
@@ -155,9 +205,7 @@ def view_project(project_id):
         except ValueError:
             pass
 
-    # ------------------------------------------------
-    #  ФИЛЬТРЫ TO-DO
-    # ------------------------------------------------
+    # Фильтры To-Do
     todo_filter_assignee = request.args.get('todo_filter_assignee', '')
     todo_filter_status = request.args.get('todo_filter_status', '')
     todo_filter_due_from = request.args.get('todo_filter_due_from', '')
@@ -199,9 +247,7 @@ def view_project(project_id):
         except ValueError:
             pass
 
-    # ------------------------------------------------
-    #  ОСТАЛЬНЫЕ ДАННЫЕ
-    # ------------------------------------------------
+    # Остальные данные
     messages = Message.query.filter_by(project_id=project.id)\
         .order_by(Message.created_at.asc()).all()
     folders = Folder.query.filter_by(project_id=project.id, parent_folder_id=None).all()
@@ -217,16 +263,14 @@ def view_project(project_id):
     overdue_milestones = [m for m in milestones if m.is_overdue]
     overdue_tasks = [t for t in tasks_all if t.is_overdue]
 
-    # ------------------------------------------------
-    #  КОНТАКТНЫЕ ЛИЦА
-    # ------------------------------------------------
+    # ← НОВОЕ: контакты всех субподрядчиков проекта
     contact_persons = []
     if project.customer:
         contact_persons.extend(project.customer.contacts)
     if project.supplier:
         contact_persons.extend(project.supplier.contacts)
-    if project.subcontractor:
-        contact_persons.extend(project.subcontractor.contacts)
+    for sub in project.subcontractors:
+        contact_persons.extend(sub.contacts)
 
     return render_template('project.html',
                            project=project,
@@ -252,7 +296,6 @@ def view_project(project_id):
                            project_overdue=project.is_overdue,
                            project_days_overdue=project.days_overdue,
                            todo_stats=get_todo_stats(project.id),
-                           # Фильтры
                            filter_assignee=filter_assignee,
                            filter_status=filter_status,
                            filter_due_from=filter_due_from,
@@ -282,14 +325,20 @@ def edit_project(project_id):
         project.description = request.form.get('description', '')
         project.status = request.form.get('status', 'active')
 
+        company_name = request.form.get('company_name', '').strip() or None
+        project.company_name = company_name
+
         customer_id = request.form.get('customer_id') or None
         project.customer_id = int(customer_id) if customer_id else None
 
         supplier_id = request.form.get('supplier_id') or None
         project.supplier_id = int(supplier_id) if supplier_id else None
 
-        subcontractor_id = request.form.get('subcontractor_id') or None
-        project.subcontractor_id = int(subcontractor_id) if subcontractor_id else None
+        # ← НОВОЕ: список субподрядчиков
+        subs = _collect_subcontractors(user)
+        project.subcontractors = subs
+        # ← legacy-поле: синхронизируем с первым, чтобы старые места не сломались
+        project.subcontractor_id = subs[0].id if subs else None
 
         project.start_date = (
             datetime.strptime(request.form['start_date'], '%Y-%m-%d')
@@ -305,13 +354,14 @@ def edit_project(project_id):
         return redirect(url_for('projects.view_project', project_id=project.id))
 
     # --- GET ---
-    suppliers, subcontractors = _split_suppliers_by_type(user)
+    suppliers, _ = _split_suppliers_by_type(user)
 
     return render_template('edit_project.html',
                            project=project,
                            customers=get_available_customers(user),
                            suppliers=suppliers,
-                           subcontractors=subcontractors,
+                           available_subcontractors=get_available_subcontractors(user),   # ← НОВОЕ
+                           available_companies=get_available_companies(user),
                            user=user,
                            user_role=get_user_role_in_project(project_id),
                            projects=get_user_projects(user))
@@ -382,7 +432,7 @@ def create_task(project_id):
     if request.form.get('due_date'):
         due_date = datetime.strptime(request.form['due_date'], '%Y-%m-%d')
 
-    assigned = request.form.get('assigned_to')  # "user:5" или "contact:3"
+    assigned = request.form.get('assigned_to')
     parent_task_id = request.form.get('parent_task_id')
     milestone_id = request.form.get('milestone_id')
 
@@ -422,16 +472,27 @@ def create_task(project_id):
                 belongs = True
             if contact.supplier_id and project.supplier_id == contact.supplier_id:
                 belongs = True
-            if contact.supplier_id and project.subcontractor_id == contact.supplier_id:
-                belongs = True
+            # ← НОВОЕ: контакт принадлежит одному из субподрядчиков проекта
+            if contact.supplier_id:
+                sub_ids = {s.id for s in project.subcontractors}
+                if contact.supplier_id in sub_ids:
+                    belongs = True
 
             if not belongs:
                 flash('Это контактное лицо не связано с проектом.', 'danger')
                 return redirect(url_for('projects.view_project', project_id=project_id))
 
-            guest_user = get_or_create_guest_user(contact)
+            guest_user, plain_password = get_or_create_guest_user(contact)
             add_guest_to_project(guest_user.id, project_id, session['user_id'])
             assigned_to_id = guest_user.id
+
+            if plain_password:
+                send_guest_credentials(
+                    recipient=guest_user,
+                    plain_password=plain_password,
+                    project=project,
+                    inviter=User.query.get(session['user_id']),
+                )
 
         else:
             flash('Некорректный тип исполнителя.', 'danger')

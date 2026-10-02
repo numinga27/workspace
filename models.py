@@ -3,8 +3,20 @@ from extensions import db
 
 
 def _utcnow():
-    """Возвращает текущее UTC-время как naive datetime."""
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    """Возвращает текущее UTC-время как aware datetime."""
+    return datetime.now(timezone.utc)
+
+
+# ============================================================
+#  СВЯЗКА ПРОЕКТ ↔ СУБПОДРЯДЧИК (many-to-many) ← НОВОЕ
+# ============================================================
+
+project_subcontractor = db.Table(
+    'project_subcontractor',
+    db.Column('project_id', db.Integer, db.ForeignKey('project.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('supplier_id', db.Integer, db.ForeignKey('supplier.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('added_at', db.DateTime, default=_utcnow),
+)
 
 
 # ============================================================
@@ -22,7 +34,6 @@ class User(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=_utcnow)
 
-    # ---- Методы работы с паролем ----
     def set_password(self, raw_password):
         from werkzeug.security import generate_password_hash
         self.password = generate_password_hash(raw_password, method='pbkdf2:sha256')
@@ -31,7 +42,6 @@ class User(db.Model):
         from werkzeug.security import check_password_hash
         if self.password.startswith(('pbkdf2:', 'scrypt:', 'argon2')):
             return check_password_hash(self.password, raw_password)
-        # Обратная совместимость со старыми plain-text паролями
         return self.password == raw_password
 
     # ---- Relationships ----
@@ -60,12 +70,12 @@ class User(db.Model):
         'Todo', backref='todo_creator', lazy=True, foreign_keys='Todo.created_by'
     )
     reports = db.relationship('Report', backref='report_author', lazy=True)
-
-    # Обратная связь с контактным лицом (если этот юзер — гость из контакта)
     contact_profile = db.relationship(
         'ContactPerson', backref='user', uselist=False,
         foreign_keys='ContactPerson.user_id'
     )
+    task_reads = db.relationship('TaskRead', backref='user', lazy=True)
+    todo_reads = db.relationship('TodoRead', backref='user', lazy=True)
 
 
 # ============================================================
@@ -76,7 +86,7 @@ class Customer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     inn = db.Column(db.String(20), nullable=True)
-    contact_person = db.Column(db.String(100), nullable=True)   # legacy-поле
+    contact_person = db.Column(db.String(100), nullable=True)
     phone = db.Column(db.String(30), nullable=True)
     email = db.Column(db.String(100), nullable=True)
     address = db.Column(db.String(300), nullable=True)
@@ -95,34 +105,29 @@ class Customer(db.Model):
 # ============================================================
 
 class Supplier(db.Model):
-    """Поставщик или субподрядчик.
-    Различается по полю supplier_type:
-      - 'supplier' — обычный поставщик
-      - 'subcontractor' — субподрядчик
-    """
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     inn = db.Column(db.String(20), nullable=True)
-    contact_person = db.Column(db.String(100), nullable=True)   # legacy-поле
+    contact_person = db.Column(db.String(100), nullable=True)
     phone = db.Column(db.String(30), nullable=True)
     email = db.Column(db.String(100), nullable=True)
     address = db.Column(db.String(300), nullable=True)
-
-    # ← НОВОЕ: тип
-    supplier_type = db.Column(db.String(20), default='supplier')  # 'supplier' | 'subcontractor'
-
+    supplier_type = db.Column(db.String(20), default='supplier')
     created_at = db.Column(db.DateTime, default=_utcnow)
 
-    # Основной backref — для supplier_id у проекта
+    # ---- Legacy (используется старым subcontractor_id) ----
     projects = db.relationship(
         'Project', backref='supplier', lazy=True,
         foreign_keys='Project.supplier_id'
     )
-    # ← НОВОЕ: обратная связь для subcontractor_id у проекта
     subcontractor_projects = db.relationship(
         'Project', backref='subcontractor', lazy=True,
         foreign_keys='Project.subcontractor_id'
     )
+
+    # ---- NEW: many-to-many субподрядчиков ----
+    # Обратная связь `subcontracted_projects` создаётся автоматически
+    # через backref в Project.subcontractors.
 
     contacts = db.relationship(
         'ContactPerson', backref='supplier', lazy=True,
@@ -144,20 +149,14 @@ class Supplier(db.Model):
 # ============================================================
 
 class ContactPerson(db.Model):
-    """Контактное лицо заказчика или поставщика/субподрядчика.
-    Может быть связано с User — если этот контакт является «гостем» в системе."""
     id = db.Column(db.Integer, primary_key=True)
     full_name = db.Column(db.String(150), nullable=False)
     position = db.Column(db.String(100), nullable=True)
     phone = db.Column(db.String(30), nullable=True)
     email = db.Column(db.String(100), nullable=True)
-
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=True)
     supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=True)
-
-    # Ссылка на User, если контакт зарегистрирован в системе
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-
     created_at = db.Column(db.DateTime, default=_utcnow)
 
     __table_args__ = (
@@ -170,7 +169,6 @@ class ContactPerson(db.Model):
 
     @property
     def belongs_to(self):
-        """Возвращает компанию (Customer или Supplier)."""
         if self.customer:
             return self.customer
         return self.supplier
@@ -192,15 +190,29 @@ class Project(db.Model):
     created_at = db.Column(db.DateTime, default=_utcnow)
     is_active = db.Column(db.Boolean, default=True)
 
+    company_name = db.Column(db.String(200), nullable=True, index=True)
+    company_color = db.Column(db.String(20), default='#6366f1')
+
+    # Связи с внешними компаниями
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=True)
     supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=True)
 
-    # ← НОВОЕ: субподрядчик
+    # ← LEGACY: старое поле "один субподрядчик". Оставлено для обратной совместимости.
+    #   Не удалять, пока не закончится миграция на many-to-many.
     subcontractor_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=True)
 
     start_date = db.Column(db.DateTime, nullable=True)
     end_date = db.Column(db.DateTime, nullable=True)
     status = db.Column(db.String(20), default='active')
+
+    # ---- Хелперы ----
+    @property
+    def company_display(self):
+        return self.company_name or 'Без филиала'
+
+    @property
+    def has_company(self):
+        return bool(self.company_name)
 
     @property
     def completion_percentage(self):
@@ -234,6 +246,15 @@ class Project(db.Model):
         if not self.is_overdue:
             return 0
         return (_utcnow() - self.end_date).days
+
+    # ---- Relationships ----
+    # ← НОВОЕ: many-to-many субподрядчиков
+    subcontractors = db.relationship(
+        'Supplier',
+        secondary=project_subcontractor,
+        backref=db.backref('subcontracted_projects', lazy='dynamic'),
+        lazy='selectin',
+    )
 
     members = db.relationship(
         'ProjectMember', back_populates='project', lazy=True,
@@ -319,7 +340,7 @@ class Milestone(db.Model):
 
 
 # ============================================================
-#  УЧАСТНИК ПРОЕКТА (с флагом гостя)
+#  УЧАСТНИК ПРОЕКТА
 # ============================================================
 
 class ProjectMember(db.Model):
@@ -328,8 +349,6 @@ class ProjectMember(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
     role_in_project = db.Column(db.String(30), default='member')
     joined_at = db.Column(db.DateTime, default=_utcnow)
-
-    # Гость — видит только свои задачи, не видит проект целиком
     is_guest = db.Column(db.Boolean, default=False)
 
     user = db.relationship('User', back_populates='projects')
@@ -374,6 +393,8 @@ class Task(db.Model):
 
     files = db.relationship('File', backref='task', lazy=True)
     milestone = db.relationship('Milestone', backref='tasks')
+    read_marks = db.relationship('TaskRead', backref='task', lazy=True,
+                                 cascade='all, delete-orphan')
 
     @property
     def is_overdue(self):
@@ -404,6 +425,9 @@ class Todo(db.Model):
 
     due_date = db.Column(db.DateTime, nullable=True)
     comment = db.Column(db.Text, nullable=True)
+
+    read_marks = db.relationship('TodoRead', backref='todo', lazy=True,
+                                 cascade='all, delete-orphan')
 
     @property
     def is_overdue(self):
@@ -506,7 +530,7 @@ class Report(db.Model):
 
 
 # ============================================================
-#  СООБЩЕНИЕ И ПРОЧИТАННОЕ
+#  СООБЩЕНИЕ
 # ============================================================
 
 class Message(db.Model):
@@ -528,6 +552,32 @@ class MessageRead(db.Model):
     )
 
     user = db.relationship('User', backref='message_reads')
+
+
+# ============================================================
+#  УВЕДОМЛЕНИЯ О ЗАДАЧАХ
+# ============================================================
+
+class TaskRead(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)
+    read_at = db.Column(db.DateTime, default=_utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'task_id', name='unique_user_task_read'),
+    )
+
+
+class TodoRead(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    todo_id = db.Column(db.Integer, db.ForeignKey('todo.id'), nullable=False)
+    read_at = db.Column(db.DateTime, default=_utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'todo_id', name='unique_user_todo_read'),
+    )
 
 
 # ============================================================
@@ -573,34 +623,3 @@ class Invitation(db.Model):
     created_at = db.Column(db.DateTime, default=_utcnow)
     expires_at = db.Column(db.DateTime, nullable=False)
     is_used = db.Column(db.Boolean, default=False)
-
-
-class TaskRead(db.Model):
-    """Отслеживает, какие задачи пользователь уже посмотрел.
-    Если записи нет — задача считается новой (непрочитанной)."""
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)
-    read_at = db.Column(db.DateTime, default=_utcnow)
-
-    __table_args__ = (
-        db.UniqueConstraint('user_id', 'task_id', name='unique_user_task_read'),
-    )
-
-    user = db.relationship('User', backref='task_reads')
-    task = db.relationship('Task', backref='read_marks')
-
-
-class TodoRead(db.Model):
-    """Отслеживает прочитанные To-Do."""
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    todo_id = db.Column(db.Integer, db.ForeignKey('todo.id'), nullable=False)
-    read_at = db.Column(db.DateTime, default=_utcnow)
-
-    __table_args__ = (
-        db.UniqueConstraint('user_id', 'todo_id', name='unique_user_todo_read'),
-    )
-
-    user = db.relationship('User', backref='todo_reads')
-    todo = db.relationship('Todo', backref='read_marks')    

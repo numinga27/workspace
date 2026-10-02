@@ -23,6 +23,10 @@
         <a href="{{ edit_url }}" class="btn btn-outline-secondary">
             <i class="bi bi-pencil"></i> Редактировать
         </a>
+        <button type="button" class="btn btn-outline-danger"
+                data-bs-toggle="modal" data-bs-target="#deleteSupplierModal">
+            <i class="bi bi-trash-fill"></i> Удалить
+        </button>
     </div>
 </div>
 
@@ -68,7 +72,7 @@
                                     <div class="col-md-6">
                                         <label class="form-label small">Email</label>
                                         <input type="email" name="email" class="form-control"
-                                               placeholder="contact@example.com">
+                                               placeholder="contact@example.com" required>
                                     </div>
                                 </div>
 
@@ -95,6 +99,9 @@
                                     <div class="small text-muted mt-1">
                                         {% if c.phone %}<i class="bi bi-telephone"></i> {{ c.phone }}{% endif %}
                                         {% if c.email %}{% if c.phone %} · {% endif %}<i class="bi bi-envelope"></i> {{ c.email }}{% endif %}
+                                        {% if not c.phone and not c.email %}
+                                            <span class="fst-italic">контакты не указаны</span>
+                                        {% endif %}
                                     </div>
                                     {% if c.user_id %}
                                     <div class="mt-1">
@@ -103,9 +110,10 @@
                                     {% endif %}
                                 </div>
                                 <form method="POST" action="{{ url_for('contacts.delete_contact', contact_id=c.id) }}"
-                                      onsubmit="return confirm('Удалить контактное лицо?');">
+                                      onsubmit="return confirm('Удалить контактное лицо «{{ c.full_name }}»?');">
                                     <button type="submit" class="btn btn-sm btn-outline-secondary"
-                                            style="width: 32px; height: 32px; padding: 0;">
+                                            style="width: 32px; height: 32px; padding: 0;"
+                                            title="Удалить контакт">
                                         <i class="bi bi-trash-fill text-danger"></i>
                                     </button>
                                 </form>
@@ -127,13 +135,20 @@
             <div class="card-header">
                 <i class="bi bi-folder-fill text-warning"></i>
                 {% if is_subcontractor %}
-                    Проекты, где он субподрядчик ({{ supplier.subcontractor_projects|length }})
+                    {# ← НОВОЕ: M2M через subcontracted_projects #}
+                    Проекты, где он субподрядчик ({{ supplier.subcontracted_projects.count() }})
                 {% else %}
                     Проекты, где он поставщик ({{ supplier.projects|length }})
                 {% endif %}
             </div>
             <div class="card-body">
-                {% set project_list = supplier.subcontractor_projects if is_subcontractor else supplier.projects %}
+                {% if is_subcontractor %}
+                    {# ← НОВОЕ: subcontracted_projects (M2M) #}
+                    {% set project_list = supplier.subcontracted_projects.all() %}
+                {% else %}
+                    {% set project_list = supplier.projects %}
+                {% endif %}
+
                 {% if project_list %}
                     {% for p in project_list %}
                     <a href="{{ url_for('projects.view_project', project_id=p.id) }}"
@@ -214,4 +229,71 @@
         </div>
     </div>
 </div>
+
+<!-- ============================================================ -->
+<!-- МОДАЛКА УДАЛЕНИЯ ПОСТАВЩИКА / СУБПОДРЯДЧИКА -->
+<!-- ============================================================ -->
+{# ← НОВОЕ: считаем количество проектов через M2M #}
+{% if is_subcontractor %}
+    {% set projects_count = supplier.subcontracted_projects.count() %}
+{% else %}
+    {% set projects_count = supplier.projects|length %}
+{% endif %}
+{% set delete_endpoint = 'suppliers.delete_subcontractor' if is_subcontractor else 'suppliers.delete_supplier' %}
+{% set type_label = 'субподрядчика' if is_subcontractor else 'поставщика' %}
+
+<div class="modal fade" id="deleteSupplierModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background: var(--danger-light); border-bottom-color: #fecaca;">
+                <h5 class="modal-title" style="color: var(--danger);">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Удаление {{ type_label }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for(delete_endpoint, supplier_id=supplier.id) }}">
+                <div class="modal-body">
+                    <p class="fw-bold" style="color: var(--danger);">
+                        Внимание! Это действие нельзя отменить.
+                    </p>
+                    <p>Будет удалён <strong>{{ supplier.name }}</strong>
+                       {% if supplier.inn %}(ИНН: {{ supplier.inn }}){% endif %}
+                       {% if supplier.contacts|length > 0 %}
+                           <br><span class="text-muted">
+                               Вместе с ним удалятся все контактные лица ({{ supplier.contacts|length }} шт.)
+                           </span>
+                       {% endif %}
+                    </p>
+
+                    {% if projects_count > 0 %}
+                    <div class="alert alert-warning mb-0">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Удаление заблокировано.</strong>
+                        {% if is_subcontractor %}
+                            Субподрядчик привязан к {{ projects_count }} проект(ам).
+                        {% else %}
+                            Поставщик привязан к {{ projects_count }} проект(ам).
+                        {% endif %}
+                        Сначала отвяжите его в разделе «Редактировать проект».
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    {% if projects_count == 0 %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash-fill"></i> Удалить
+                    </button>
+                    {% else %}
+                    <button type="button" class="btn btn-danger" disabled
+                            title="Сначала отвяжите его от всех проектов">
+                        <i class="bi bi-trash-fill"></i> Удалить (заблокировано)
+                    </button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

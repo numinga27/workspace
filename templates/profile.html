@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+
+        <div class="mb-3">
+            <h2 class="mb-1">
+                <i class="bi bi-person-circle"></i> Профиль
+            </h2>
+            <p class="text-muted mb-0">{{ user.first_name }} {{ user.last_name }}</p>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header py-2">
+                <i class="bi bi-info-circle"></i> Данные аккаунта
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <div class="small text-muted">Email (логин)</div>
+                    <div class="fw-bold">{{ user.email }}</div>
+                </div>
+                {% if user.company %}
+                <div class="mb-2">
+                    <div class="small text-muted">Компания</div>
+                    <div>{{ user.company }}</div>
+                </div>
+                {% endif %}
+                <div class="mb-0">
+                    <div class="small text-muted">Роль</div>
+                    <div><span class="badge bg-secondary">{{ user.role }}</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header py-2">
+                <i class="bi bi-key-fill text-warning"></i> Смена пароля
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('auth.change_password') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Текущий пароль *</label>
+                        <input type="password" name="current_password"
+                               class="form-control" required autocomplete="current-password">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Новый пароль *</label>
+                        <input type="password" name="new_password"
+                               class="form-control" required minlength="6"
+                               autocomplete="new-password">
+                        <small class="text-muted">Минимум 6 символов</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Подтвердите новый пароль *</label>
+                        <input type="password" name="confirm_password"
+                               class="form-control" required minlength="6"
+                               autocomplete="new-password">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-check-circle"></i> Изменить пароль
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

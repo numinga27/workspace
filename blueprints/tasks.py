@@ -18,6 +18,7 @@ from utils import (
     mark_task_as_read, mark_todo_as_read,
 )
 from services.stats import calculate_task_stats
+from services.email import send_guest_credentials   # ← НОВОЕ
 
 bp = Blueprint('tasks', __name__)
 
@@ -341,9 +342,19 @@ def edit_task(task_id):
                 flash('Это контактное лицо не связано с проектом.', 'danger')
                 return redirect(url_for('tasks.view_task', task_id=task_id))
 
-            guest_user = get_or_create_guest_user(contact)
+            # ← НОВОЕ: получаем пару (user, plain_password)
+            guest_user, plain_password = get_or_create_guest_user(contact)
             add_guest_to_project(guest_user.id, task.project_id, session['user_id'])
             task.assigned_to = guest_user.id
+
+            # ← НОВОЕ: если гость только что создан — отправляем письмо с доступом
+            if plain_password:
+                send_guest_credentials(
+                    recipient=guest_user,
+                    plain_password=plain_password,
+                    project=task.project,
+                    inviter=user,
+                )
     else:
         task.assigned_to = None
 

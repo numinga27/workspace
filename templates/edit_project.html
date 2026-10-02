@@ -18,24 +18,42 @@
             <div class="card-body">
                 <form method="POST">
 
-                    <!-- ============================================ -->
-                    <!-- НАЗВАНИЕ И ОПИСАНИЕ -->
-                    <!-- ============================================ -->
+                    <!-- Название -->
                     <div class="mb-3">
                         <label class="form-label">Название *</label>
                         <input type="text" name="name" class="form-control"
                                value="{{ project.name }}" required autofocus>
                     </div>
 
+                    <!-- Описание -->
                     <div class="mb-3">
                         <label class="form-label">Описание</label>
                         <textarea name="description" class="form-control"
                                   rows="3">{{ project.description or '' }}</textarea>
                     </div>
 
-                    <!-- ============================================ -->
-                    <!-- ЗАКАЗЧИК -->
-                    <!-- ============================================ -->
+                    <!-- Филиал компании -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-building"></i> Филиал компании
+                        </label>
+                        <input type="text" name="company_name" class="form-control"
+                               list="companies-list"
+                               value="{{ project.company_name or '' }}"
+                               placeholder="Например: ООО СтройМастер"
+                               autocomplete="off">
+                        <datalist id="companies-list">
+                            {% for c in available_companies|default([]) %}
+                            <option value="{{ c }}">
+                            {% endfor %}
+                        </datalist>
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            Какой филиал ведёт проект. Оставьте пустым, если филиал не указан.
+                        </small>
+                    </div>
+
+                    <!-- Заказчик -->
                     <div class="mb-3">
                         <label class="form-label">Заказчик</label>
                         <div class="input-group">
@@ -56,9 +74,7 @@
                         </div>
                     </div>
 
-                    <!-- ============================================ -->
-                    <!-- ПОСТАВЩИК + СУБПОДРЯДЧИК -->
-                    <!-- ============================================ -->
+                    <!-- Поставщик + Субподрядчики -->
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Поставщик</label>
@@ -74,7 +90,7 @@
                                 </select>
                                 <a href="{{ url_for('suppliers.create_supplier') }}?next={{ url_for('projects.edit_project', project_id=project.id) }}"
                                    class="btn btn-outline-warning"
-                                   title="Добавить нового поставщика">
+                                   title="Добавить поставщика">
                                     <i class="bi bi-plus-lg"></i>
                                 </a>
                             </div>
@@ -84,13 +100,17 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Субподрядчик</label>
+                            {# ← НОВОЕ: multiple select с preselected #}
+                            {% set current_sub_ids = project.subcontractors|map(attribute='id')|list %}
+                            <label class="form-label">
+                                <i class="bi bi-people-fill"></i> Субподрядчики
+                                <span class="text-muted small">(можно несколько)</span>
+                            </label>
                             <div class="input-group">
-                                <select name="subcontractor_id" class="form-select">
-                                    <option value="">— Без субподрядчика —</option>
-                                    {% for s in subcontractors|default([]) %}
+                                <select name="subcontractor_ids" class="form-select" multiple size="4">
+                                    {% for s in available_subcontractors|default([]) %}
                                     <option value="{{ s.id }}"
-                                            {% if project.subcontractor_id == s.id %}selected{% endif %}>
+                                            {% if s.id in current_sub_ids %}selected{% endif %}>
                                         {{ s.name }}{% if s.inn %} (ИНН: {{ s.inn }}){% endif %}
                                     </option>
                                     {% endfor %}
@@ -102,27 +122,33 @@
                                 </a>
                             </div>
                             <small class="text-muted">
-                                <i class="bi bi-people-fill"></i> Привлечённый субподрядчик
+                                <i class="bi bi-info-circle"></i>
+                                Ctrl+клик (⌘ на Mac) — выбрать несколько.
+                                Выбрано: <strong>{{ project.subcontractors|length }}</strong>
                             </small>
                         </div>
                     </div>
 
-                    <!-- ============================================ -->
-                    <!-- СТАТУС -->
-                    <!-- ============================================ -->
+                    <!-- Статус -->
                     <div class="mb-3">
                         <label class="form-label">Статус проекта</label>
                         <select name="status" class="form-select">
-                            <option value="active" {% if project.status == 'active' %}selected{% endif %}>🟢 В работе</option>
-                            <option value="paused" {% if project.status == 'paused' %}selected{% endif %}>⏸️ Приостановлен</option>
-                            <option value="completed" {% if project.status == 'completed' %}selected{% endif %}>✅ Завершён</option>
-                            <option value="cancelled" {% if project.status == 'cancelled' %}selected{% endif %}>❌ Отменён</option>
+                            <option value="active" {% if project.status == 'active' %}selected{% endif %}>
+                                🟢 В работе
+                            </option>
+                            <option value="paused" {% if project.status == 'paused' %}selected{% endif %}>
+                                ⏸️ Приостановлен
+                            </option>
+                            <option value="completed" {% if project.status == 'completed' %}selected{% endif %}>
+                                ✅ Завершён
+                            </option>
+                            <option value="cancelled" {% if project.status == 'cancelled' %}selected{% endif %}>
+                                ❌ Отменён
+                            </option>
                         </select>
                     </div>
 
-                    <!-- ============================================ -->
-                    <!-- ДАТЫ -->
-                    <!-- ============================================ -->
+                    <!-- Даты -->
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Дата старта</label>
@@ -142,9 +168,7 @@
                         </div>
                     </div>
 
-                    <!-- ============================================ -->
-                    <!-- ИНФО -->
-                    <!-- ============================================ -->
+                    <!-- Инфо -->
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle"></i>
                         Изменения вступят в силу сразу. Список участников и роли
@@ -152,9 +176,7 @@
                         <a href="{{ url_for('team.project_settings', project_id=project.id) }}" class="alert-link">«Команда»</a>.
                     </div>
 
-                    <!-- ============================================ -->
-                    <!-- КНОПКИ -->
-                    <!-- ============================================ -->
+                    <!-- Кнопки -->
                     <div class="d-flex justify-content-between mt-3">
                         <a href="{{ url_for('projects.view_project', project_id=project.id) }}"
                            class="btn btn-secondary">
@@ -164,19 +186,27 @@
                             <i class="bi bi-check-circle"></i> Сохранить
                         </button>
                     </div>
-
                 </form>
             </div>
         </div>
 
-        <!-- ============================================ -->
-        <!-- СВОДКА ПО ТЕКУЩИМ ПРИВЯЗКАМ -->
-        <!-- ============================================ -->
+        <!-- Сводка по текущим привязкам -->
         <div class="card mt-3">
             <div class="card-body">
                 <h6 class="mb-3"><i class="bi bi-link-45deg"></i> Текущие привязки</h6>
                 <div class="row small">
-                    <div class="col-md-4 mb-2">
+                    <div class="col-md-3 mb-2">
+                        <div class="text-muted">Филиал</div>
+                        {% if project.company_name %}
+                            <span class="badge text-white"
+                                  style="background: {{ project.company_color }};">
+                                <i class="bi bi-building"></i> {{ project.company_name }}
+                            </span>
+                        {% else %}
+                            <span class="text-muted fst-italic">не указан</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-3 mb-2">
                         <div class="text-muted">Заказчик</div>
                         {% if project.customer %}
                             <a href="{{ url_for('customers.view_customer', customer_id=project.customer.id) }}">
@@ -186,7 +216,7 @@
                             <span class="text-muted fst-italic">не указан</span>
                         {% endif %}
                     </div>
-                    <div class="col-md-4 mb-2">
+                    <div class="col-md-3 mb-2">
                         <div class="text-muted">Поставщик</div>
                         {% if project.supplier %}
                             <a href="{{ url_for('suppliers.view_supplier', supplier_id=project.supplier.id) }}">
@@ -196,14 +226,19 @@
                             <span class="text-muted fst-italic">не указан</span>
                         {% endif %}
                     </div>
-                    <div class="col-md-4 mb-2">
-                        <div class="text-muted">Субподрядчик</div>
-                        {% if project.subcontractor %}
-                            <a href="{{ url_for('suppliers.view_subcontractor', supplier_id=project.subcontractor.id) }}">
-                                {{ project.subcontractor.name }}
-                            </a>
+                    <div class="col-md-3 mb-2">
+                        {# ← НОВОЕ: список субподрядчиков #}
+                        <div class="text-muted">Субподрядчики ({{ project.subcontractors|length }})</div>
+                        {% if project.subcontractors %}
+                            {% for sub in project.subcontractors %}
+                                <div>
+                                    <a href="{{ url_for('suppliers.view_subcontractor', supplier_id=sub.id) }}">
+                                        {{ sub.name }}
+                                    </a>
+                                </div>
+                            {% endfor %}
                         {% else %}
-                            <span class="text-muted fst-italic">не указан</span>
+                            <span class="text-muted fst-italic">не указаны</span>
                         {% endif %}
                     </div>
                 </div>

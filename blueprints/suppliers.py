@@ -17,17 +17,24 @@ def _can_view_supplier(user, supplier_id):
     if user.role == 'admin':
         return True
 
-    # Если у пользователя есть проект с этим поставщиком или субподрядчиком
+    # Если у пользователя есть проект с этим поставщиком
     for member in user.projects:
         if member.project.supplier_id == supplier_id:
             return True
-        if member.project.subcontractor_id == supplier_id:
-            return True
+        # ← НОВОЕ: проверяем M2M субподрядчиков
+        for sub in member.project.subcontractors:
+            if sub.id == supplier_id:
+                return True
 
     # Если поставщик ещё не привязан ни к одному проекту — видят все
-    if not Project.query.filter(
-        (Project.supplier_id == supplier_id) | (Project.subcontractor_id == supplier_id)
-    ).first():
+    bound_as_supplier = Project.query.filter(Project.supplier_id == supplier_id).first()
+    bound_as_subcontractor = Supplier.query.filter_by(id=supplier_id).first()
+    if bound_as_subcontractor:
+        bound_m2m = bound_as_subcontractor.subcontracted_projects.count() > 0
+    else:
+        bound_m2m = False
+
+    if not bound_as_supplier and not bound_m2m:
         return True
 
     return False
@@ -41,8 +48,10 @@ def _can_edit_supplier(user, supplier_id):
     for member in user.projects:
         if member.project.supplier_id == supplier_id:
             return True
-        if member.project.subcontractor_id == supplier_id:
-            return True
+        # ← НОВОЕ: M2M субподрядчики
+        for sub in member.project.subcontractors:
+            if sub.id == supplier_id:
+                return True
 
     return False
 
@@ -140,7 +149,6 @@ def _create_supplier_internal(supplier_type):
         label = 'Субподрядчик' if is_sub else 'Поставщик'
         flash(f'{label} добавлен!', 'success')
 
-        # Куда возвращаемся
         next_url = request.form.get('next') or request.referrer
         if not next_url:
             next_url = url_for('suppliers.subcontractors_list') if is_sub else url_for('suppliers.suppliers_list')
@@ -259,3 +267,82 @@ def _edit_supplier_internal(supplier_id):
                            view_url=url_for('suppliers.view_subcontractor', supplier_id=supplier.id) if is_sub
                                     else url_for('suppliers.view_supplier', supplier_id=supplier.id),
                            projects=get_user_projects(user))
+
+
+# ============================================================
+#  УДАЛЕНИЕ: ПОСТАВЩИК
+# ============================================================
+
+@bp.route('/supplier/<int:supplier_id>/delete', methods=['POST'])
+@login_required
+def delete_supplier(supplier_id):
+    return _delete_supplier_internal(supplier_id)
+
+
+# ============================================================
+#  УДАЛЕНИЕ: СУБПОДРЯДЧИК
+# ============================================================
+
+@bp.route('/subcontractor/<int:supplier_id>/delete', methods=['POST'])
+@login_required
+def delete_subcontractor(supplier_id):
+    return _delete_supplier_internal(supplier_id)
+
+
+def _delete_supplier_internal(supplier_id):
+    """Общая логика удаления поставщика/субподрядчика."""
+    from models import Task
+    user = User.query.get(session['user_id'])
+    supplier = Supplier.query.get_or_404(supplier_id)
+    is_sub = supplier.is_subcontractor
+
+    if not _can_edit_supplier(user, supplier_id):
+        flash('Нет прав на удаление.', 'danger')
+        if is_sub:
+            return redirect(url_for('suppliers.subcontractors_list'))
+        return redirect(url_for('suppliers.suppliers_list'))
+
+    # Проверка 1: привязан к проектам?
+    as_supplier = Project.query.filter_by(supplier_id=supplier_id).count()
+
+    # ← НОВОЕ: считаем M2M-проекты через subcontracted_projects
+    if is_sub:
+        as_subcontractor = supplier.subcontracted_projects.count()
+    else:
+        # Для обычного поставщика legacy-поле subcontractor_id тоже считаем,
+        # на случай если он был назначен субподрядчиком в старых проектах
+        from models import Project as P
+        as_subcontractor = P.query.filter_by(subcontractor_id=supplier_id).count()
+
+    if as_supplier > 0 or as_subcontractor > 0:
+        parts = []
+        if as_supplier:
+            parts.append(f'поставщик в {as_supplier} проект(ах)')
+        if as_subcontractor:
+            parts.append(f'субподрядчик в {as_subcontractor} проект(ах)')
+        flash(f'Нельзя удалить: он указан как {" и ".join(parts)}.', 'danger')
+        if is_sub:
+            return redirect(url_for('suppliers.view_subcontractor', supplier_id=supplier_id))
+        return redirect(url_for('suppliers.view_supplier', supplier_id=supplier_id))
+
+    # Проверка 2: контакты назначены на задачи?
+    contact_user_ids = [c.user_id for c in supplier.contacts if c.user_id]
+    if contact_user_ids:
+        assigned_tasks = Task.query.filter(Task.assigned_to.in_(contact_user_ids)).count()
+        if assigned_tasks > 0:
+            flash(f'Нельзя удалить: его контакты назначены на {assigned_tasks} задач(и).', 'danger')
+            if is_sub:
+                return redirect(url_for('suppliers.view_subcontractor', supplier_id=supplier_id))
+            return redirect(url_for('suppliers.view_supplier', supplier_id=supplier_id))
+
+    # OK — удаляем
+    name = supplier.name
+    db.session.delete(supplier)
+    db.session.commit()
+
+    label = 'Субподрядчик' if is_sub else 'Поставщик'
+    flash(f'{label} «{name}» удалён.', 'success')
+
+    if is_sub:
+        return redirect(url_for('suppliers.subcontractors_list'))
+    return redirect(url_for('suppliers.suppliers_list'))

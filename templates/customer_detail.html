@@ -21,6 +21,10 @@
         <a href="{{ url_for('customers.edit_customer', customer_id=customer.id) }}" class="btn btn-outline-secondary">
             <i class="bi bi-pencil"></i> Редактировать
         </a>
+        <button type="button" class="btn btn-outline-danger"
+                data-bs-toggle="modal" data-bs-target="#deleteCustomerModal">
+            <i class="bi bi-trash-fill"></i> Удалить
+        </button>
     </div>
 </div>
 
@@ -118,9 +122,10 @@
                                     {% endif %}
                                 </div>
                                 <form method="POST" action="{{ url_for('contacts.delete_contact', contact_id=c.id) }}"
-                                      onsubmit="return confirm('Удалить контактное лицо?');">
+                                      onsubmit="return confirm('Удалить контактное лицо «{{ c.full_name }}»?');">
                                     <button type="submit" class="btn btn-sm btn-outline-secondary"
-                                            style="width: 32px; height: 32px; padding: 0;">
+                                            style="width: 32px; height: 32px; padding: 0;"
+                                            title="Удалить контакт">
                                         <i class="bi bi-trash-fill text-danger"></i>
                                     </button>
                                 </form>
@@ -239,4 +244,58 @@
         </div>
     </div>
 </div>
+
+<!-- ============================================================ -->
+<!-- МОДАЛКА УДАЛЕНИЯ ЗАКАЗЧИКА -->
+<!-- ============================================================ -->
+<div class="modal fade" id="deleteCustomerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background: var(--danger-light); border-bottom-color: #fecaca;">
+                <h5 class="modal-title" style="color: var(--danger);">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Удаление заказчика
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('customers.delete_customer', customer_id=customer.id) }}">
+                <div class="modal-body">
+                    <p class="fw-bold" style="color: var(--danger);">
+                        Внимание! Это действие нельзя отменить.
+                    </p>
+                    <p>Будет удалён заказчик <strong>{{ customer.name }}</strong>
+                       {% if customer.inn %}(ИНН: {{ customer.inn }}){% endif %}
+                       {% if customer.contacts|length > 0 %}
+                           <br><span class="text-muted">
+                               Вместе с ним удалятся все контактные лица ({{ customer.contacts|length }} шт.)
+                           </span>
+                       {% endif %}
+                    </p>
+
+                    {% if customer.projects|length > 0 %}
+                    <div class="alert alert-warning mb-0">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Удаление заблокировано.</strong>
+                        Заказчик привязан к {{ customer.projects|length }} проект(ам).
+                        Сначала отвяжите его в разделе «Редактировать проект».
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    {% if customer.projects|length == 0 %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash-fill"></i> Удалить заказчика
+                    </button>
+                    {% else %}
+                    <button type="button" class="btn btn-danger" disabled
+                            title="Сначала отвяжите заказчика от всех проектов">
+                        <i class="bi bi-trash-fill"></i> Удалить (заблокировано)
+                    </button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

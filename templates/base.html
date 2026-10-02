@@ -10,7 +10,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
 
-    <!-- FullCalendar -->
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
@@ -84,7 +83,6 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* HEADER */
         .header {
             height: var(--header-height);
             background: var(--bg-secondary);
@@ -133,8 +131,10 @@
             background: var(--bg-tertiary);
             transition: var(--transition);
             cursor: pointer;
+            text-decoration: none;
+            color: inherit;
         }
-        .header-right .user-info:hover { background: var(--border-light); }
+        .header-right .user-info:hover { background: var(--border-light); color: inherit; }
         .header-right .user-info .avatar {
             width: 32px;
             height: 32px;
@@ -179,7 +179,6 @@
             border-color: var(--border-medium);
         }
 
-        /* ГЛОБАЛЬНЫЙ ПОИСК */
         .global-search-wrap {
             position: relative;
             width: 300px;
@@ -316,7 +315,6 @@
         .gs-icon.type-supplier { background: #fef9c3; color: #a16207; }
         .gs-icon.type-contact { background: #fff7ed; color: #c2410c; }
 
-        /* SIDEBAR */
         .sidebar {
             position: fixed;
             top: var(--header-height);
@@ -479,6 +477,64 @@
             color: #fff;
         }
 
+        .tree-company-header {
+            padding: 8px 10px 4px 10px;
+            margin-top: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #71717a;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .tree-company-header:first-child {
+            border-top: none;
+            margin-top: 0;
+        }
+        .tree-company-header i {
+            font-size: 12px;
+            color: #6366f1;
+        }
+        .tree-company-header .badge {
+            margin-left: auto;
+            background: rgba(255,255,255,0.06);
+            color: #a1a1aa;
+            font-size: 10px;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .tree-subcontractor-header {
+            padding: 5px 10px 3px 22px;
+            margin-top: 4px;
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #6366f1;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            opacity: 0.85;
+        }
+        .tree-subcontractor-header i {
+            font-size: 11px;
+            color: #818cf8;
+        }
+        .tree-subcontractor-header .badge {
+            margin-left: auto;
+            background: rgba(99, 102, 241, 0.18);
+            color: #a5b4fc;
+            font-size: 9px;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
         .project-search-input {
             width: 100%;
             background: rgba(255,255,255,0.05);
@@ -508,7 +564,6 @@
             pointer-events: none;
         }
 
-        /* MAIN CONTENT */
         .main-content {
             margin-left: var(--sidebar-width);
             margin-top: var(--header-height);
@@ -531,13 +586,11 @@
             scroll-margin-top: calc(var(--header-height) + 24px);
         }
 
-        /* TYPOGRAPHY */
         h1, h2, h3, h4, h5, h6 { color: var(--text-primary); }
         h2 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
         h5 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
         .text-muted { color: var(--text-secondary) !important; }
 
-        /* BUTTONS */
         .btn {
             font-weight: 500;
             border-radius: var(--radius-md);
@@ -619,7 +672,6 @@
         }
         .btn-link:hover { color: var(--accent-hover); }
 
-        /* CARDS */
         .card {
             background: var(--bg-secondary);
             border: 1px solid var(--border-light);
@@ -637,7 +689,6 @@
         }
         .card:hover { box-shadow: var(--shadow-sm); }
 
-        /* STAT CARDS */
         .stat-card {
             background: var(--bg-secondary);
             border-radius: var(--radius-lg);
@@ -666,7 +717,6 @@
         }
         .stat-card .stat-label { color: var(--text-secondary); font-size: 13px; margin-top: 4px; }
 
-        /* Компактная статистика */
         .compact-stats {
             display: flex;
             flex-wrap: wrap;
@@ -678,7 +728,6 @@
             padding: 5px 10px;
         }
 
-        /* PROJECT CARDS */
         .project-card {
             background: var(--bg-secondary);
             border-radius: var(--radius-lg);
@@ -749,7 +798,6 @@
         .progress-bar.bg-warning { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
         .progress-bar.bg-info { background: linear-gradient(90deg, #0891b2, #06b6d4); }
 
-        /* BADGES */
         .badge {
             font-weight: 600;
             padding: 4px 9px;
@@ -780,7 +828,6 @@
             50% { opacity: 0.7; }
         }
 
-        /* FORMS */
         .form-control, .form-select {
             border: 1px solid var(--border-medium);
             border-radius: var(--radius-md);
@@ -800,7 +847,6 @@
         .form-control-sm, .form-select-sm { padding: 6px 10px; font-size: 12.5px; border-radius: var(--radius-sm); }
         .form-check-input:checked { background-color: var(--accent); border-color: var(--accent); }
 
-        /* ALERTS */
         .alert {
             border-radius: var(--radius-md);
             border: 1px solid transparent;
@@ -817,7 +863,6 @@
         .alert-info { background: var(--info-light); color: #164e63; border-color: #a5f3fc; }
         .alert-secondary { background: var(--bg-tertiary); color: var(--text-secondary); border-color: var(--border-light); }
 
-        /* TASK CARDS */
         .task-card {
             border-left: 3px solid var(--border-medium);
             transition: var(--transition);
@@ -835,7 +880,6 @@
             background: #f5f6ff;
         }
 
-        /* ТАБЛИЧНЫЙ ВИД ЗАДАЧ */
         .tasks-table { font-size: 13.5px; }
         .tasks-table thead th {
             background: var(--bg-tertiary);
@@ -880,7 +924,6 @@
         }
         .tasks-table .action-btn:hover { background: var(--bg-tertiary); border-color: var(--accent); }
 
-        /* CHAT */
         .chat-box {
             height: 300px;
             overflow-y: auto;
@@ -908,7 +951,6 @@
             margin-left: 8px;
         }
 
-        /* EMPTY STATES */
         .empty-state { text-align: center; padding: 64px 20px; }
         .empty-state-icon {
             width: 72px;
@@ -925,7 +967,6 @@
         .empty-state h5 { color: var(--text-primary); margin-bottom: 8px; }
         .empty-state p { color: var(--text-secondary); font-size: 13.5px; margin-bottom: 20px; }
 
-        /* CALENDAR */
         #calendar, #myCalendar {
             --fc-border-color: var(--border-light);
             --fc-today-bg-color: var(--accent-light);
@@ -1004,7 +1045,6 @@
         .fc-daygrid-day { cursor: pointer; transition: background 0.15s ease; }
         .fc-daygrid-day:hover { background: rgba(91, 91, 214, 0.04) !important; }
 
-        /* Метка ISO-недели в понедельниках */
         .fc-week-number-badge {
             font-size: 9px;
             color: var(--text-tertiary);
@@ -1023,7 +1063,6 @@
             padding-right: 4px;
         }
 
-        /* ИНТЕРАКТИВНАЯ ЛЕГЕНДА КАЛЕНДАРЯ */
         .legend-item {
             cursor: pointer;
             user-select: none;
@@ -1043,7 +1082,6 @@
         }
         .legend-item.legend-disabled:hover { opacity: 0.6; }
 
-        /* СВОРАЧИВАЕМЫЕ ФОРМЫ */
         .collapse-icon {
             transition: transform 0.2s ease;
             display: inline-block;
@@ -1054,7 +1092,6 @@
         [aria-expanded="true"] .collapse-label-closed { display: none; }
         [aria-expanded="false"] .collapse-label-open { display: none; }
 
-        /* ПОДСВЕТКА НОВОЙ ЗАДАЧИ */
         @keyframes highlight-pulse {
             0% { box-shadow: 0 0 0 0 rgba(91, 91, 214, 0.6); background-color: rgba(91, 91, 214, 0.08); }
             50% { box-shadow: 0 0 0 8px rgba(91, 91, 214, 0); background-color: rgba(91, 91, 214, 0.15); }
@@ -1086,7 +1123,6 @@
         }
         .fade-in-up { animation: fadeInUp 0.3s ease-out; }
 
-        /* TOGGLE MOBILE */
         .sidebar-toggle {
             display: none;
             background: none;
@@ -1137,7 +1173,6 @@
             .tasks-table td { border: none; padding: 6px 8px; }
         }
 
-        /* UTILITY */
         .text-truncate-2 {
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -1205,7 +1240,6 @@
     </style>
 </head>
 <body>
-    <!-- HEADER -->
     <header class="header">
         <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Меню">
             <i class="bi bi-list"></i>
@@ -1230,7 +1264,9 @@
         {% endif %}
 
         <div class="header-right">
-            <div class="user-info">
+            <a href="{{ url_for('auth.profile') }}"
+               class="user-info"
+               title="Профиль и смена пароля">
                 <div class="avatar">
                     {{ session.user_name[0]|upper if session.user_name else 'U' }}
                 </div>
@@ -1238,7 +1274,7 @@
                     <div class="user-name">{{ session.user_name }}</div>
                     <div class="user-role">{{ session.user_role }}</div>
                 </div>
-            </div>
+            </a>
             <a href="{{ url_for('auth.logout') }}" class="header-icon-btn" title="Выйти">
                 <i class="bi bi-box-arrow-right"></i>
             </a>
@@ -1247,7 +1283,6 @@
 
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-    <!-- SIDEBAR -->
     <nav class="sidebar" id="sidebar">
         <div class="nav-section">
             <div class="section-title">Основное</div>
@@ -1309,70 +1344,137 @@
             </div>
             {% endif %}
 
+            {# ============================================================ #}
+            {# ← НОВОЕ: ГРУППИРОВКА ПРОЕКТ ↔ НЕСКОЛЬКО СУБПОДРЯДЧИКОВ #}
+            {# Проект попадает в группу каждого своего субподрядчика. #}
+            {# ============================================================ #}
             <div class="project-tree" id="projectTree">
                 {% if projects %}
+                    {% set company_groups = {} %}
                     {% for project in projects %}
-                        {% set current_pid = request.view_args.get('project_id') if request.view_args else None %}
-                        {% set is_current = current_pid and current_pid|int == project.id %}
-                        {% set project_unread = unread_counts.get(project.id, 0) %}
+                        {% set company = project.company_name or '— Без филиала —' %}
+                        {% if company not in company_groups %}
+                            {% set _ = company_groups.update({company: {}}) %}
+                        {% endif %}
 
-                        <div class="tree-item {% if is_current %}active{% endif %}"
-                             onclick="toggleProject('{{ project.id }}')">
-                            <span class="expand-icon {% if is_current %}expanded{% endif %}" id="expand-{{ project.id }}">▶</span>
-                            <i class="bi bi-folder-fill folder-icon"></i>
-                            <span class="project-name">{{ project.name }}</span>
-                            {% if project.is_overdue %}
-                                <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 12px;" title="Проект просрочен"></i>
-                            {% endif %}
-                            {% if project_unread > 0 and not is_current %}
-                                <span class="nav-badge-count">{{ project_unread }}</span>
-                            {% else %}
-                                <span class="badge">{{ project.completion_percentage }}%</span>
-                            {% endif %}
-                        </div>
-                        <div class="tree-children" id="children-{{ project.id }}"
-                             style="display: {% if is_current %}block{% else %}none{% endif %};">
-                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}"
-                               class="tree-item project-tab-link" data-tab="dashboard" data-project-id="{{ project.id }}">
-                                <i class="bi bi-grid"></i><span>Дашборд</span>
-                            </a>
-                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}#tasks"
-                               class="tree-item project-tab-link" data-tab="tasks" data-project-id="{{ project.id }}">
-                                <i class="bi bi-list-task"></i><span>Задачи</span>
-                                <span class="badge">{{ project.tasks|length }}</span>
-                            </a>
-                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}#todo"
-                               class="tree-item project-tab-link" data-tab="todo" data-project-id="{{ project.id }}">
-                                <i class="bi bi-check2-square"></i><span>To-Do</span>
-                            </a>
-                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}#reports"
-                               class="tree-item project-tab-link" data-tab="reports" data-project-id="{{ project.id }}">
-                                <i class="bi bi-file-earmark-text"></i><span>Отчёты</span>
-                            </a>
-                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}#calendar"
-                               class="tree-item project-tab-link" data-tab="calendar" data-project-id="{{ project.id }}">
-                                <i class="bi bi-calendar3"></i><span>Календарь</span>
-                            </a>
-                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}#files"
-                               class="tree-item project-tab-link" data-tab="files" data-project-id="{{ project.id }}">
-                                <i class="bi bi-folder"></i><span>Файлы</span>
-                            </a>
-                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}?mark_read=1#chat"
-                               class="tree-item project-tab-link" data-tab="chat" data-project-id="{{ project.id }}">
-                                <i class="bi bi-chat-dots"></i><span>Чат</span>
-                                {% if project_unread > 0 %}
-                                    <span class="nav-badge-count">{{ project_unread }}</span>
-                                {% else %}
-                                    <span class="badge">{{ project.messages|length }}</span>
+                        {% set subs_list = project.subcontractors if project.subcontractors else [] %}
+                        {% if subs_list %}
+                            {% for sub in subs_list %}
+                                {% set sub_key = sub.name %}
+                                {% set subs = company_groups[company] %}
+                                {% if sub_key not in subs %}
+                                    {% set _ = subs.update({sub_key: []}) %}
                                 {% endif %}
-                            </a>
-                            {% if session.user_role == 'admin' or (user_role and user_role in ['admin', 'manager']) %}
-                            <a href="{{ url_for('team.project_settings', project_id=project.id) }}"
-                               class="tree-item {% if request.endpoint == 'team.project_settings' and is_current %}active{% endif %}">
-                                <i class="bi bi-gear"></i><span>Настройки</span>
-                            </a>
+                                {# Проверяем, что проект ещё не добавлен в эту группу #}
+                                {% set already = [] %}
+                                {% for existing_p in subs[sub_key] %}
+                                    {% if existing_p.id == project.id %}
+                                        {% set _ = already.append(1) %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% if not already %}
+                                    {% set _ = subs[sub_key].append(project) %}
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            {% set sub_key = '__none__' %}
+                            {% set subs = company_groups[company] %}
+                            {% if sub_key not in subs %}
+                                {% set _ = subs.update({sub_key: []}) %}
                             {% endif %}
+                            {% set _ = subs[sub_key].append(project) %}
+                        {% endif %}
+                    {% endfor %}
+
+                    {% for company_name, sub_dict in company_groups.items() %}
+                        {% if company_name != '— Без филиала —' %}
+                        <div class="tree-company-header" data-company="{{ company_name }}">
+                            <i class="bi bi-building"></i> {{ company_name }}
+                            <span class="badge">
+                                {% set total = 0 %}
+                                {% for subs in sub_dict.values() %}{% set total = total + subs|length %}{% endfor %}
+                                {{ total }}
+                            </span>
                         </div>
+                        {% endif %}
+
+                        {% for sub_name, sub_projects in sub_dict.items() %}
+                            {% if sub_name != '__none__' %}
+                            <div class="tree-subcontractor-header"
+                                 data-subcontractor="{{ sub_name }}"
+                                 title="Субподрядчик: {{ sub_name }}">
+                                <i class="bi bi-people-fill"></i> {{ sub_name }}
+                                <span class="badge">{{ sub_projects|length }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% for project in sub_projects %}
+                                {% set current_pid = request.view_args.get('project_id') if request.view_args else None %}
+                                {% set is_current = current_pid and current_pid|int == project.id %}
+                                {% set project_unread = unread_counts.get(project.id, 0) %}
+
+                                <div class="tree-item {% if is_current %}active{% endif %}"
+                                     onclick="toggleProject('{{ project.id }}')"
+                                     data-company="{{ project.company_name or '' }}"
+                                     data-subcontractor="{{ sub_name if sub_name != '__none__' else '' }}">
+                                    <span class="expand-icon {% if is_current %}expanded{% endif %}" id="expand-{{ project.id }}">▶</span>
+                                    <i class="bi bi-folder-fill folder-icon"></i>
+                                    <span class="project-name">{{ project.name }}</span>
+                                    {% if project.is_overdue %}
+                                        <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 12px;" title="Проект просрочен"></i>
+                                    {% endif %}
+                                    {% if project_unread > 0 and not is_current %}
+                                        <span class="nav-badge-count">{{ project_unread }}</span>
+                                    {% else %}
+                                        <span class="badge">{{ project.completion_percentage }}%</span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="tree-children" id="children-{{ project.id }}"
+                                     style="display: {% if is_current %}block{% else %}none{% endif %};">
+                                    <a href="{{ url_for('projects.view_project', project_id=project.id) }}"
+                                       class="tree-item project-tab-link" data-tab="dashboard" data-project-id="{{ project.id }}">
+                                        <i class="bi bi-grid"></i><span>Дашборд</span>
+                                    </a>
+                                    <a href="{{ url_for('projects.view_project', project_id=project.id) }}#tasks"
+                                       class="tree-item project-tab-link" data-tab="tasks" data-project-id="{{ project.id }}">
+                                        <i class="bi bi-list-task"></i><span>Задачи</span>
+                                        <span class="badge">{{ project.tasks|length }}</span>
+                                    </a>
+                                    <a href="{{ url_for('projects.view_project', project_id=project.id) }}#todo"
+                                       class="tree-item project-tab-link" data-tab="todo" data-project-id="{{ project.id }}">
+                                        <i class="bi bi-check2-square"></i><span>To-Do</span>
+                                    </a>
+                                    <a href="{{ url_for('projects.view_project', project_id=project.id) }}#reports"
+                                       class="tree-item project-tab-link" data-tab="reports" data-project-id="{{ project.id }}">
+                                        <i class="bi bi-file-earmark-text"></i><span>Отчёты</span>
+                                    </a>
+                                    <a href="{{ url_for('projects.view_project', project_id=project.id) }}#calendar"
+                                       class="tree-item project-tab-link" data-tab="calendar" data-project-id="{{ project.id }}">
+                                        <i class="bi bi-calendar3"></i><span>Календарь</span>
+                                    </a>
+                                    <a href="{{ url_for('projects.view_project', project_id=project.id) }}#files"
+                                       class="tree-item project-tab-link" data-tab="files" data-project-id="{{ project.id }}">
+                                        <i class="bi bi-folder"></i><span>Файлы</span>
+                                    </a>
+                                    <a href="{{ url_for('projects.view_project', project_id=project.id) }}?mark_read=1#chat"
+                                       class="tree-item project-tab-link" data-tab="chat" data-project-id="{{ project.id }}">
+                                        <i class="bi bi-chat-dots"></i><span>Чат</span>
+                                        {% if project_unread > 0 %}
+                                            <span class="nav-badge-count">{{ project_unread }}</span>
+                                        {% else %}
+                                            <span class="badge">{{ project.messages|length }}</span>
+                                        {% endif %}
+                                    </a>
+                                    {% if session.user_role == 'admin' or (user_role and user_role in ['admin', 'manager']) %}
+                                    <a href="{{ url_for('team.project_settings', project_id=project.id) }}"
+                                       class="tree-item {% if request.endpoint == 'team.project_settings' and is_current %}active{% endif %}">
+                                        <i class="bi bi-gear"></i><span>Настройки</span>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        {% endfor %}
                     {% endfor %}
                 {% else %}
                     <div style="padding: 12px 10px; font-size: 12.5px; color: #52525b; text-align: center;">
@@ -1386,7 +1488,6 @@
         </div>
     </nav>
 
-    <!-- MAIN CONTENT -->
     <main class="main-content" id="mainContent">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -1403,7 +1504,6 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function toggleSidebar() {
@@ -1426,6 +1526,7 @@
 
         function filterProjects(query) {
             const q = query.toLowerCase().trim();
+
             document.querySelectorAll('#projectTree .tree-item').forEach(el => {
                 const name = (el.querySelector('.project-name')?.textContent || '').toLowerCase();
                 if (el.querySelector('.project-name')) {
@@ -1436,6 +1537,37 @@
                         if (children) children.style.display = 'none';
                     }
                 }
+            });
+
+            document.querySelectorAll('#projectTree .tree-subcontractor-header').forEach(header => {
+                let hasVisible = false;
+                let next = header.nextElementSibling;
+                while (next && !next.classList.contains('tree-subcontractor-header')
+                       && !next.classList.contains('tree-company-header')) {
+                    if (next.classList.contains('tree-item')
+                        && !next.classList.contains('project-tab-link')
+                        && next.style.display !== 'none') {
+                        hasVisible = true;
+                        break;
+                    }
+                    next = next.nextElementSibling;
+                }
+                header.style.display = hasVisible ? '' : 'none';
+            });
+
+            document.querySelectorAll('#projectTree .tree-company-header').forEach(header => {
+                let hasVisible = false;
+                let next = header.nextElementSibling;
+                while (next && !next.classList.contains('tree-company-header')) {
+                    if (next.classList.contains('tree-item')
+                        && !next.classList.contains('project-tab-link')
+                        && next.style.display !== 'none') {
+                        hasVisible = true;
+                        break;
+                    }
+                    next = next.nextElementSibling;
+                }
+                header.style.display = hasVisible ? '' : 'none';
             });
         }
 
@@ -1496,7 +1628,6 @@
             .catch(err => console.error('Ошибка отметки чата:', err));
         }
 
-        // ГЛОБАЛЬНЫЙ ПОИСК
         (function() {
             const input = document.getElementById('globalSearchInput');
             const resultsBox = document.getElementById('globalSearchResults');
@@ -1633,7 +1764,6 @@
             }
         })();
 
-        // СОХРАНЕНИЕ СОСТОЯНИЯ COLLAPSE
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.collapse').forEach(el => {
                 if (!el.id) return;
@@ -1648,7 +1778,6 @@
             });
         });
 
-        // ПОДСВЕТКА НОВОЙ ЗАДАЧИ / TO-DO
         document.addEventListener('DOMContentLoaded', function() {
             const params = new URLSearchParams(window.location.search);
             const createdTaskId = params.get('created');
@@ -1672,7 +1801,6 @@
             }
         });
 
-        // ИНИЦИАЛИЗАЦИЯ
         document.addEventListener('DOMContentLoaded', function() {
             document.addEventListener('click', function(e) {
                 const sidebar = document.getElementById('sidebar');
@@ -1741,7 +1869,7 @@
                     if (href && href.startsWith('#')) {
                         const tabId = href.substring(1);
                         updateSidebarActive(tabId);
-                        if (history.replaceState) history.replaceState(null, null, '#' + tabId);
+                        if (history.replaceState) history.replaceState(null, '', '#' + tabId);
                         if (tabId === 'chat') {
                             const projectMatch = window.location.pathname.match(/^\/project\/(\d+)$/);
                             if (projectMatch) markChatAsRead(projectMatch[1]);

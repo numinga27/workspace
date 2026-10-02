@@ -4,6 +4,7 @@ from datetime import timedelta
 from extensions import db
 from models import User, Invitation, ProjectMember
 from utils import utcnow
+from decorators import login_required
 
 bp = Blueprint('auth', __name__)
 
@@ -85,3 +86,47 @@ def logout():
     session.clear()
     flash('Вы вышли из системы.', 'info')
     return redirect(url_for('auth.login'))
+
+
+
+@bp.route('/profile')
+@login_required
+def profile():
+    """Страница профиля с формой смены пароля."""
+    from models import User
+    user = User.query.get(session['user_id'])
+    return render_template('profile.html', user=user)
+
+
+@bp.route('/profile/change-password', methods=['POST'])
+@login_required
+def change_password():
+    """Смена пароля."""
+    from extensions import db
+    from models import User
+
+    user = User.query.get(session['user_id'])
+    current = request.form.get('current_password', '')
+    new_password = request.form.get('new_password', '')
+    confirm = request.form.get('confirm_password', '')
+
+    if not user.check_password(current):
+        flash('Текущий пароль неверен.', 'danger')
+        return redirect(url_for('auth.profile'))
+
+    if len(new_password) < 6:
+        flash('Новый пароль должен быть не короче 6 символов.', 'danger')
+        return redirect(url_for('auth.profile'))
+
+    if new_password != confirm:
+        flash('Новый пароль и подтверждение не совпадают.', 'danger')
+        return redirect(url_for('auth.profile'))
+
+    if new_password == current:
+        flash('Новый пароль совпадает с текущим.', 'warning')
+        return redirect(url_for('auth.profile'))
+
+    user.set_password(new_password)
+    db.session.commit()
+    flash('Пароль успешно изменён.', 'success')
+    return redirect(url_for('auth.profile'))

@@ -14,21 +14,43 @@
             </div>
             <div class="card-body">
                 <form method="POST">
+
+                    <!-- Название -->
                     <div class="mb-3">
                         <label class="form-label">Название проекта *</label>
                         <input type="text" name="name" class="form-control"
                                placeholder="Например: Строительство склада" required autofocus>
                     </div>
 
+                    <!-- Описание -->
                     <div class="mb-3">
                         <label class="form-label">Описание</label>
                         <textarea name="description" class="form-control" rows="3"
                                   placeholder="Краткое описание проекта..."></textarea>
                     </div>
 
-                    <!-- ============================================ -->
-                    <!-- ЗАКАЗЧИК -->
-                    <!-- ============================================ -->
+                    <!-- Филиал компании -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-building"></i> Филиал компании
+                        </label>
+                        <input type="text" name="company_name" class="form-control"
+                               list="companies-list"
+                               placeholder="Например: ООО СтройМастер"
+                               autocomplete="off">
+                        <datalist id="companies-list">
+                            {% for c in available_companies|default([]) %}
+                            <option value="{{ c }}">
+                            {% endfor %}
+                        </datalist>
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            Укажите, какой филиал ведёт проект. Если филиала нет — оставьте пустым.
+                            Влияет на фильтр в дашборде и группировку в сайдбаре.
+                        </small>
+                    </div>
+
+                    <!-- Заказчик -->
                     <div class="mb-3">
                         <label class="form-label">Заказчик</label>
                         <div class="input-group">
@@ -46,15 +68,9 @@
                                 <i class="bi bi-plus-lg"></i>
                             </a>
                         </div>
-                        <small class="text-muted">
-                            <i class="bi bi-info-circle"></i>
-                            Нажмите <i class="bi bi-plus-lg"></i>, чтобы добавить заказчика.
-                        </small>
                     </div>
 
-                    <!-- ============================================ -->
-                    <!-- ПОСТАВЩИК + СУБПОДРЯДЧИК -->
-                    <!-- ============================================ -->
+                    <!-- Поставщик + Субподрядчики -->
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Поставщик</label>
@@ -79,11 +95,13 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Субподрядчик</label>
+                            <label class="form-label">
+                                <i class="bi bi-people-fill"></i> Субподрядчики
+                                <span class="text-muted small">(можно несколько)</span>
+                            </label>
                             <div class="input-group">
-                                <select name="subcontractor_id" class="form-select">
-                                    <option value="">— Без субподрядчика —</option>
-                                    {% for s in subcontractors|default([]) %}
+                                <select name="subcontractor_ids" class="form-select" multiple size="4">
+                                    {% for s in available_subcontractors|default([]) %}
                                     <option value="{{ s.id }}">
                                         {{ s.name }}{% if s.inn %} (ИНН: {{ s.inn }}){% endif %}
                                     </option>
@@ -96,14 +114,13 @@
                                 </a>
                             </div>
                             <small class="text-muted">
-                                <i class="bi bi-people-fill"></i> Привлечённый субподрядчик
+                                <i class="bi bi-info-circle"></i>
+                                Ctrl+клик (⌘ на Mac) — выбрать несколько.
                             </small>
                         </div>
                     </div>
 
-                    <!-- ============================================ -->
-                    <!-- ДАТЫ -->
-                    <!-- ============================================ -->
+                    <!-- Даты -->
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Дата старта</label>
@@ -117,9 +134,7 @@
                         </div>
                     </div>
 
-                    <!-- ============================================ -->
-                    <!-- ИНФО О ПРАВАХ -->
-                    <!-- ============================================ -->
+                    <!-- Инфо -->
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle"></i>
                         <strong>После создания</strong> вы автоматически становитесь
@@ -127,15 +142,13 @@
                         <ul class="mb-0 mt-1 small">
                             <li>Приглашать участников и назначать им роли</li>
                             <li>Создавать задачи, вехи и To-Do</li>
-                            <li>Назначать задачи на контактных лиц заказчика / поставщика / субподрядчика</li>
+                            <li>Назначать задачи на контактных лиц заказчика / поставщика / субподрядчиков</li>
                             <li>Загружать файлы и писать отчёты</li>
                             <li>Удалять проект (с подтверждением)</li>
                         </ul>
                     </div>
 
-                    <!-- ============================================ -->
-                    <!-- КНОПКИ -->
-                    <!-- ============================================ -->
+                    <!-- Кнопки -->
                     <div class="d-flex justify-content-between mt-3">
                         <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-secondary">
                             <i class="bi bi-x"></i> Отмена
@@ -145,6 +158,18 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Подсказка -->
+        <div class="card mt-3" style="border-left: 3px solid var(--accent);">
+            <div class="card-body small text-muted">
+                <i class="bi bi-lightbulb text-warning"></i>
+                <strong>Совет по субподрядчикам:</strong>
+                если проект ведут несколько субподрядных организаций (например,
+                ООО «ЭлектроМонтаж» и ООО «СантехМонтаж»), выберите обоих в списке.
+                В сайдбаре проект появится под каждым из них, а в фильтре дашборда
+                можно будет найти по любому.
             </div>
         </div>
     </div>

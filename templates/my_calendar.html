@@ -47,8 +47,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <div class="small text-muted">
         <i class="bi bi-info-circle"></i>
-        Клик по дню — просмотр событий и создание личного события.
-        Клик по цвету — <strong>скрыть/показать</strong> тип.
+        Клик по дню — просмотр расписания. Клик по цвету — <strong>скрыть/показать</strong> тип.
     </div>
     <div class="d-flex align-items-center gap-2">
         <div class="small text-muted" id="my-calendar-filter-count">
@@ -185,10 +184,10 @@
 {% endif %}
 
 <!-- ============================================================ -->
-<!-- МОДАЛЬНОЕ ОКНО: ПРОСМОТР ДНЯ -->
+<!-- МОДАЛЬНОЕ ОКНО: РАСПИСАНИЕ ДНЯ -->
 <!-- ============================================================ -->
 <div class="modal fade" id="myDayModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
@@ -320,9 +319,7 @@ const ALL_TYPES = ['personal', 'project_event', 'task-new', 'task-progress', 'ov
 function getLegendFilters() {
     try {
         return JSON.parse(localStorage.getItem(LEGEND_FILTER_KEY) || '{}');
-    } catch (e) {
-        return {};
-    }
+    } catch (e) { return {}; }
 }
 
 function saveLegendFilters(state) {
@@ -444,7 +441,6 @@ document.addEventListener('DOMContentLoaded', function() {
         height: 'auto',
         firstDay: 1,
 
-        // ← НОВОЕ: заголовок с номером недели
         titleFormat: function(dateInfo) {
             const d = dateInfo.date.marker;
             const week = getISOWeek(d);
@@ -496,9 +492,8 @@ document.addEventListener('DOMContentLoaded', function() {
         dayCellDidMount: function(arg) {
             arg.el.style.cursor = 'pointer';
 
-            // ← НОВОЕ: метка недели в понедельниках
             const date = arg.date;
-            if (date.getDay() === 1) {  // понедельник
+            if (date.getDay() === 1) {
                 const weekNum = getISOWeek(date);
                 const badge = document.createElement('div');
                 badge.className = 'fc-week-number-badge';
@@ -511,7 +506,6 @@ document.addEventListener('DOMContentLoaded', function() {
         },
 
         eventsSet: function(events) {
-            // Счётчики
             let tasksCount = 0;
             let todosCount = 0;
             events.forEach(ev => {
@@ -524,7 +518,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (tasksEl) tasksEl.textContent = tasksCount;
             if (todosEl) todosEl.textContent = todosCount;
 
-            // Фильтры
             restoreLegendFilters();
             applyLegendFilters(true);
         }
@@ -533,7 +526,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================================
-// ПРОСМОТР ДНЯ
+// РАСПИСАНИЕ ДНЯ
 // ============================================================
 function openMyDayModal(dateStr, dateObj) {
     mySelectedDateStr = dateStr;
@@ -543,64 +536,170 @@ function openMyDayModal(dateStr, dateObj) {
                   'четверг', 'пятница', 'суббота'];
     const d = dateObj || new Date(dateStr);
     const weekNum = getISOWeek(d);
+    const dateLabel = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${days[d.getDay()]}`;
 
-    document.getElementById('myDayModalTitle').innerHTML =
-        `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${days[d.getDay()]}
-         <span class="badge bg-secondary ms-2" style="font-size: 11px;">неделя ${weekNum}</span>`;
-
-    const eventsList = document.getElementById('myDayModalEvents');
-    const events = myCalendar.getEvents().filter(ev => {
+    const dayEvents = myCalendar.getEvents().filter(ev => {
         if (ev.display === 'none') return false;
         return ev.startStr.split('T')[0] === dateStr;
     });
 
-    if (events.length === 0) {
-        eventsList.innerHTML = `
-            <div class="text-center py-4 text-muted">
-                <i class="bi bi-calendar-x" style="font-size: 36px; opacity: 0.3; display: block; margin-bottom: 8px;"></i>
-                Нет событий на этот день
-            </div>
-        `;
+    const events = [];
+    const personal = [];
+    const tasks = [];
+    const todos = [];
+    const milestones = [];
+
+    dayEvents.forEach(ev => {
+        const props = ev.extendedProps || {};
+        const type = props.type;
+        if (type === 'project_event') events.push(ev);
+        else if (type === 'personal' || type === 'personal_event') personal.push(ev);
+        else if (type === 'task') tasks.push(ev);
+        else if (type === 'todo') todos.push(ev);
+        else if (type === 'milestone') milestones.push(ev);
+        else personal.push(ev);
+    });
+
+    const sortByTime = (a, b) => {
+        const ta = a.start ? a.start.getTime() : 0;
+        const tb = b.start ? b.start.getTime() : 0;
+        return ta - tb;
+    };
+    events.sort(sortByTime);
+    personal.sort(sortByTime);
+
+    document.getElementById('myDayModalTitle').innerHTML =
+        `${dateLabel}
+         <span class="badge bg-secondary ms-2" style="font-size: 11px;">неделя ${weekNum}</span>`;
+
+    const total = dayEvents.length;
+    let html = `
+        <div class="text-muted small mb-3">
+            Всего: <strong>${total}</strong>
+            ${events.length ? `· Событий: <strong>${events.length}</strong>` : ''}
+            ${personal.length ? `· Личных: <strong>${personal.length}</strong>` : ''}
+            ${tasks.length ? `· Задач: <strong>${tasks.length}</strong>` : ''}
+            ${todos.length ? `· To-Do: <strong>${todos.length}</strong>` : ''}
+        </div>
+    `;
+
+    if (total === 0) {
+        html += '<div class="text-center py-4 text-muted"><i class="bi bi-calendar-x" style="font-size: 36px; opacity: 0.3; display: block; margin-bottom: 8px;"></i>Нет событий на этот день</div>';
     } else {
-        const order = { personal: 0, project_event: 1, task: 2, todo: 3 };
-        events.sort((a, b) => {
-            const ta = (a.extendedProps && a.extendedProps.type) || 'project_event';
-            const tb = (b.extendedProps && b.extendedProps.type) || 'project_event';
-            return (order[ta] ?? 99) - (order[tb] ?? 99);
-        });
-
-        eventsList.innerHTML = events.map(ev => {
-            const props = ev.extendedProps || {};
-            const timeLabel = ev.allDay ? 'Весь день' :
-                (ev.start ? ev.start.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'}) : '');
-            const color = ev.backgroundColor || '#5b5bd6';
-
-            let badge = '';
-            if (props.type === 'todo') {
-                badge = props.done
-                    ? '<span class="badge bg-success ms-2">Выполнено</span>'
-                    : '<span class="badge bg-info ms-2">To-Do</span>';
-            }
-
-            return `
-                <div class="d-flex align-items-center gap-2 p-2 mb-2 rounded" style="background: var(--bg-tertiary);">
-                    <div style="width: 4px; height: 36px; border-radius: 2px; background: ${color};"></div>
-                    <div class="flex-grow-1">
-                        <div class="fw-bold small">${ev.title}${badge}</div>
-                        <div class="text-muted" style="font-size: 11px;">
-                            ${timeLabel}
-                            ${props.description ? ' · ' + props.description : ''}
-                            ${props.project ? ' · ' + props.project : ''}
-                        </div>
-                    </div>
-                    ${ev.url ? `<a href="${ev.url}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-box-arrow-up-right"></i></a>` : ''}
-                </div>
-            `;
-        }).join('');
+        if (events.length) {
+            html += '<h6 class="text-uppercase small text-muted mb-2"><i class="bi bi-calendar-event"></i> События проектов</h6>';
+            html += events.map(ev => renderEventCard(ev)).join('');
+        }
+        if (personal.length) {
+            html += '<h6 class="text-uppercase small text-muted mb-2 mt-3"><i class="bi bi-person-fill"></i> Личные</h6>';
+            html += personal.map(ev => renderEventCard(ev)).join('');
+        }
+        if (tasks.length) {
+            html += '<h6 class="text-uppercase small text-muted mb-2 mt-3"><i class="bi bi-list-task"></i> Задачи</h6>';
+            html += tasks.map(ev => renderTaskCard(ev)).join('');
+        }
+        if (todos.length) {
+            html += '<h6 class="text-uppercase small text-muted mb-2 mt-3"><i class="bi bi-check2-square"></i> To-Do</h6>';
+            html += todos.map(ev => renderTodoCard(ev)).join('');
+        }
+        if (milestones.length) {
+            html += '<h6 class="text-uppercase small text-muted mb-2 mt-3"><i class="bi bi-flag-fill"></i> Вехи</h6>';
+            html += milestones.map(ev => renderEventCard(ev)).join('');
+        }
     }
+
+    document.getElementById('myDayModalEvents').innerHTML = html;
     new bootstrap.Modal(document.getElementById('myDayModal')).show();
 }
 
+// ============================================================
+// РЕНДЕР КАРТОЧЕК
+// ============================================================
+function renderEventCard(ev) {
+    const props = ev.extendedProps || {};
+    const color = ev.backgroundColor || '#5b5bd6';
+
+    let timeLabel = '';
+    if (ev.allDay) {
+        timeLabel = 'Весь день';
+    } else if (ev.start && ev.end) {
+        const s = ev.start.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'});
+        const e = ev.end.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'});
+        timeLabel = `${s} – ${e}`;
+    } else if (ev.start) {
+        timeLabel = ev.start.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'});
+    }
+
+    const metaParts = [];
+    if (props.project) metaParts.push(`📁 ${props.project}`);
+    if (props.creator) metaParts.push(`👤 ${props.creator}`);
+
+    return `
+        <div class="d-flex gap-2 p-2 mb-2 rounded"
+             style="background: var(--bg-tertiary); border-left: 4px solid ${color};">
+            <div class="flex-grow-1">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div class="fw-bold small">${ev.title}</div>
+                    <div class="small text-muted text-nowrap">${timeLabel}</div>
+                </div>
+                ${metaParts.length ? `<div class="small text-muted mt-1">${metaParts.join(' · ')}</div>` : ''}
+                ${props.description ? `<div class="small mt-1" style="color: var(--text-secondary);">📝 ${props.description}</div>` : ''}
+            </div>
+            ${ev.url ? `<a href="${ev.url}" class="btn btn-sm btn-outline-secondary align-self-start" title="Открыть"><i class="bi bi-box-arrow-up-right"></i></a>` : ''}
+        </div>
+    `;
+}
+
+function renderTaskCard(ev) {
+    const props = ev.extendedProps || {};
+    const color = ev.backgroundColor || '#a1a1aa';
+    const status = props.status || 'new';
+
+    let statusBadge = '';
+    if (status === 'completed') statusBadge = '<span class="badge bg-success">✅ Завершена</span>';
+    else if (status === 'in_progress') statusBadge = '<span class="badge bg-warning text-dark">🔄 В работе</span>';
+    else statusBadge = '<span class="badge bg-secondary">🆕 Новая</span>';
+
+    const metaParts = [];
+    if (props.assignee) metaParts.push(`👤 ${props.assignee}`);
+    if (props.project) metaParts.push(`📁 ${props.project}`);
+
+    return `
+        <div class="d-flex gap-2 p-2 mb-2 rounded"
+             style="background: var(--bg-tertiary); border-left: 4px solid ${color};">
+            <div class="flex-grow-1">
+                <div class="fw-bold small">${ev.title}</div>
+                ${metaParts.length ? `<div class="small text-muted mt-1">${metaParts.join(' · ')}</div>` : ''}
+                <div class="mt-1">${statusBadge}</div>
+            </div>
+            ${ev.url ? `<a href="${ev.url}" class="btn btn-sm btn-outline-secondary align-self-start" title="Открыть"><i class="bi bi-box-arrow-up-right"></i></a>` : ''}
+        </div>
+    `;
+}
+
+function renderTodoCard(ev) {
+    const props = ev.extendedProps || {};
+    const done = props.done;
+    const color = ev.backgroundColor || '#0891b2';
+
+    return `
+        <div class="d-flex gap-2 p-2 mb-2 rounded"
+             style="background: var(--bg-tertiary); border-left: 4px solid ${color};">
+            <div class="flex-grow-1">
+                <div class="fw-bold small ${done ? 'text-decoration-line-through text-muted' : ''}">${ev.title}</div>
+                ${props.project ? `<div class="small text-muted mt-1">📁 ${props.project}</div>` : ''}
+                <div class="mt-1">
+                    ${done ? '<span class="badge bg-success">✅ Выполнено</span>' : '<span class="badge bg-info">⚪ Активно</span>'}
+                </div>
+            </div>
+            ${ev.url ? `<a href="${ev.url}" class="btn btn-sm btn-outline-secondary align-self-start" title="Открыть"><i class="bi bi-box-arrow-up-right"></i></a>` : ''}
+        </div>
+    `;
+}
+
+// ============================================================
+// СОЗДАНИЕ ЛИЧНОГО СОБЫТИЯ ИЗ ДНЯ
+// ============================================================
 function createMyEventFromDay() {
     bootstrap.Modal.getInstance(document.getElementById('myDayModal')).hide();
     if (mySelectedDateStr) {

@@ -40,8 +40,9 @@
                     </td>
                     <td>
                         <span class="badge bg-secondary">
+                            {# ← НОВОЕ: M2M для субподрядчиков #}
                             {% if page_type == 'subcontractor' %}
-                                {{ s.subcontractor_projects|length }}
+                                {{ s.subcontracted_projects.count() }}
                             {% else %}
                                 {{ s.projects|length }}
                             {% endif %}
