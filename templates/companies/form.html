@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+
+        <div class="mb-3">
+            <a href="{{ url_for('companies.companies_list') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> К списку филиалов
+            </a>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    {% if edit_company %}
+                        <i class="bi bi-pencil"></i> Редактировать филиал
+                    {% else %}
+                        <i class="bi bi-building-add"></i> Новый филиал
+                    {% endif %}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+
+                    <!-- Название -->
+                    <div class="mb-3">
+                        <label class="form-label">Название *</label>
+                        <input type="text" name="name" class="form-control"
+                               value="{{ form_data.get('name') or (edit_company.name if edit_company else '') }}"
+                               placeholder="Например: ООО СтройМастер"
+                               required autofocus>
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            Отображается в проектах, сайдбаре и фильтрах.
+                        </small>
+                    </div>
+
+                    <!-- ИНН / Телефон -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">ИНН</label>
+                            <input type="text" name="inn" class="form-control"
+                                   value="{{ form_data.get('inn') or (edit_company.inn if edit_company else '') }}"
+                                   pattern="[0-9]{10,12}"
+                                   title="ИНН должен содержать 10 или 12 цифр">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Телефон</label>
+                            <input type="tel" name="phone" class="form-control"
+                                   value="{{ form_data.get('phone') or (edit_company.phone if edit_company else '') }}"
+                                   placeholder="+7 (___) ___-__-__">
+                        </div>
+                    </div>
+
+                    <!-- Email / Адрес -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control"
+                                   value="{{ form_data.get('email') or (edit_company.email if edit_company else '') }}"
+                                   placeholder="info@example.com">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Адрес</label>
+                            <input type="text" name="address" class="form-control"
+                                   value="{{ form_data.get('address') or (edit_company.address if edit_company else '') }}"
+                                   placeholder="г. Москва, ул. Примерная, д. 1">
+                        </div>
+                    </div>
+
+                    <!-- Цвет -->
+                    <div class="mb-3">
+                        <label class="form-label">Цвет филиала</label>
+                        <div class="d-flex gap-2">
+                            {% set current_color = form_data.get('color') or (edit_company.color if edit_company else '#6366f1') %}
+                            {% for color, hex in [
+                                ('#6366f1', '#6366f1'),
+                                ('#5b5bd6', '#5b5bd6'),
+                                ('#16a34a', '#16a34a'),
+                                ('#dc2626', '#dc2626'),
+                                ('#f59e0b', '#f59e0b'),
+                                ('#0891b2', '#0891b2'),
+                                ('#8b5cf6', '#8b5cf6')
+                            ] %}
+                            <label style="cursor: pointer;">
+                                <input type="radio" name="color" value="{{ color }}"
+                                       {% if current_color == color %}checked{% endif %}
+                                       style="display: none;"
+                                       onchange="updateColorSelection(this)">
+                                <span class="color-dot {% if current_color == color %}selected{% endif %}"
+                                      style="background: {{ hex }};"></span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            Используется как метка филиала в проектах.
+                        </small>
+                    </div>
+
+                    <!-- Кнопки -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('companies.companies_list') }}" class="btn btn-secondary">
+                            <i class="bi bi-x"></i> Отмена
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i>
+                            {% if edit_company %}Сохранить{% else %}Создать{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if edit_company %}
+        <div class="card mt-3">
+            <div class="card-body small text-muted">
+                <div class="row">
+                    <div class="col-md-4">
+                        <strong>ID:</strong> {{ edit_company.id }}
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Создан:</strong> {{ edit_company.created_at.strftime('%d.%m.%Y %H:%M') }}
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Проектов:</strong> {{ edit_company.projects_count }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+function updateColorSelection(radio) {
+    document.querySelectorAll('.color-dot').forEach(dot => dot.classList.remove('selected'));
+    radio.parentElement.querySelector('.color-dot').classList.add('selected');
+}
+</script>
+
+{% endblock %}

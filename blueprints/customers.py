@@ -1,12 +1,16 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 
 from extensions import db
-from models import User, Customer, Project
+from models import User, Customer, Project, ContactPerson, Task
 from decorators import login_required
-from utils import get_user_projects, get_available_customers
+from utils import get_user_projects, get_available_customers, is_privileged
 
 bp = Blueprint('customers', __name__)
 
+
+# ============================================================
+#  СПИСОК ЗАКАЗЧИКОВ
+# ============================================================
 
 @bp.route('/customers')
 @login_required
@@ -17,6 +21,10 @@ def customers_list():
                            user=user,
                            projects=get_user_projects(user))
 
+
+# ============================================================
+#  СОЗДАНИЕ ЗАКАЗЧИКА
+# ============================================================
 
 @bp.route('/customer/create', methods=['GET', 'POST'])
 @login_required
@@ -44,20 +52,26 @@ def create_customer():
                            projects=get_user_projects(user))
 
 
+# ============================================================
+#  РЕДАКТИРОВАНИЕ ЗАКАЗЧИКА
+# ============================================================
+
 @bp.route('/customer/<int:customer_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_customer(customer_id):
     user = User.query.get(session['user_id'])
     customer = Customer.query.get_or_404(customer_id)
 
-    can_edit = False
-    if user.role == 'admin':
+    # ← Админ и супервизор могут редактировать любого заказчика
+    if is_privileged(user):
         can_edit = True
     else:
+        can_edit = False
         for member in user.projects:
             if member.project.customer_id == customer_id:
                 can_edit = True
                 break
+        # «Свободный» заказчик (не привязан ни к одному проекту) — видят все
         if not Project.query.filter_by(customer_id=customer_id).first():
             can_edit = True
 
@@ -82,6 +96,9 @@ def edit_customer(customer_id):
                            projects=get_user_projects(user))
 
 
+# ============================================================
+#  ПРОСМОТР ЗАКАЗЧИКА
+# ============================================================
 
 @bp.route('/customer/<int:customer_id>')
 @login_required
@@ -89,8 +106,11 @@ def view_customer(customer_id):
     user = User.query.get(session['user_id'])
     customer = Customer.query.get_or_404(customer_id)
 
-    can_view = user.role == 'admin'
-    if not can_view:
+    # ← Админ и супервизор видят всех
+    if is_privileged(user):
+        can_view = True
+    else:
+        can_view = False
         for member in user.projects:
             if member.project.customer_id == customer_id:
                 can_view = True
@@ -108,28 +128,33 @@ def view_customer(customer_id):
                            projects=get_user_projects(user))
 
 
+# ============================================================
+#  УДАЛЕНИЕ ЗАКАЗЧИКА
+# ============================================================
+
 @bp.route('/customer/<int:customer_id>/delete', methods=['POST'])
 @login_required
 def delete_customer(customer_id):
-    """Удаление заказчика. Разрешено только если нет привязанных проектов
-    и ни один контакт не назначен на задачи."""
-    from models import Project, ContactPerson, Task
-    from extensions import db
-    from flask import current_app
-    import os
+    """Удаление заказчика.
 
+    Разрешено только если:
+    - нет привязанных проектов;
+    - ни один контакт не назначен на задачи.
+    """
     user = User.query.get(session['user_id'])
     customer = Customer.query.get_or_404(customer_id)
 
-    # Проверка прав: admin или тот, у кого есть проекты с этим заказчиком
-    can_delete = user.role == 'admin'
-    if not can_delete:
+    # ← Админ и супервизор могут удалять любого
+    if is_privileged(user):
+        can_delete = True
+    else:
+        can_delete = False
         for member in user.projects:
             if member.project.customer_id == customer_id:
                 can_delete = True
                 break
         if not Project.query.filter_by(customer_id=customer_id).first():
-            can_delete = True  # «свободный» заказчик — можно удалять
+            can_delete = True
 
     if not can_delete:
         flash('Нет прав на удаление этого заказчика.', 'danger')

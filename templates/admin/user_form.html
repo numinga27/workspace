@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+
+        <div class="mb-3">
+            <a href="{{ url_for('users_admin.users_list') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> К списку пользователей
+            </a>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    {% if edit_user %}
+                        <i class="bi bi-pencil"></i> Редактировать пользователя
+                    {% else %}
+                        <i class="bi bi-person-plus-fill"></i> Новый пользователь
+                    {% endif %}
+                </h4>
+            </div>
+            <div class="card-body">
+
+                <form method="POST">
+
+                    <!-- Имя / Фамилия -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Имя *</label>
+                            <input type="text" name="first_name" class="form-control"
+                                   value="{{ form_data.get('first_name') or (edit_user.first_name if edit_user else '') }}"
+                                   required autofocus>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Фамилия *</label>
+                            <input type="text" name="last_name" class="form-control"
+                                   value="{{ form_data.get('last_name') or (edit_user.last_name if edit_user else '') }}"
+                                   required>
+                        </div>
+                    </div>
+
+                    <!-- Компания / Email -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Компания *</label>
+                            <input type="text" name="company" class="form-control"
+                                   value="{{ form_data.get('company') or (edit_user.company if edit_user else '') }}"
+                                   required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email (логин) *</label>
+                            <input type="email" name="email" class="form-control"
+                                   value="{{ form_data.get('email') or (edit_user.email if edit_user else '') }}"
+                                   required autocomplete="off">
+                        </div>
+                    </div>
+
+                    {# --- Роль: только при создании --- #}
+                    {% if not edit_user %}
+                    <div class="mb-3">
+                        <label class="form-label">Роль *</label>
+                        <select name="role" class="form-select">
+                            <option value="user"
+                                    {% if form_data.get('role') == 'user' %}selected{% endif %}>
+                                Пользователь
+                            </option>
+                            <option value="supervisor"
+                                    {% if form_data.get('role') == 'supervisor' %}selected{% endif %}>
+                                Супервизор (полный паритет с админом)
+                            </option>
+                            {% if user.is_admin %}
+                            <option value="admin"
+                                    {% if form_data.get('role') == 'admin' %}selected{% endif %}>
+                                Администратор (полный доступ)
+                            </option>
+                            {% endif %}
+                        </select>
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            Роль можно будет изменить потом в списке пользователей.
+                        </small>
+                    </div>
+                    {% else %}
+                    <div class="mb-3">
+                        <label class="form-label">Роль</label>
+                        <div>
+                            {% if edit_user.role == 'admin' %}
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-shield-fill-check"></i> Администратор
+                                </span>
+                            {% elif edit_user.role == 'supervisor' %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-eye-fill"></i> Супервизор
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-person"></i> Пользователь
+                                </span>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">
+                            Роль меняется отдельно — из списка пользователей.
+                        </small>
+                    </div>
+                    {% endif %}
+
+                    <!-- Пароль -->
+                    <hr>
+                    {% if edit_user %}
+                    <div class="alert alert-info py-2 px-3 small">
+                        <i class="bi bi-info-circle"></i>
+                        Оставьте поле пустым, чтобы не менять пароль.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Новый пароль</label>
+                        <input type="password" name="new_password" class="form-control"
+                               minlength="6" autocomplete="new-password">
+                        <small class="text-muted">Минимум 6 символов</small>
+                    </div>
+                    {% else %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Пароль *</label>
+                            <input type="password" name="password" class="form-control"
+                                   required minlength="6" autocomplete="new-password">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Повтор пароля *</label>
+                            <input type="password" name="password_confirm" class="form-control"
+                                   required minlength="6" autocomplete="new-password">
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Кнопки -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('users_admin.users_list') }}" class="btn btn-secondary">
+                            <i class="bi bi-x"></i> Отмена
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i>
+                            {% if edit_user %}Сохранить{% else %}Создать{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Подсказка про роли -->
+        <div class="card mt-3" style="border-left: 3px solid var(--accent);">
+            <div class="card-body small">
+                <h6><i class="bi bi-info-circle"></i> Что означают роли</h6>
+                <ul class="mb-0 ps-3">
+                    <li>
+                        <strong>Пользователь</strong> — видит только свои проекты
+                        (где он участник) и свои задачи.
+                    </li>
+                    <li>
+                        <strong>Супервизор</strong> — видит все проекты и пользователей,
+                        может ставить задачи от своего имени, управлять справочниками.
+                        <em>Полный паритет с администратором.</em>
+                    </li>
+                    <li>
+                        <strong>Администратор</strong> — то же, что супервизор, плюс может
+                        назначать и удалять других администраторов.
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

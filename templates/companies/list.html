@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1">
+            <i class="bi bi-building"></i> Филиалы компании
+        </h2>
+        <p class="text-muted mb-0">Справочник филиалов, которые ведут проекты</p>
+    </div>
+    {% if can_manage %}
+    <a href="{{ url_for('companies.companies_create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Добавить филиал
+    </a>
+    {% endif %}
+</div>
+
+<!-- Статистика -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4 col-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #e0e7ff; color: #4f46e5;">
+                <i class="bi bi-building"></i>
+            </div>
+            <div class="stat-number">{{ stats.total }}</div>
+            <div class="stat-label">Всего филиалов</div>
+        </div>
+    </div>
+    <div class="col-md-4 col-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #f0fdf4; color: #16a34a;">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <div class="stat-number">{{ stats.active }}</div>
+            <div class="stat-label">Активных</div>
+        </div>
+    </div>
+    <div class="col-md-4 col-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #fef3c7; color: #d97706;">
+                <i class="bi bi-pause-circle-fill"></i>
+            </div>
+            <div class="stat-number">{{ stats.inactive }}</div>
+            <div class="stat-label">Деактивированных</div>
+        </div>
+    </div>
+</div>
+
+<!-- Фильтры -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label small">Поиск</label>
+                <input type="text" name="q" class="form-control"
+                       placeholder="Название, ИНН, email, адрес..."
+                       value="{{ q }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Статус</label>
+                <select name="status" class="form-select">
+                    <option value="">Все</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Только активные</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Только деактивированные</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Сортировка</label>
+                <select name="sort" class="form-select">
+                    <option value="name" {% if sort == 'name' %}selected{% endif %}>По названию</option>
+                    <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Сначала новые</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-primary flex-grow-1">
+                    <i class="bi bi-funnel"></i> Применить
+                </button>
+                {% if q or status_filter or sort != 'name' %}
+                <a href="{{ url_for('companies.companies_list') }}"
+                   class="btn btn-outline-secondary" title="Сбросить">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Таблица -->
+{% if companies %}
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Название</th>
+                    <th style="width: 140px;">ИНН</th>
+                    <th style="width: 200px;">Контакты</th>
+                    <th style="width: 120px;">Проектов</th>
+                    <th style="width: 110px;">Статус</th>
+                    {% if can_manage %}
+                    <th style="width: 180px;" class="text-end">Действия</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in companies %}
+                <tr class="{% if not c.is_active %}opacity-50{% endif %}">
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width: 32px; height: 32px; border-radius: 8px;
+                                        background: {{ c.color_hex }}; flex-shrink: 0;
+                                        display: flex; align-items: center; justify-content: center;
+                                        color: white; font-size: 14px;">
+                                <i class="bi bi-building"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold">{{ c.name }}</div>
+                                {% if c.address %}
+                                <div class="small text-muted">{{ c.address[:60] }}{% if c.address|length > 60 %}…{% endif %}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if c.inn %}<small>{{ c.inn }}</small>{% else %}<span class="text-muted small">—</span>{% endif %}
+                    </td>
+                    <td>
+                        {% if c.phone %}
+                        <div class="small"><i class="bi bi-telephone text-muted"></i> {{ c.phone }}</div>
+                        {% endif %}
+                        {% if c.email %}
+                        <div class="small"><i class="bi bi-envelope text-muted"></i> {{ c.email }}</div>
+                        {% endif %}
+                        {% if not c.phone and not c.email %}
+                        <span class="text-muted small">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge bg-secondary">{{ c.projects_count }}</span>
+                    </td>
+                    <td>
+                        {% if c.is_active %}
+                        <span class="badge bg-success">Активен</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark">Неактивен</span>
+                        {% endif %}
+                    </td>
+                    {% if can_manage %}
+                    <td class="text-end">
+                        <div class="d-flex gap-1 justify-content-end">
+                            <a href="{{ url_for('companies.companies_edit', company_id=c.id) }}"
+                               class="btn btn-sm btn-outline-secondary"
+                               style="width: 32px; height: 32px; padding: 0;"
+                               title="Редактировать">
+                                <i class="bi bi-pencil text-primary"></i>
+                            </a>
+                            <form method="POST"
+                                  action="{{ url_for('companies.companies_toggle_active', company_id=c.id) }}"
+                                  class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                        style="width: 32px; height: 32px; padding: 0;"
+                                        title="{% if c.is_active %}Деактивировать{% else %}Активировать{% endif %}">
+                                    {% if c.is_active %}
+                                    <i class="bi bi-pause-fill text-warning"></i>
+                                    {% else %}
+                                    <i class="bi bi-play-fill text-success"></i>
+                                    {% endif %}
+                                </button>
+                            </form>
+                            <form method="POST"
+                                  action="{{ url_for('companies.companies_delete', company_id=c.id) }}"
+                                  class="d-inline"
+                                  onsubmit="return confirm('Удалить филиал «{{ c.name }}»?');">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                        style="width: 32px; height: 32px; padding: 0;"
+                                        title="Удалить"
+                                        {% if c.projects_count > 0 %}disabled{% endif %}>
+                                    <i class="bi bi-trash-fill text-danger"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">
+        <i class="bi bi-building"></i>
+    </div>
+    <h5>
+        {% if q or status_filter %}
+            По фильтрам ничего не найдено
+        {% else %}
+            Филиалов пока нет
+        {% endif %}
+    </h5>
+    {% if q or status_filter %}
+    <a href="{{ url_for('companies.companies_list') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-x-lg"></i> Сбросить
+    </a>
+    {% elif can_manage %}
+    <a href="{{ url_for('companies.companies_create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Добавить первый филиал
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

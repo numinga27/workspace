@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1">
+            <i class="bi bi-people-fill"></i> Пользователи системы
+        </h2>
+        <p class="text-muted mb-0">
+            Управление доступом и ролями
+        </p>
+    </div>
+    <a href="{{ url_for('users_admin.users_create') }}" class="btn btn-primary">
+        <i class="bi bi-person-plus-fill"></i> Добавить пользователя
+    </a>
+</div>
+
+<!-- Статистика -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #e0e7ff; color: #4f46e5;">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="stat-number">{{ stats.total }}</div>
+            <div class="stat-label">Всего</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #fee2e2; color: #dc2626;">
+                <i class="bi bi-shield-fill-check"></i>
+            </div>
+            <div class="stat-number">{{ stats.admins }}</div>
+            <div class="stat-label">Администраторов</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #fef3c7; color: #d97706;">
+                <i class="bi bi-eye-fill"></i>
+            </div>
+            <div class="stat-number">{{ stats.supervisors }}</div>
+            <div class="stat-label">Супервизоров</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #f0fdf4; color: #16a34a;">
+                <i class="bi bi-person"></i>
+            </div>
+            <div class="stat-number">{{ stats.regular }}</div>
+            <div class="stat-label">Обычных</div>
+        </div>
+    </div>
+</div>
+
+<!-- Фильтры -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+
+            <div class="col-md-4">
+                <label class="form-label small">Поиск</label>
+                <input type="text" name="q" class="form-control"
+                       placeholder="Имя, email, компания..."
+                       value="{{ q }}">
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small">Роль</label>
+                <select name="role" class="form-select">
+                    <option value="">Все</option>
+                    <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>
+                        Администратор
+                    </option>
+                    <option value="supervisor" {% if role_filter == 'supervisor' %}selected{% endif %}>
+                        Супервизор
+                    </option>
+                    <option value="user" {% if role_filter == 'user' %}selected{% endif %}>
+                        Пользователь
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small">Статус</label>
+                <select name="status" class="form-select">
+                    <option value="">Все</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>
+                        Активные
+                    </option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>
+                        Заблокированные
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small">Сортировка</label>
+                <select name="sort" class="form-select">
+                    <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Сначала новые</option>
+                    <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Сначала старые</option>
+                    <option value="name" {% if sort == 'name' %}selected{% endif %}>По имени</option>
+                    <option value="email" {% if sort == 'email' %}selected{% endif %}>По email</option>
+                </select>
+            </div>
+
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-primary flex-grow-1">
+                    <i class="bi bi-funnel"></i> Применить
+                </button>
+                {% if q or role_filter or status_filter or sort != 'newest' %}
+                <a href="{{ url_for('users_admin.users_list') }}"
+                   class="btn btn-outline-secondary" title="Сбросить">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Таблица пользователей -->
+{% if users %}
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Пользователь</th>
+                    <th style="width: 180px;">Компания</th>
+                    <th style="width: 200px;">Email</th>
+                    <th style="width: 200px;">Роль</th>
+                    <th style="width: 110px;">Статус</th>
+                    <th style="width: 180px;" class="text-end">Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr class="{% if not u.is_active %}opacity-50{% endif %}">
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="avatar-small
+                                {% if u.role == 'admin' %}avatar-admin
+                                {% elif u.role == 'supervisor' %}avatar-supervisor
+                                {% endif %}">
+                                {{ u.first_name[0]|upper }}{{ u.last_name[0]|upper }}
+                            </div>
+                            <div>
+                                <div class="fw-bold">
+                                    {{ u.full_name }}
+                                    {% if u.id == user.id %}
+                                    <span class="badge bg-secondary" style="font-size: 9px;">
+                                        это вы
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                {% if u.created_by %}
+                                <div class="small text-muted" style="font-size: 11px;">
+                                    создан: {{ u.created_by.full_name }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <small>{{ u.company }}</small>
+                    </td>
+                    <td>
+                        <small class="text-muted">{{ u.email }}</small>
+                    </td>
+                    <td>
+                        {% if u.role == 'admin' %}
+                            <span class="badge bg-danger">
+                                <i class="bi bi-shield-fill-check"></i> Администратор
+                            </span>
+                        {% elif u.role == 'supervisor' %}
+                            <span class="badge bg-warning text-dark">
+                                <i class="bi bi-eye-fill"></i> Супервизор
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary">
+                                <i class="bi bi-person"></i> Пользователь
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if u.is_active %}
+                            <span class="badge bg-success">Активен</span>
+                        {% else %}
+                            <span class="badge bg-danger">Заблокирован</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="d-flex gap-1 justify-content-end">
+                            {# Смена роли #}
+                            {% if u.id != user.id %}
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary action-btn"
+                                        type="button"
+                                        data-bs-toggle="dropdown"
+                                        title="Сменить роль">
+                                    <i class="bi bi-shield-fill text-primary"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <h6 class="dropdown-header">Сменить роль</h6>
+                                    </li>
+                                    {% if user.is_admin %}
+                                    <li>
+                                        <form method="POST"
+                                              action="{{ url_for('users_admin.users_set_role', user_id=u.id) }}"
+                                              class="d-inline">
+                                            <input type="hidden" name="role" value="admin">
+                                            <button type="submit"
+                                                    class="dropdown-item {% if u.role == 'admin' %}active{% endif %}">
+                                                <i class="bi bi-shield-fill-check text-danger"></i>
+                                                Администратор
+                                            </button>
+                                        </form>
+                                    </li>
+                                    {% endif %}
+                                    <li>
+                                        <form method="POST"
+                                              action="{{ url_for('users_admin.users_set_role', user_id=u.id) }}"
+                                              class="d-inline">
+                                            <input type="hidden" name="role" value="supervisor">
+                                            <button type="submit"
+                                                    class="dropdown-item {% if u.role == 'supervisor' %}active{% endif %}">
+                                                <i class="bi bi-eye-fill text-warning"></i>
+                                                Супервизор
+                                            </button>
+                                        </form>
+                                    </li>
+                                    <li>
+                                        <form method="POST"
+                                              action="{{ url_for('users_admin.users_set_role', user_id=u.id) }}"
+                                              class="d-inline">
+                                            <input type="hidden" name="role" value="user">
+                                            <button type="submit"
+                                                    class="dropdown-item {% if u.role == 'user' %}active{% endif %}">
+                                                <i class="bi bi-person text-secondary"></i>
+                                                Пользователь
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                            {% endif %}
+
+                            {# Редактировать #}
+                            <a href="{{ url_for('users_admin.users_edit', user_id=u.id) }}"
+                               class="btn btn-sm btn-outline-secondary action-btn"
+                               title="Редактировать">
+                                <i class="bi bi-pencil text-primary"></i>
+                            </a>
+
+                            {# Блокировка #}
+                            {% if u.id != user.id %}
+                            <form method="POST"
+                                  action="{{ url_for('users_admin.users_toggle_active', user_id=u.id) }}"
+                                  class="d-inline">
+                                <button type="submit"
+                                        class="btn btn-sm btn-outline-secondary action-btn"
+                                        title="{% if u.is_active %}Заблокировать{% else %}Разблокировать{% endif %}">
+                                    {% if u.is_active %}
+                                        <i class="bi bi-lock-fill text-warning"></i>
+                                    {% else %}
+                                        <i class="bi bi-unlock-fill text-success"></i>
+                                    {% endif %}
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            {# Удаление #}
+                            {% if u.id != user.id %}
+                            <form method="POST"
+                                  action="{{ url_for('users_admin.users_delete', user_id=u.id) }}"
+                                  class="d-inline"
+                                  onsubmit="return confirm('Удалить пользователя {{ u.full_name }}? Это действие необратимо.');">
+                                <button type="submit"
+                                        class="btn btn-sm btn-outline-secondary action-btn"
+                                        title="Удалить">
+                                    <i class="bi bi-trash-fill text-danger"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">
+        <i class="bi bi-people"></i>
+    </div>
+    <h5>
+        {% if q or role_filter or status_filter %}
+            Пользователи не найдены
+        {% else %}
+            Пользователей пока нет
+        {% endif %}
+    </h5>
+    {% if q or role_filter or status_filter %}
+    <a href="{{ url_for('users_admin.users_list') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-x-lg"></i> Сбросить фильтры
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+
+<style>
+.avatar-small {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+.avatar-admin {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+.avatar-supervisor {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+</style>
+
+{% endblock %}

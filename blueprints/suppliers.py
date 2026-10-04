@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from extensions import db
 from models import User, Supplier, Project
 from decorators import login_required
-from utils import get_user_projects, get_available_suppliers
+from utils import get_user_projects, get_available_suppliers, is_privileged
 
 bp = Blueprint('suppliers', __name__)
 
@@ -14,19 +14,16 @@ bp = Blueprint('suppliers', __name__)
 
 def _can_view_supplier(user, supplier_id):
     """Проверяет, может ли пользователь видеть карточку поставщика/субподрядчика."""
-    if user.role == 'admin':
+    if is_privileged(user):       # ← было: user.role == 'admin'
         return True
 
-    # Если у пользователя есть проект с этим поставщиком
     for member in user.projects:
         if member.project.supplier_id == supplier_id:
             return True
-        # ← НОВОЕ: проверяем M2M субподрядчиков
         for sub in member.project.subcontractors:
             if sub.id == supplier_id:
                 return True
 
-    # Если поставщик ещё не привязан ни к одному проекту — видят все
     bound_as_supplier = Project.query.filter(Project.supplier_id == supplier_id).first()
     bound_as_subcontractor = Supplier.query.filter_by(id=supplier_id).first()
     if bound_as_subcontractor:
@@ -42,13 +39,12 @@ def _can_view_supplier(user, supplier_id):
 
 def _can_edit_supplier(user, supplier_id):
     """Проверяет, может ли пользователь редактировать поставщика/субподрядчика."""
-    if user.role == 'admin':
+    if is_privileged(user):       # ← было: user.role == 'admin'
         return True
 
     for member in user.projects:
         if member.project.supplier_id == supplier_id:
             return True
-        # ← НОВОЕ: M2M субподрядчики
         for sub in member.project.subcontractors:
             if sub.id == supplier_id:
                 return True
@@ -63,7 +59,7 @@ def _get_suppliers_by_type(user, supplier_type):
 
 
 # ============================================================
-#  СПИСОК: ПОСТАВЩИКИ
+#  СПИСОК: ГРУППА КОМПАНИЙ АМ СТАНКО (поставщики)
 # ============================================================
 
 @bp.route('/suppliers')
@@ -76,9 +72,9 @@ def suppliers_list():
                            suppliers=suppliers,
                            user=user,
                            page_type='supplier',
-                           page_title='Поставщики',
-                           page_icon='bi-truck',
-                           page_color='warning',
+                           page_title='Группа компаний АМ Станко',
+                           page_icon='bi-people-fill',
+                           page_color='primary',
                            create_url=url_for('suppliers.create_supplier'),
                            view_url_endpoint='suppliers.view_supplier',
                            edit_url_endpoint='suppliers.edit_supplier',
@@ -100,7 +96,7 @@ def subcontractors_list():
                            user=user,
                            page_type='subcontractor',
                            page_title='Субподрядчики',
-                           page_icon='bi-people-fill',
+                           page_icon='bi-person-badge',
                            page_color='info',
                            create_url=url_for('suppliers.create_subcontractor'),
                            view_url_endpoint='suppliers.view_subcontractor',
@@ -109,7 +105,7 @@ def subcontractors_list():
 
 
 # ============================================================
-#  СОЗДАНИЕ: ПОСТАВЩИК
+#  СОЗДАНИЕ: ГРУППА КОМПАНИЙ АМ СТАНКО (поставщик)
 # ============================================================
 
 @bp.route('/supplier/create', methods=['GET', 'POST'])
@@ -146,7 +142,7 @@ def _create_supplier_internal(supplier_type):
         db.session.add(supplier)
         db.session.commit()
 
-        label = 'Субподрядчик' if is_sub else 'Поставщик'
+        label = 'Субподрядчик' if is_sub else 'Компания группы'
         flash(f'{label} добавлен!', 'success')
 
         next_url = request.form.get('next') or request.referrer
@@ -157,15 +153,21 @@ def _create_supplier_internal(supplier_type):
     return render_template('create_supplier.html',
                            user=user,
                            page_type=supplier_type,
-                           page_title='Новый субподрядчик' if is_sub else 'Новый поставщик',
-                           page_icon='bi-people-fill' if is_sub else 'bi-truck',
-                           page_color='info' if is_sub else 'warning',
-                           list_url=url_for('suppliers.subcontractors_list') if is_sub else url_for('suppliers.suppliers_list'),
+                           page_title=(
+                               'Новый субподрядчик' if is_sub
+                               else 'Новая компания группы'
+                           ),
+                           page_icon='bi-person-badge' if is_sub else 'bi-people-fill',
+                           page_color='info' if is_sub else 'primary',
+                           list_url=(
+                               url_for('suppliers.subcontractors_list') if is_sub
+                               else url_for('suppliers.suppliers_list')
+                           ),
                            projects=get_user_projects(user))
 
 
 # ============================================================
-#  ПРОСМОТР: ПОСТАВЩИК
+#  ПРОСМОТР: ГРУППА КОМПАНИЙ АМ СТАНКО (поставщик)
 # ============================================================
 
 @bp.route('/supplier/<int:supplier_id>')
@@ -200,17 +202,26 @@ def _view_supplier_internal(supplier_id):
                            supplier=supplier,
                            user=user,
                            is_subcontractor=is_sub,
-                           page_title='Субподрядчик' if is_sub else 'Поставщик',
-                           page_icon='bi-people-fill' if is_sub else 'bi-truck',
-                           page_color='info' if is_sub else 'warning',
-                           list_url=url_for('suppliers.subcontractors_list') if is_sub else url_for('suppliers.suppliers_list'),
-                           edit_url=url_for('suppliers.edit_subcontractor', supplier_id=supplier.id) if is_sub
-                                     else url_for('suppliers.edit_supplier', supplier_id=supplier.id),
+                           page_title=(
+                               'Субподрядчик' if is_sub
+                               else 'Группа компаний АМ Станко'
+                           ),
+                           page_icon='bi-person-badge' if is_sub else 'bi-people-fill',
+                           page_color='info' if is_sub else 'primary',
+                           list_url=(
+                               url_for('suppliers.subcontractors_list') if is_sub
+                               else url_for('suppliers.suppliers_list')
+                           ),
+                           edit_url=(
+                               url_for('suppliers.edit_subcontractor', supplier_id=supplier.id)
+                               if is_sub
+                               else url_for('suppliers.edit_supplier', supplier_id=supplier.id)
+                           ),
                            projects=get_user_projects(user))
 
 
 # ============================================================
-#  РЕДАКТИРОВАНИЕ: ПОСТАВЩИК
+#  РЕДАКТИРОВАНИЕ: ГРУППА КОМПАНИЙ АМ СТАНКО (поставщик)
 # ============================================================
 
 @bp.route('/supplier/<int:supplier_id>/edit', methods=['GET', 'POST'])
@@ -250,7 +261,7 @@ def _edit_supplier_internal(supplier_id):
         supplier.address = request.form.get('address')
         db.session.commit()
 
-        label = 'Субподрядчик' if is_sub else 'Поставщик'
+        label = 'Субподрядчик' if is_sub else 'Компания группы'
         flash(f'{label} обновлён!', 'success')
 
         if is_sub:
@@ -261,16 +272,22 @@ def _edit_supplier_internal(supplier_id):
                            supplier=supplier,
                            user=user,
                            is_subcontractor=is_sub,
-                           page_title='Редактирование субподрядчика' if is_sub else 'Редактирование поставщика',
-                           page_icon='bi-people-fill' if is_sub else 'bi-truck',
-                           page_color='info' if is_sub else 'warning',
-                           view_url=url_for('suppliers.view_subcontractor', supplier_id=supplier.id) if is_sub
-                                    else url_for('suppliers.view_supplier', supplier_id=supplier.id),
+                           page_title=(
+                               'Редактирование субподрядчика' if is_sub
+                               else 'Редактирование компании группы'
+                           ),
+                           page_icon='bi-person-badge' if is_sub else 'bi-people-fill',
+                           page_color='info' if is_sub else 'primary',
+                           view_url=(
+                               url_for('suppliers.view_subcontractor', supplier_id=supplier.id)
+                               if is_sub
+                               else url_for('suppliers.view_supplier', supplier_id=supplier.id)
+                           ),
                            projects=get_user_projects(user))
 
 
 # ============================================================
-#  УДАЛЕНИЕ: ПОСТАВЩИК
+#  УДАЛЕНИЕ: ГРУППА КОМПАНИЙ АМ СТАНКО (поставщик)
 # ============================================================
 
 @bp.route('/supplier/<int:supplier_id>/delete', methods=['POST'])
@@ -305,12 +322,9 @@ def _delete_supplier_internal(supplier_id):
     # Проверка 1: привязан к проектам?
     as_supplier = Project.query.filter_by(supplier_id=supplier_id).count()
 
-    # ← НОВОЕ: считаем M2M-проекты через subcontracted_projects
     if is_sub:
         as_subcontractor = supplier.subcontracted_projects.count()
     else:
-        # Для обычного поставщика legacy-поле subcontractor_id тоже считаем,
-        # на случай если он был назначен субподрядчиком в старых проектах
         from models import Project as P
         as_subcontractor = P.query.filter_by(subcontractor_id=supplier_id).count()
 
@@ -335,12 +349,11 @@ def _delete_supplier_internal(supplier_id):
                 return redirect(url_for('suppliers.view_subcontractor', supplier_id=supplier_id))
             return redirect(url_for('suppliers.view_supplier', supplier_id=supplier_id))
 
-    # OK — удаляем
     name = supplier.name
     db.session.delete(supplier)
     db.session.commit()
 
-    label = 'Субподрядчик' if is_sub else 'Поставщик'
+    label = 'Субподрядчик' if is_sub else 'Компания группы'
     flash(f'{label} «{name}» удалён.', 'success')
 
     if is_sub:

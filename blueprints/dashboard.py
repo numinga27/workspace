@@ -11,7 +11,8 @@ from utils import (
     get_user_projects, get_available_customers, is_project_guest,
     get_unread_task_ids, get_unread_todo_ids,
     get_available_companies,
-    get_available_suppliers,        # ← НОВОЕ
+    get_available_suppliers,
+    is_privileged,
     utcnow,
 )
 
@@ -38,14 +39,12 @@ def dashboard():
 
     filtered = projects
 
-    # ← фильтр по филиалу
     if filter_company:
         if filter_company == '__no_company__':
             filtered = [p for p in filtered if not p.company_name]
         else:
             filtered = [p for p in filtered if p.company_name == filter_company]
 
-    # ← НОВОЕ: фильтр по субподрядчику (many-to-many)
     if filter_subcontractor:
         if filter_subcontractor == '__none__':
             filtered = [p for p in filtered if not p.subcontractors]
@@ -82,7 +81,6 @@ def dashboard():
     customers = get_available_customers(user)
     available_companies = get_available_companies(user)
 
-    # ← НОВОЕ: список доступных субподрядчиков для селекта
     all_suppliers = get_available_suppliers(user)
     available_subcontractors = [
         s for s in all_suppliers if s.supplier_type == 'subcontractor'
@@ -109,7 +107,7 @@ def dashboard():
                            all_projects=projects,
                            customers=customers,
                            available_companies=available_companies,
-                           available_subcontractors=available_subcontractors,   # ← НОВОЕ
+                           available_subcontractors=available_subcontractors,
                            user=user,
                            filter_company=filter_company,
                            filter_customer=filter_customer,
@@ -137,9 +135,9 @@ def api_search():
         return jsonify([])
 
     user = User.query.get(session['user_id'])
-    is_admin = user.role == 'admin'
+    privileged = is_privileged(user)   # ← было: user.role == 'admin'
 
-    if is_admin:
+    if privileged:
         projects = Project.query.filter_by(is_active=True).all()
     else:
         projects = [m.project for m in user.projects if not m.is_guest]
@@ -148,7 +146,6 @@ def api_search():
     customer_ids = {p.customer_id for p in projects if p.customer_id}
     supplier_ids = {p.supplier_id for p in projects if p.supplier_id}
 
-    # ← НОВОЕ: собираем ID субподрядчиков из M2M
     subcontractor_ids = set()
     for p in projects:
         for s in p.subcontractors:
@@ -163,7 +160,6 @@ def api_search():
             subtitle = f'Проект · {p.completion_percentage}%'
             if p.company_name:
                 subtitle = f'{p.company_name} · {p.completion_percentage}%'
-            # ← НОВОЕ: показываем имена субподрядчиков
             if p.subcontractors:
                 sub_names = ', '.join(s.name for s in p.subcontractors[:2])
                 if len(p.subcontractors) > 2:
@@ -225,7 +221,7 @@ def api_search():
             })
 
     # 4. Заказчики
-    if is_admin:
+    if privileged:
         customers = Customer.query.filter(Customer.name.ilike(f'%{q}%'))\
             .order_by(Customer.name).limit(10).all()
     else:
@@ -245,8 +241,8 @@ def api_search():
         })
 
     # 5. Поставщики + субподрядчики
-    all_supplier_ids = supplier_ids | subcontractor_ids   # ← НОВОЕ: объединяем
-    if is_admin:
+    all_supplier_ids = supplier_ids | subcontractor_ids
+    if privileged:
         suppliers = Supplier.query.filter(Supplier.name.ilike(f'%{q}%'))\
             .order_by(Supplier.name).limit(10).all()
     else:
@@ -269,7 +265,7 @@ def api_search():
         })
 
     # 6. Контактные лица
-    if is_admin:
+    if privileged:
         contact_query = ContactPerson.query.filter(
             ContactPerson.full_name.ilike(f'%{q}%')
         )
@@ -279,7 +275,7 @@ def api_search():
             conditions.append(ContactPerson.customer_id.in_(customer_ids))
         if supplier_ids:
             conditions.append(ContactPerson.supplier_id.in_(supplier_ids))
-        if subcontractor_ids:                                  # ← НОВОЕ
+        if subcontractor_ids:
             conditions.append(ContactPerson.supplier_id.in_(subcontractor_ids))
 
         if conditions:

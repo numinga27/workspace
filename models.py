@@ -8,7 +8,7 @@ def _utcnow():
 
 
 # ============================================================
-#  СВЯЗКА ПРОЕКТ ↔ СУБПОДРЯДЧИК (many-to-many) ← НОВОЕ
+#  СВЯЗКА ПРОЕКТ ↔ СУБПОДРЯДЧИК (many-to-many)
 # ============================================================
 
 project_subcontractor = db.Table(
@@ -30,9 +30,19 @@ class User(db.Model):
     company = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
+
+    # ← Роли:
+    #   'user'       — обычный пользователь
+    #   'supervisor' — супервизор (полный паритет с админом)
+    #   'admin'      — главный администратор
     role = db.Column(db.String(20), default='user')
+
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=_utcnow)
+
+    # ← Дополнительные поля для админки
+    last_login_at = db.Column(db.DateTime, nullable=True)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
 
     def set_password(self, raw_password):
         from werkzeug.security import generate_password_hash
@@ -44,6 +54,37 @@ class User(db.Model):
             return check_password_hash(self.password, raw_password)
         return self.password == raw_password
 
+    # ---- Хелперы для ролей ----
+
+    @property
+    def is_admin(self):
+        """Главный администратор."""
+        return self.role == 'admin'
+
+    @property
+    def is_supervisor(self):
+        """Супервизор (полный паритет с админом)."""
+        return self.role == 'supervisor'
+
+    @property
+    def is_privileged(self):
+        """Админ ИЛИ супервизор — видят всё, могут всё.
+        Используется ВМЕСТО `user.role == 'admin'` во всём коде."""
+        return self.role in ('admin', 'supervisor')
+
+    @property
+    def role_display(self):
+        """Человеческое название роли."""
+        return {
+            'admin': 'Администратор',
+            'supervisor': 'Супервизор',
+            'user': 'Пользователь',
+        }.get(self.role, self.role)
+
+    @property
+    def full_name(self):
+        return f'{self.first_name} {self.last_name}'
+
     # ---- Relationships ----
     projects = db.relationship('ProjectMember', back_populates='user', lazy=True)
     created_projects = db.relationship(
@@ -54,6 +95,9 @@ class User(db.Model):
     )
     created_tasks = db.relationship(
         'Task', backref='task_creator', lazy=True, foreign_keys='Task.created_by'
+    )
+    supervisor_tasks = db.relationship(
+        'Task', backref='supervisor', lazy=True, foreign_keys='Task.supervisor_id'
     )
     messages = db.relationship('Message', backref='author', lazy=True)
     uploaded_files = db.relationship('File', backref='uploader', lazy=True)
@@ -76,6 +120,12 @@ class User(db.Model):
     )
     task_reads = db.relationship('TaskRead', backref='user', lazy=True)
     todo_reads = db.relationship('TodoRead', backref='user', lazy=True)
+
+    # Кто создал этого пользователя (для аудита)
+    created_by = db.relationship(
+        'User', remote_side=[id], backref='created_users',
+        foreign_keys=[created_by_id]
+    )
 
 
 # ============================================================
@@ -126,8 +176,8 @@ class Supplier(db.Model):
     )
 
     # ---- NEW: many-to-many субподрядчиков ----
-    # Обратная связь `subcontracted_projects` создаётся автоматически
-    # через backref в Project.subcontractors.
+    # Обратная связь `subcontracted_projects` создаётся через backref
+    # в Project.subcontractors.
 
     contacts = db.relationship(
         'ContactPerson', backref='supplier', lazy=True,
@@ -141,7 +191,7 @@ class Supplier(db.Model):
 
     @property
     def type_display(self):
-        return 'Субподрядчик' if self.is_subcontractor else 'Поставщик'
+        return 'Субподрядчик' if self.is_subcontractor else 'Группа компаний АМ Станко'
 
 
 # ============================================================
@@ -179,6 +229,41 @@ class ContactPerson(db.Model):
 
 
 # ============================================================
+#  ФИЛИАЛ КОМПАНИИ (Company)
+# ============================================================
+
+class Company(db.Model):
+    """Филиал/подразделение компании, которое ведёт проекты.
+
+    Раньше филиал хранился просто строкой в Project.company_name.
+    Теперь это отдельная сущность со справочником.
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False, unique=True, index=True)
+    inn = db.Column(db.String(20), nullable=True)
+    address = db.Column(db.String(300), nullable=True)
+    phone = db.Column(db.String(30), nullable=True)
+    email = db.Column(db.String(100), nullable=True)
+    color = db.Column(db.String(20), default='#6366f1')
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=_utcnow)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
+    creator = db.relationship('User', foreign_keys=[created_by_id])
+
+    @property
+    def projects_count(self):
+        return Project.query.filter_by(company_id=self.id).count()
+
+    @property
+    def color_hex(self):
+        return self.color or '#6366f1'
+
+    def __repr__(self):
+        return f'<Company {self.id}: {self.name}>'
+
+
+# ============================================================
 #  ПРОЕКТ
 # ============================================================
 
@@ -190,6 +275,10 @@ class Project(db.Model):
     created_at = db.Column(db.DateTime, default=_utcnow)
     is_active = db.Column(db.Boolean, default=True)
 
+    # Филиал компании
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=True, index=True)
+    # Legacy-поля: раньше хранили филиал как строку. Оставляем для обратной совместимости,
+    # синхронизируются с Company при сохранении проекта.
     company_name = db.Column(db.String(200), nullable=True, index=True)
     company_color = db.Column(db.String(20), default='#6366f1')
 
@@ -197,8 +286,7 @@ class Project(db.Model):
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=True)
     supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=True)
 
-    # ← LEGACY: старое поле "один субподрядчик". Оставлено для обратной совместимости.
-    #   Не удалять, пока не закончится миграция на many-to-many.
+    # ← LEGACY: старое поле "один субподрядчик". Оставлено для совместимости.
     subcontractor_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=True)
 
     start_date = db.Column(db.DateTime, nullable=True)
@@ -208,11 +296,14 @@ class Project(db.Model):
     # ---- Хелперы ----
     @property
     def company_display(self):
+        """Название филиала: сначала из связи Company, потом — legacy строка."""
+        if self.company_ref:
+            return self.company_ref.name
         return self.company_name or 'Без филиала'
 
     @property
     def has_company(self):
-        return bool(self.company_name)
+        return bool(self.company_id or self.company_name)
 
     @property
     def completion_percentage(self):
@@ -248,7 +339,9 @@ class Project(db.Model):
         return (_utcnow() - self.end_date).days
 
     # ---- Relationships ----
-    # ← НОВОЕ: many-to-many субподрядчиков
+    company_ref = db.relationship('Company', backref='projects', lazy=True,
+                                  foreign_keys=[company_id])
+
     subcontractors = db.relationship(
         'Supplier',
         secondary=project_subcontractor,
@@ -355,18 +448,69 @@ class ProjectMember(db.Model):
     project = db.relationship('Project', back_populates='members')
 
     ROLE_NAMES = {
-        'admin': 'Руководитель проекта',
-        'manager': 'Менеджер',
+        # Своя команда
+        'admin':          'Руководитель проекта',
+        'manager':        'Менеджер',
         'chief_engineer': 'Главный инженер',
-        'logistic': 'Логистик',
-        'member': 'Участник',
+        'logistic':       'Логистик',
+        'member':         'Участник',
+
+        # Группа компаний АМ Станко
+        'am_stanko_admin':    'АМ Станко · Руководитель',
+        'am_stanko_manager':  'АМ Станко · Менеджер',
+        'am_stanko_engineer': 'АМ Станко · Гл. инженер',
+        'am_stanko_logistic': 'АМ Станко · Логистик',
+        'am_stanko_member':   'АМ Станко · Участник',
+
+        # Служебное
+        'guest': 'Гость',
     }
+
+    OWN_TEAM_ROLES = ['admin', 'manager', 'chief_engineer', 'logistic', 'member']
+
+    AM_STANKO_ROLES = [
+        'am_stanko_admin',
+        'am_stanko_manager',
+        'am_stanko_engineer',
+        'am_stanko_logistic',
+        'am_stanko_member',
+    ]
+
+    MANAGE_ROLES = [
+        'admin', 'manager',
+        'am_stanko_admin', 'am_stanko_manager',
+    ]
+
+    SELECTABLE_ROLES = [
+        ('admin',          'Руководитель проекта'),
+        ('manager',        'Менеджер'),
+        ('chief_engineer', 'Главный инженер'),
+        ('logistic',       'Логистик'),
+        ('member',         'Участник'),
+        ('am_stanko_admin',    'АМ Станко · Руководитель'),
+        ('am_stanko_manager',  'АМ Станко · Менеджер'),
+        ('am_stanko_engineer', 'АМ Станко · Гл. инженер'),
+        ('am_stanko_logistic', 'АМ Станко · Логистик'),
+        ('am_stanko_member',   'АМ Станко · Участник'),
+    ]
 
     @property
     def role_display(self):
         if self.is_guest:
             return 'Гость'
         return self.ROLE_NAMES.get(self.role_in_project, self.role_in_project)
+
+    @property
+    def is_am_stanko(self):
+        return self.role_in_project in self.AM_STANKO_ROLES
+
+    @property
+    def is_own_team(self):
+        return not self.is_guest and self.role_in_project in self.OWN_TEAM_ROLES
+
+    @property
+    def is_manager(self):
+        return self.role_in_project in self.MANAGE_ROLES
 
 
 # ============================================================
@@ -391,6 +535,14 @@ class Task(db.Model):
     milestone_id = db.Column(db.Integer, db.ForeignKey('milestone.id'), nullable=True)
     comment = db.Column(db.Text, nullable=True)
 
+    # ← Постановщик задачи:
+    #   'normal'      — обычная задача (создана в проекте)
+    #   'admin'       — поставлена администратором
+    #   'supervisor'  — поставлена супервизором
+    source = db.Column(db.String(20), default='normal', index=True)
+    supervisor_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    supervisor_comment = db.Column(db.Text, nullable=True)
+
     files = db.relationship('File', backref='task', lazy=True)
     milestone = db.relationship('Milestone', backref='tasks')
     read_marks = db.relationship('TaskRead', backref='task', lazy=True,
@@ -407,6 +559,25 @@ class Task(db.Model):
         if not self.is_overdue:
             return 0
         return (_utcnow() - self.due_date).days
+
+    @property
+    def is_from_admin(self):
+        return self.source == 'admin'
+
+    @property
+    def is_from_supervisor(self):
+        return self.source == 'supervisor'
+
+    @property
+    def is_from_privileged(self):
+        return self.source in ('admin', 'supervisor')
+
+    @property
+    def poster(self):
+        """Кто поставил задачу: супервизор/админ или создатель."""
+        if self.supervisor:
+            return self.supervisor
+        return self.task_creator
 
 
 # ============================================================
@@ -553,7 +724,54 @@ class MessageRead(db.Model):
 
     user = db.relationship('User', backref='message_reads')
 
+# ============================================================
+#  УПОМИНАНИЯ В ЧАТЕ (@Иван Иванов)
+# ============================================================
 
+class MessageMention(db.Model):
+    """Упоминание пользователя в сообщении чата через @.
+
+    Хранится отдельной записью, чтобы:
+    - считать непрочитанные;
+    - фильтровать «мои упоминания»;
+    - помечать прочитанными по одному или пачкой.
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    message_id = db.Column(
+        db.Integer,
+        db.ForeignKey('message.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True
+    )
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True
+    )
+    project_id = db.Column(
+        db.Integer,
+        db.ForeignKey('project.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True
+    )
+    created_at = db.Column(db.DateTime, default=_utcnow)
+    is_read = db.Column(db.Boolean, default=False, index=True)
+
+    # Отношения
+    message = db.relationship(
+        'Message',
+        backref=db.backref('mentions', lazy=True, cascade='all, delete-orphan')
+    )
+    user = db.relationship('User', backref='mentions')
+    project = db.relationship('Project', backref='mentions')
+
+    __table_args__ = (
+        db.UniqueConstraint('message_id', 'user_id', name='unique_message_mention'),
+    )
+
+    def __repr__(self):
+        return f'<MessageMention msg={self.message_id} user={self.user_id} read={self.is_read}>'
 # ============================================================
 #  УВЕДОМЛЕНИЯ О ЗАДАЧАХ
 # ============================================================

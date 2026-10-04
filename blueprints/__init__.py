@@ -13,6 +13,8 @@ from . import contacts           # ← НОВОЕ
 from . import team
 from . import pdf
 from . import admin
+from . import users_admin 
+from . import companies  
 
 
 ALL_BLUEPRINTS = [
@@ -31,6 +33,8 @@ ALL_BLUEPRINTS = [
     team.bp,
     pdf.bp,
     admin.bp,
+    users_admin.bp,
+    companies.bp,
 ]
 
 

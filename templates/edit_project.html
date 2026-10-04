@@ -37,19 +37,30 @@
                         <label class="form-label">
                             <i class="bi bi-building"></i> Филиал компании
                         </label>
-                        <input type="text" name="company_name" class="form-control"
-                               list="companies-list"
-                               value="{{ project.company_name or '' }}"
-                               placeholder="Например: ООО СтройМастер"
-                               autocomplete="off">
-                        <datalist id="companies-list">
-                            {% for c in available_companies|default([]) %}
-                            <option value="{{ c }}">
-                            {% endfor %}
-                        </datalist>
+                        <div class="input-group">
+                            <select name="company_id" class="form-select">
+                                <option value="">— Без филиала —</option>
+                                {% for c in companies|default([]) %}
+                                <option value="{{ c.id }}"
+                                        {% if project.company_id == c.id %}selected{% endif %}>
+                                    {{ c.name }}{% if c.inn %} (ИНН: {{ c.inn }}){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <a href="{{ url_for('companies.companies_create') }}?next={{ url_for('projects.edit_project', project_id=project.id) }}"
+                               class="btn btn-outline-primary"
+                               title="Добавить новый филиал">
+                                <i class="bi bi-plus-lg"></i>
+                            </a>
+                        </div>
                         <small class="text-muted">
                             <i class="bi bi-info-circle"></i>
-                            Какой филиал ведёт проект. Оставьте пустым, если филиал не указан.
+                            Какой филиал ведёт проект. Влияет на фильтр дашборда и группировку в сайдбаре.
+                            {% if not companies %}
+                            <br><span class="text-warning">
+                                Список пуст — сначала добавьте филиал.
+                            </span>
+                            {% endif %}
                         </small>
                     </div>
 
@@ -100,7 +111,6 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            {# ← НОВОЕ: multiple select с preselected #}
                             {% set current_sub_ids = project.subcontractors|map(attribute='id')|list %}
                             <label class="form-label">
                                 <i class="bi bi-people-fill"></i> Субподрядчики
@@ -197,9 +207,13 @@
                 <div class="row small">
                     <div class="col-md-3 mb-2">
                         <div class="text-muted">Филиал</div>
-                        {% if project.company_name %}
+                        {% if project.company_ref %}
                             <span class="badge text-white"
-                                  style="background: {{ project.company_color }};">
+                                  style="background: {{ project.company_ref.color_hex }};">
+                                <i class="bi bi-building"></i> {{ project.company_ref.name }}
+                            </span>
+                        {% elif project.company_name %}
+                            <span class="badge bg-secondary" title="legacy">
                                 <i class="bi bi-building"></i> {{ project.company_name }}
                             </span>
                         {% else %}
@@ -227,7 +241,6 @@
                         {% endif %}
                     </div>
                     <div class="col-md-3 mb-2">
-                        {# ← НОВОЕ: список субподрядчиков #}
                         <div class="text-muted">Субподрядчики ({{ project.subcontractors|length }})</div>
                         {% if project.subcontractors %}
                             {% for sub in project.subcontractors %}

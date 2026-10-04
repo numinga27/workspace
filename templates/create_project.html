@@ -34,19 +34,29 @@
                         <label class="form-label">
                             <i class="bi bi-building"></i> Филиал компании
                         </label>
-                        <input type="text" name="company_name" class="form-control"
-                               list="companies-list"
-                               placeholder="Например: ООО СтройМастер"
-                               autocomplete="off">
-                        <datalist id="companies-list">
-                            {% for c in available_companies|default([]) %}
-                            <option value="{{ c }}">
-                            {% endfor %}
-                        </datalist>
+                        <div class="input-group">
+                            <select name="company_id" class="form-select">
+                                <option value="">— Без филиала —</option>
+                                {% for c in companies|default([]) %}
+                                <option value="{{ c.id }}">
+                                    {{ c.name }}{% if c.inn %} (ИНН: {{ c.inn }}){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <a href="{{ url_for('companies.companies_create') }}?next={{ url_for('projects.create_project') }}"
+                               class="btn btn-outline-primary"
+                               title="Добавить новый филиал">
+                                <i class="bi bi-plus-lg"></i>
+                            </a>
+                        </div>
                         <small class="text-muted">
                             <i class="bi bi-info-circle"></i>
-                            Укажите, какой филиал ведёт проект. Если филиала нет — оставьте пустым.
-                            Влияет на фильтр в дашборде и группировку в сайдбаре.
+                            Какой филиал ведёт проект. Влияет на фильтр дашборда и группировку в сайдбаре.
+                            {% if not companies %}
+                            <br><span class="text-warning">
+                                Список пуст — сначала добавьте филиал.
+                            </span>
+                            {% endif %}
                         </small>
                     </div>
 

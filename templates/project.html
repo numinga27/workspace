@@ -19,7 +19,6 @@
             {% endif %}
         </h2>
 
-        {# Одна строка: даты + филиал #}
         <div class="d-flex flex-wrap gap-2 small text-muted align-items-center">
             <span><i class="bi bi-calendar-plus"></i> {{ project.created_at.strftime('%d.%m.%Y') }}</span>
             {% if project.start_date %}
@@ -32,7 +31,13 @@
             </span>
             {% endif %}
 
-            {% if project.company_name %}
+            {% if project.company_ref %}
+            <span class="badge text-decoration-none"
+                  style="background: {{ project.company_ref.color_hex }}; color: white; font-size: 10px;"
+                  title="Филиал компании">
+                <i class="bi bi-building"></i> {{ project.company_ref.name }}
+            </span>
+            {% elif project.company_name %}
             <span class="badge text-decoration-none"
                   style="background: {{ project.company_color }}; color: white; font-size: 10px;"
                   title="Филиал компании">
@@ -86,7 +91,7 @@
                             <li>Календарь событий ({{ events|length }})</li>
                             <li>Файлы и папки</li>
                             <li>Сообщения в чате ({{ messages|length }})</li>
-                            <li>Участники ({{ members|length }})</li>
+                            <li>Участники ({{ members|length + (am_stanko_members|length if am_stanko_members else 0) + (guests|length if guests else 0) }})</li>
                         </ul>
                         <p>Для подтверждения введите слово <strong>УДАЛИТЬ</strong> заглавными буквами:</p>
                         <input type="text" name="confirm_text" class="form-control"
@@ -108,7 +113,7 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- КОМПАКТНАЯ СТАТИСТИКА + ЗАКАЗЧИК + СУБПОДРЯДЧИКИ + ПОСТАВЩИК -->
+<!-- КОМПАКТНАЯ СТАТИСТИКА -->
 <!-- ============================================================ -->
 <div class="compact-stats">
     <span class="badge bg-secondary">
@@ -126,10 +131,9 @@
     </span>
     {% endif %}
     <span class="badge bg-info">
-        <i class="bi bi-people-fill"></i> Участников: {{ members|length }}
+        <i class="bi bi-people-fill"></i> Участников: {{ members|length + (am_stanko_members|length if am_stanko_members else 0) + (guests|length if guests else 0) }}
     </span>
 
-    {# Заказчик #}
     {% if project.customer %}
     <a href="{{ url_for('customers.view_customer', customer_id=project.customer.id) }}"
        class="badge bg-info text-decoration-none"
@@ -142,34 +146,31 @@
     </span>
     {% endif %}
 
-    {# ← НОВОЕ: несколько субподрядчиков #}
+    {% if project.supplier %}
+    <a href="{{ url_for('suppliers.view_supplier', supplier_id=project.supplier.id) }}"
+       class="badge bg-am-stanko text-decoration-none"
+       title="Группа компаний АМ Станко: {{ project.supplier.name }}{% if project.supplier.inn %} · ИНН: {{ project.supplier.inn }}{% endif %}">
+        <i class="bi bi-people-fill"></i> {{ project.supplier.name }}
+    </a>
+    {% endif %}
+
     {% if project.subcontractors %}
         {% for sub in project.subcontractors %}
         <a href="{{ url_for('suppliers.view_subcontractor', supplier_id=sub.id) }}"
-           class="badge text-decoration-none"
-           style="background: #6366f1; color: white;"
+           class="badge bg-info text-decoration-none"
            title="Субподрядчик: {{ sub.name }}{% if sub.inn %} · ИНН: {{ sub.inn }}{% endif %}">
-            <i class="bi bi-people-fill"></i> {{ sub.name }}
+            <i class="bi bi-person-badge"></i> {{ sub.name }}
         </a>
         {% endfor %}
     {% else %}
     <span class="badge bg-secondary" style="opacity: 0.7;" title="Субподрядчики не указаны">
-        <i class="bi bi-people"></i> Без субподрядчиков
+        <i class="bi bi-person-badge"></i> Без субподрядчиков
     </span>
-    {% endif %}
-
-    {# Поставщик #}
-    {% if project.supplier %}
-    <a href="{{ url_for('suppliers.view_supplier', supplier_id=project.supplier.id) }}"
-       class="badge bg-warning text-dark text-decoration-none"
-       title="Поставщик: {{ project.supplier.name }}{% if project.supplier.inn %} · ИНН: {{ project.supplier.inn }}{% endif %}">
-        <i class="bi bi-truck"></i> {{ project.supplier.name }}
-    </a>
     {% endif %}
 </div>
 
 <!-- ============================================================ -->
-<!-- УВЕДОМЛЕНИЯ О ПРОСРОЧКАХ (КОМПАКТНО) -->
+<!-- УВЕДОМЛЕНИЯ О ПРОСРОЧКАХ -->
 <!-- ============================================================ -->
 {% if project_overdue %}
 <div class="alert alert-danger py-2 px-3 mb-2 small">
@@ -229,11 +230,10 @@
 {% endif %}
 
 <!-- ============================================================ -->
-<!-- КОМПАКТНЫЙ ПРОГРЕСС С ВЕХАМИ -->
+<!-- ПРОГРЕСС С ВЕХАМИ -->
 <!-- ============================================================ -->
 <div class="card mb-3">
     <div class="card-body py-3">
-
         <div class="d-flex align-items-center gap-3 flex-wrap">
             <div class="d-flex align-items-center gap-2">
                 <span class="fw-bold" style="font-size: 12px; color: var(--text-secondary);">Прогресс</span>
@@ -404,7 +404,6 @@
             </form>
         </div>
         {% endif %}
-
     </div>
 </div>
 
@@ -460,9 +459,10 @@
                                 <select name="filter_assignee" class="form-select form-select-sm">
                                     <option value="">Все</option>
                                     <option value="unassigned" {% if filter_assignee == 'unassigned' %}selected{% endif %}>— Не назначен —</option>
-                                    {% for m in members %}
+                                    {% for m in members_for_filters %}
                                     <option value="{{ m.user.id }}" {% if filter_assignee == m.user.id|string %}selected{% endif %}>
                                         {{ m.user.first_name }} {{ m.user.last_name }}
+                                        {% if m.is_am_stanko %} · {{ m.role_display }}{% endif %}
                                     </option>
                                     {% endfor %}
                                 </select>
@@ -500,6 +500,186 @@
                     </div>
                 </div>
 
+                {# ============================================================ #}
+                {# ПАНЕЛЬ АДМИНА / СУПЕРВИЗОРА #}
+                {# ============================================================ #}
+                {% if session.user_role in ['admin', 'supervisor'] %}
+                <div class="card mb-3"
+                     style="border-left: 4px solid {% if session.user_role == 'admin' %}#dc2626{% else %}#f59e0b{% endif %};
+                            background: {% if session.user_role == 'admin' %}#fef2f2{% else %}#fffbeb{% endif %};">
+                    <div class="card-header py-2 d-flex justify-content-between align-items-center"
+                         style="background: {% if session.user_role == 'admin' %}#fef2f2{% else %}#fffbeb{% endif %};">
+                        <span style="color: {% if session.user_role == 'admin' %}#991b1b{% else %}#92400e{% endif %};">
+                            <i class="bi {% if session.user_role == 'admin' %}bi-shield-fill-check{% else %}bi-eye-fill{% endif %}"></i>
+                            <strong>
+                                {% if session.user_role == 'admin' %}
+                                    Задача от администратора
+                                {% else %}
+                                    Задача от супервизора
+                                {% endif %}
+                            </strong>
+                        </span>
+                        <button class="btn btn-sm btn-link text-decoration-none p-0"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#adminAssignTaskForm"
+                                aria-expanded="false">
+                            <span class="collapse-label-closed">Развернуть</span>
+                            <span class="collapse-label-open" style="display:none;">Свернуть</span>
+                            <i class="bi bi-chevron-down collapse-icon"></i>
+                        </button>
+                    </div>
+                    <div class="collapse" id="adminAssignTaskForm">
+                        <div class="card-body">
+
+                            <ul class="nav nav-pills mb-3" id="adminTaskModeTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active btn-sm"
+                                            data-bs-toggle="pill"
+                                            data-bs-target="#modeLeader"
+                                            type="button">
+                                        <i class="bi bi-person-badge"></i> Руководителю
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link btn-sm"
+                                            data-bs-toggle="pill"
+                                            data-bs-target="#modeAnyone"
+                                            type="button">
+                                        <i class="bi bi-people-fill"></i> Любому участнику
+                                    </button>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content">
+
+                                <div class="tab-pane fade show active" id="modeLeader">
+                                    {% if managers_list %}
+                                    <p class="small mb-2" style="color: {% if session.user_role == 'admin' %}#991b1b{% else %}#92400e{% endif %};">
+                                        <i class="bi bi-info-circle"></i>
+                                        Задача будет назначена руководителю или менеджеру проекта.
+                                    </p>
+                                    <form method="POST" action="{{ url_for('tasks.admin_assign_task', project_id=project.id) }}">
+                                        <div class="row g-2">
+                                            <div class="col-md-4">
+                                                <label class="form-label small">Руководитель проекта *</label>
+                                                <select name="assigned_to" class="form-select" required>
+                                                    <option value="">— Выберите —</option>
+                                                    {% for m in managers_list %}
+                                                    <option value="user:{{ m.user.id }}">
+                                                        {{ m.user.first_name }} {{ m.user.last_name }}
+                                                        · {{ m.role_display }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <label class="form-label small">Название задачи *</label>
+                                                <input type="text" class="form-control" name="title"
+                                                       placeholder="Например: Подготовить отчёт за квартал" required>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label small">Дедлайн</label>
+                                                <input type="date" class="form-control" name="due_date">
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label small">Описание</label>
+                                                <textarea class="form-control" name="description" rows="2"
+                                                          placeholder="Детали задачи..."></textarea>
+                                            </div>
+                                            <div class="col-12 text-end">
+                                                <button type="submit"
+                                                        class="btn {% if session.user_role == 'admin' %}btn-danger{% else %}btn-warning text-dark{% endif %}">
+                                                    <i class="bi bi-send-fill"></i> Поставить руководителю
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    {% else %}
+                                    <div class="alert alert-warning small mb-0">
+                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                        В проекте нет руководителей или менеджеров.
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="tab-pane fade" id="modeAnyone">
+                                    <p class="small mb-2" style="color: {% if session.user_role == 'admin' %}#991b1b{% else %}#92400e{% endif %};">
+                                        <i class="bi bi-info-circle"></i>
+                                        Задача будет назначена любому участнику — команде, АМ Станко или гостю.
+                                    </p>
+                                    <form method="POST" action="{{ url_for('tasks.admin_assign_task', project_id=project.id) }}">
+                                        <input type="hidden" name="allow_any" value="1">
+                                        <div class="row g-2">
+                                            <div class="col-md-4">
+                                                <label class="form-label small">Участник *</label>
+                                                <select name="assigned_to" class="form-select" required>
+                                                    <option value="">— Выберите —</option>
+
+                                                    {% if members %}
+                                                    <optgroup label="Команда проекта">
+                                                        {% for m in members %}
+                                                        <option value="user:{{ m.user.id }}">
+                                                            {{ m.user.first_name }} {{ m.user.last_name }}
+                                                            · {{ m.role_display }}
+                                                        </option>
+                                                        {% endfor %}
+                                                    </optgroup>
+                                                    {% endif %}
+
+                                                    {% if am_stanko_members %}
+                                                    <optgroup label="Группа компаний АМ Станко">
+                                                        {% for m in am_stanko_members %}
+                                                        <option value="user:{{ m.user.id }}">
+                                                            {{ m.user.first_name }} {{ m.user.last_name }}
+                                                            · {{ m.role_display }}
+                                                        </option>
+                                                        {% endfor %}
+                                                    </optgroup>
+                                                    {% endif %}
+
+                                                    {% if guests %}
+                                                    <optgroup label="Гости проекта">
+                                                        {% for m in guests %}
+                                                        <option value="user:{{ m.user.id }}">
+                                                            {{ m.user.first_name }} {{ m.user.last_name }}
+                                                            · {{ m.user.company or 'Гость' }}
+                                                        </option>
+                                                        {% endfor %}
+                                                    </optgroup>
+                                                    {% endif %}
+                                                </select>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <label class="form-label small">Название задачи *</label>
+                                                <input type="text" class="form-control" name="title"
+                                                       placeholder="Например: Подготовить документы" required>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label small">Дедлайн</label>
+                                                <input type="date" class="form-control" name="due_date">
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label small">Описание</label>
+                                                <textarea class="form-control" name="description" rows="2"
+                                                          placeholder="Детали задачи..."></textarea>
+                                            </div>
+                                            <div class="col-12 text-end">
+                                                <button type="submit"
+                                                        class="btn {% if session.user_role == 'admin' %}btn-danger{% else %}btn-warning text-dark{% endif %}">
+                                                    <i class="bi bi-send-fill"></i> Поставить задачу
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
                 {% if can_manage %}
                 <div class="card mb-3">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -527,15 +707,29 @@
                                             <option value="user:{{ user.id }}">
                                                 👤 Я — {{ user.first_name }} {{ user.last_name }}
                                             </option>
+
                                             {% if members %}
                                             <optgroup label="Команда проекта">
                                                 {% for m in members %}
                                                 <option value="user:{{ m.user.id }}">
                                                     {{ m.user.first_name }} {{ m.user.last_name }}
+                                                    {% if m.role_in_project != 'member' %} · {{ m.role_display }}{% endif %}
                                                 </option>
                                                 {% endfor %}
                                             </optgroup>
                                             {% endif %}
+
+                                            {% if am_stanko_members %}
+                                            <optgroup label="Группа компаний АМ Станко">
+                                                {% for m in am_stanko_members %}
+                                                <option value="user:{{ m.user.id }}">
+                                                    {{ m.user.first_name }} {{ m.user.last_name }}
+                                                    {% if m.role_in_project != 'am_stanko_member' %} · {{ m.role_display }}{% endif %}
+                                                </option>
+                                                {% endfor %}
+                                            </optgroup>
+                                            {% endif %}
+
                                             {% if project.customer and project.customer.contacts %}
                                             <optgroup label="Заказчик: {{ project.customer.name }}">
                                                 {% for c in project.customer.contacts %}
@@ -545,16 +739,7 @@
                                                 {% endfor %}
                                             </optgroup>
                                             {% endif %}
-                                            {% if project.supplier and project.supplier.contacts %}
-                                            <optgroup label="Поставщик: {{ project.supplier.name }}">
-                                                {% for c in project.supplier.contacts %}
-                                                <option value="contact:{{ c.id }}">
-                                                    {{ c.full_name }}{% if c.position %} — {{ c.position }}{% endif %}
-                                                </option>
-                                                {% endfor %}
-                                            </optgroup>
-                                            {% endif %}
-                                            {# ← НОВОЕ: контакты каждого субподрядчика в отдельной группе #}
+
                                             {% for sub in project.subcontractors %}
                                                 {% if sub.contacts %}
                                                 <optgroup label="Субподрядчик: {{ sub.name }}">
@@ -633,6 +818,22 @@
                                             {% if task.subtasks %}
                                             <span class="badge bg-secondary" style="font-size: 10px;">
                                                 <i class="bi bi-diagram-3"></i> {{ task.subtasks|length }} подзадач
+                                            </span>
+                                            {% endif %}
+
+                                            {% if task.is_from_admin %}
+                                            <span class="badge bg-danger" style="font-size: 10px;"
+                                                   title="Поставил: {{ task.supervisor.full_name if task.supervisor else '—' }}">
+                                                <i class="bi bi-shield-fill-check"></i>
+                                                от администратора
+                                                {% if task.supervisor %}: {{ task.supervisor.first_name }} {{ task.supervisor.last_name }}{% endif %}
+                                            </span>
+                                            {% elif task.is_from_supervisor %}
+                                            <span class="badge bg-warning text-dark" style="font-size: 10px;"
+                                                   title="Поставил: {{ task.supervisor.full_name if task.supervisor else '—' }}">
+                                                <i class="bi bi-eye-fill"></i>
+                                                от супервизора
+                                                {% if task.supervisor %}: {{ task.supervisor.first_name }} {{ task.supervisor.last_name }}{% endif %}
                                             </span>
                                             {% endif %}
                                         </div>
@@ -777,9 +978,10 @@
                                 <select name="todo_filter_assignee" class="form-select form-select-sm">
                                     <option value="">Все</option>
                                     <option value="unassigned" {% if todo_filter_assignee == 'unassigned' %}selected{% endif %}>— Не назначен —</option>
-                                    {% for m in members %}
+                                    {% for m in members_for_filters %}
                                     <option value="{{ m.user.id }}" {% if todo_filter_assignee == m.user.id|string %}selected{% endif %}>
                                         {{ m.user.first_name }} {{ m.user.last_name }}
+                                        {% if m.is_am_stanko %} · {{ m.role_display }}{% endif %}
                                     </option>
                                     {% endfor %}
                                 </select>
@@ -847,6 +1049,13 @@
                                         {% for m in members %}
                                         <option value="{{ m.user.id }}">{{ m.user.first_name }} {{ m.user.last_name }}</option>
                                         {% endfor %}
+                                        {% if am_stanko_members %}
+                                        <optgroup label="Группа компаний АМ Станко">
+                                            {% for m in am_stanko_members %}
+                                            <option value="{{ m.user.id }}">{{ m.user.first_name }} {{ m.user.last_name }}</option>
+                                            {% endfor %}
+                                        </optgroup>
+                                        {% endif %}
                                     </select>
                                 </div>
                                 <div class="col-md-2">
@@ -1196,25 +1405,43 @@
             <!-- ЧАТ -->
             <div class="tab-pane fade" id="chat" role="tabpanel">
                 <div class="card">
-                    <div class="card-header py-2"><i class="bi bi-chat-dots"></i> Чат проекта</div>
+                    <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-chat-dots"></i> Чат проекта</span>
+                        <small class="text-muted">
+                            <i class="bi bi-at"></i> Введите <code>@</code> — упомянуть участника
+                        </small>
+                    </div>
                     <div class="card-body">
                         <div id="chatBox" class="chat-box mb-3" style="height: 400px;">
                             {% for msg in messages %}
                             <div class="message">
                                 <span class="author">{{ msg.author.first_name }} {{ msg.author.last_name }}</span>
                                 <span class="time">{{ msg.created_at.strftime('%H:%M %d.%m.%Y') }}</span>
-                                <br>{{ msg.text }}
+                                <br>
+                                <span class="message-text" data-raw="{{ msg.text }}">{{ msg.text }}</span>
                             </div>
                             {% else %}
                             <div class="text-muted text-center py-5">Сообщений пока нет</div>
                             {% endfor %}
                         </div>
-                        <form method="POST" action="{{ url_for('chat.send_message', project_id=project.id) }}">
-                            <div class="input-group">
-                                <input type="text" class="form-control" name="message" placeholder="Напишите сообщение..." required>
-                                <button class="btn btn-primary" type="submit">
-                                    <i class="bi bi-send-fill"></i> Отправить
-                                </button>
+
+                        <form method="POST" action="{{ url_for('chat.send_message', project_id=project.id) }}"
+                              id="chatForm" autocomplete="off">
+                            <div class="position-relative">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="message" id="chatMessageInput"
+                                           placeholder="Напишите сообщение... (введите @ чтобы упомянуть)"
+                                           required autocomplete="off">
+                                    <button class="btn btn-primary" type="submit">
+                                        <i class="bi bi-send-fill"></i> Отправить
+                                    </button>
+                                </div>
+
+                                {# ← Выпадающий список для @упоминаний #}
+                                <div id="mentionResults"
+                                     class="list-group position-absolute w-100 shadow-sm"
+                                     style="z-index: 1000; max-height: 300px; overflow-y: auto; display: none; bottom: 100%; margin-bottom: 6px; left: 0;">
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -1225,6 +1452,8 @@
 
     <!-- ПРАВАЯ КОЛОНКА -->
     <div class="col-md-4">
+
+        <!-- КОМАНДА ПРОЕКТА -->
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center py-2">
                 <span><i class="bi bi-people-fill"></i> Команда ({{ members|length }})</span>
@@ -1261,8 +1490,101 @@
                     </span>
                 </div>
                 {% endfor %}
+
+                {% if not members %}
+                <div class="text-muted small text-center py-3 fst-italic">
+                    В команде пока никого
+                </div>
+                {% endif %}
             </div>
         </div>
+
+        <!-- ГРУППА КОМПАНИЙ АМ СТАНКО -->
+        {% if am_stanko_members %}
+        <div class="card mb-3" style="border-left: 3px solid var(--am-stanko);">
+            <div class="card-header d-flex justify-content-between align-items-center py-2">
+                <span style="color: var(--am-stanko);">
+                    <i class="bi bi-people-fill"></i>
+                    Группа компаний АМ Станко ({{ am_stanko_members|length }})
+                </span>
+                {% if can_manage %}
+                <a href="{{ url_for('team.project_settings', project_id=project.id) }}"
+                   class="btn btn-sm btn-outline-secondary" title="Управление">
+                    <i class="bi bi-gear-fill" style="color: var(--am-stanko);"></i>
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% for m in am_stanko_members %}
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="flex-grow-1" style="min-width: 0;">
+                        <a href="{{ url_for('tasks.user_all_tasks', user_id=m.user.id) }}"
+                           class="text-decoration-none text-dark fw-bold small d-block">
+                            <i class="bi bi-person-circle"></i>
+                            {{ m.user.first_name }} {{ m.user.last_name }}
+                        </a>
+                        {% if m.user.company %}
+                        <div class="small text-muted ms-4">{{ m.user.company }}</div>
+                        {% endif %}
+                        {% if m.user.email %}
+                        <div class="small text-muted ms-4">
+                            <i class="bi bi-envelope"></i> {{ m.user.email }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <span class="badge
+                        {% if m.role_in_project == 'am_stanko_admin' %}bg-danger
+                        {% elif m.role_in_project == 'am_stanko_manager' %}bg-warning text-dark
+                        {% elif m.role_in_project == 'am_stanko_engineer' %}bg-info
+                        {% elif m.role_in_project == 'am_stanko_logistic' %}bg-success
+                        {% else %}bg-am-stanko{% endif %}">
+                        {{ m.role_display }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ГОСТИ ПРОЕКТА -->
+        {% if guests %}
+        <div class="card mb-3" style="border-left: 3px solid var(--info);">
+            <div class="card-header d-flex justify-content-between align-items-center py-2">
+                <span style="color: #0e7490;">
+                    <i class="bi bi-person-badge"></i>
+                    Гости проекта ({{ guests|length }})
+                </span>
+                {% if can_manage %}
+                <a href="{{ url_for('team.project_settings', project_id=project.id) }}"
+                   class="btn btn-sm btn-outline-secondary" title="Управление">
+                    <i class="bi bi-gear-fill" style="color: #0e7490;"></i>
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% for m in guests %}
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="flex-grow-1" style="min-width: 0;">
+                        <div class="text-dark fw-bold small">
+                            <i class="bi bi-person-circle"></i>
+                            {{ m.user.first_name }} {{ m.user.last_name }}
+                        </div>
+                        {% if m.user.company %}
+                        <div class="small text-muted ms-4">{{ m.user.company }}</div>
+                        {% endif %}
+                    </div>
+                    <span class="badge bg-guest">
+                        Гость
+                    </span>
+                </div>
+                {% endfor %}
+                <div class="small text-muted fst-italic mt-2">
+                    <i class="bi bi-info-circle"></i>
+                    Видят только назначенные на них задачи.
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -1378,6 +1700,15 @@
                                     {{ m.user.first_name }} {{ m.user.last_name }}
                                 </option>
                                 {% endfor %}
+                                {% if am_stanko_members %}
+                                <optgroup label="Группа компаний АМ Станко">
+                                    {% for m in am_stanko_members %}
+                                    <option value="{{ m.user.id }}" {% if todo.assigned_to == m.user.id %}selected{% endif %}>
+                                        {{ m.user.first_name }} {{ m.user.last_name }}
+                                    </option>
+                                    {% endfor %}
+                                </optgroup>
+                                {% endif %}
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -1402,7 +1733,7 @@
 {% endfor %}
 
 <!-- ============================================================ -->
-<!-- SCRIPTS (без изменений) -->
+<!-- SCRIPTS -->
 <!-- ============================================================ -->
 <script>
 let calendarInitialized = false;
@@ -1784,6 +2115,196 @@ function updateColorSelection(radio) {
     radio.parentElement.querySelector('.color-dot').classList.add('selected');
 }
 
+// ============================================================
+//  УПОМИНАНИЯ В ЧАТЕ (@Иван Иванов)
+// ============================================================
+(function() {
+    const projectId = {{ project.id }};
+    const input = document.getElementById('chatMessageInput');
+    const resultsBox = document.getElementById('mentionResults');
+
+    // ===== 1. АВТОКОМПЛИТ ПРИ ВВОДЕ @ =====
+    if (input && resultsBox) {
+        let activeIndex = -1;
+        let currentResults = [];
+        let mentionStartPos = -1;
+        let searchTimer = null;
+
+        input.addEventListener('input', function() {
+            const value = this.value;
+            const cursorPos = this.selectionStart;
+            const textBefore = value.substring(0, cursorPos);
+            const atIndex = textBefore.lastIndexOf('@');
+
+            if (atIndex === -1) { closeResults(); return; }
+
+            const afterAt = textBefore.substring(atIndex + 1);
+            if (!/^[а-яёa-z\s\-\.]*$/i.test(afterAt)) { closeResults(); return; }
+            if (afterAt.length > 40) { closeResults(); return; }
+
+            mentionStartPos = atIndex;
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => doSearch(afterAt.trim()), 150);
+        });
+
+        input.addEventListener('keydown', function(e) {
+            if (!resultsBox.style.display || resultsBox.style.display === 'none') return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeIndex = Math.min(activeIndex + 1, currentResults.length - 1);
+                updateActive();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeIndex = Math.max(activeIndex - 1, 0);
+                updateActive();
+            } else if (e.key === 'Enter' || e.key === 'Tab') {
+                if (activeIndex >= 0 && currentResults[activeIndex]) {
+                    e.preventDefault();
+                    pickUser(currentResults[activeIndex]);
+                }
+            } else if (e.key === 'Escape') {
+                closeResults();
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#chatForm')) closeResults();
+        });
+
+        function doSearch(q) {
+            fetch(`/project/${projectId}/api/mention/search?q=` + encodeURIComponent(q))
+                .then(r => r.json())
+                .then(data => {
+                    currentResults = data;
+                    activeIndex = data.length > 0 ? 0 : -1;
+                    render(data);
+                })
+                .catch(err => {
+                    console.error('Mention search error:', err);
+                    closeResults();
+                });
+        }
+
+        function render(results) {
+            if (!results.length) {
+                resultsBox.innerHTML = `<div class="list-group-item text-muted small py-2 text-center">Участники не найдены</div>`;
+                resultsBox.style.display = 'block';
+                return;
+            }
+
+            resultsBox.innerHTML = results.map((u, i) => `
+                <button type="button" class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2"
+                        data-index="${i}">
+                    <div class="mention-avatar">${escapeHtml((u.name || '?')[0].toUpperCase())}</div>
+                    <div class="flex-grow-1 text-start" style="min-width: 0;">
+                        <div class="fw-bold small">${escapeHtml(u.name)}</div>
+                        <div class="small text-muted text-truncate">
+                            ${escapeHtml(u.email)}
+                            ${u.role_display ? ' · ' + escapeHtml(u.role_display) : ''}
+                        </div>
+                    </div>
+                </button>
+            `).join('');
+
+            resultsBox.style.display = 'block';
+
+            resultsBox.querySelectorAll('button[data-index]').forEach((btn) => {
+                const idx = parseInt(btn.dataset.index, 10);
+                btn.addEventListener('click', () => pickUser(results[idx]));
+                btn.addEventListener('mouseenter', () => {
+                    activeIndex = idx;
+                    updateActive();
+                });
+            });
+
+            updateActive();
+        }
+
+        function pickUser(u) {
+            if (mentionStartPos === -1) return;
+            const value = input.value;
+            const cursorPos = input.selectionStart;
+            const before = value.substring(0, mentionStartPos);
+            const after = value.substring(cursorPos);
+            const insert = `@${u.name} `;
+            input.value = before + insert + after;
+            const newPos = before.length + insert.length;
+            input.setSelectionRange(newPos, newPos);
+            input.focus();
+            closeResults();
+            mentionStartPos = -1;
+        }
+
+        function updateActive() {
+            resultsBox.querySelectorAll('button[data-index]').forEach((btn) => {
+                const idx = parseInt(btn.dataset.index, 10);
+                btn.classList.toggle('active', idx === activeIndex);
+            });
+            const activeEl = resultsBox.querySelector('button.active');
+            if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
+        }
+
+        function closeResults() {
+            resultsBox.style.display = 'none';
+            resultsBox.innerHTML = '';
+            activeIndex = -1;
+            currentResults = [];
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str == null ? '' : String(str);
+            return div.innerHTML;
+        }
+    }
+
+    // ===== 2. ПОДСВЕТКА @УПОМИНАНИЙ В ОТПРАВЛЕННЫХ СООБЩЕНИЯХ =====
+    const mentionUsers = [
+        {% for m in members_for_filters %}
+        { id: {{ m.user.id }}, name: "{{ (m.user.first_name ~ ' ' ~ m.user.last_name)|e }}" },
+        {% endfor %}
+    ];
+
+    function escapeHtmlGlobal(str) {
+        const div = document.createElement('div');
+        div.textContent = str == null ? '' : String(str);
+        return div.innerHTML;
+    }
+
+    function highlightMentions(root) {
+        const nodes = (root || document).querySelectorAll('.message-text');
+        nodes.forEach(node => {
+            if (node.dataset.highlighted === '1') return;
+            const raw = node.dataset.raw || node.textContent;
+            let html = escapeHtmlGlobal(raw);
+
+            const sorted = [...mentionUsers].sort((a, b) => b.name.length - a.name.length);
+
+            sorted.forEach(u => {
+                const needle = '@' + u.name;
+                const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const re = new RegExp('(' + escaped + ')(?![\\wа-яё])', 'gi');
+                html = html.replace(re, (match) =>
+                    `<a href="/user/${u.id}/all-tasks" class="mention" target="_blank" title="Задачи: ${u.name}">${match}</a>`
+                );
+            });
+
+            node.innerHTML = html;
+            node.dataset.highlighted = '1';
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => highlightMentions());
+    } else {
+        highlightMentions();
+    }
+})();
+
+// ============================================================
+//  ИНИЦИАЛИЗАЦИЯ СТРАНИЦЫ
+// ============================================================
 document.addEventListener('DOMContentLoaded', function() {
     const params = new URLSearchParams(window.location.search);
     const hash = window.__initialHash || window.location.hash;
@@ -1825,4 +2346,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<style>
+.mention-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 11px;
+    flex-shrink: 0;
+}
+#mentionResults .list-group-item.active {
+    background: var(--accent-light);
+    color: var(--text-primary);
+    border-color: var(--border-light);
+}
+</style>
+
 {% endblock %}

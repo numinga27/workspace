@@ -69,12 +69,12 @@
     <div class="empty-state-icon">
         <i class="bi {{ page_icon }}"></i>
     </div>
-    <h5>{% if page_type == 'subcontractor' %}Субподрядчиков{% else %}Поставщиков{% endif %} пока нет</h5>
+<h5>{% if page_type == 'subcontractor' %}Субподрядчиков{% else %}Компаний группы{% endif %} пока нет</h5>
     <p>
         {% if page_type == 'subcontractor' %}
             Добавьте первого субподрядчика
         {% else %}
-            Добавьте первого поставщика
+            Добавьте первую компанию группы
         {% endif %}
     </p>
     <a href="{{ create_url }}" class="btn btn-primary">

@@ -1,8 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
 
-{# ← ПУНКТ 5 + ГОСТЬ: определяем режим #}
 {% set is_guest = is_guest_view|default(false) %}
+
+{# ← Определяем тип постановки через поля модели #}
+{% set task_from_privileged = task.is_from_privileged %}
+{% set task_from_admin = task.is_from_admin %}
+{% set task_from_supervisor = task.is_from_supervisor %}
 
 <div class="mb-3">
     {% if not is_guest %}
@@ -18,7 +22,6 @@
 </div>
 
 {% if is_guest %}
-<!-- Информация для гостя -->
 <div class="alert alert-info mb-3">
     <i class="bi bi-info-circle"></i>
     <strong>Вы — гость проекта.</strong>
@@ -32,12 +35,9 @@
     <!-- ЛЕВАЯ КОЛОНКА -->
     <!-- ============================================================ -->
     <div class="col-md-8">
-        <!-- ============================================ -->
-        <!-- ЗАГОЛОВОК И ОПИСАНИЕ -->
-        <!-- ============================================ -->
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
                     <h4 class="mb-0">{{ task.title }}</h4>
                     <span class="badge {% if task.status == 'completed' %}bg-success{% elif task.status == 'in_progress' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
                         {% if task.status == 'completed' %}✅ Завершена
@@ -51,7 +51,6 @@
                     {% endif %}
                 </div>
 
-                {# ← ПУНКТ 5: кнопка редактирования #}
                 {% if not is_guest and (can_manage or task.assigned_to == user.id) %}
                 <button type="button" class="btn btn-outline-secondary btn-sm"
                         data-bs-toggle="modal" data-bs-target="#editTaskModal">
@@ -59,9 +58,44 @@
                 </button>
                 {% endif %}
             </div>
+
+            {# ← Баннер «от админа/супервизора» #}
+            {% if task_from_privileged %}
+            <div class="px-3 pt-3">
+                <div class="d-flex align-items-center gap-2 p-2 rounded"
+                     style="background: {% if task_from_admin %}#fef2f2{% else %}#fffbeb{% endif %};
+                            border-left: 4px solid {% if task_from_admin %}#dc2626{% else %}#f59e0b{% endif %};">
+                    <i class="bi {% if task_from_admin %}bi-shield-fill-check{% else %}bi-eye-fill{% endif %} fs-4"
+                       style="color: {% if task_from_admin %}#dc2626{% else %}#f59e0b{% endif %};"></i>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold small"
+                             style="color: {% if task_from_admin %}#991b1b{% else %}#92400e{% endif %};">
+                            {% if task_from_admin %}
+                                Задача от администратора
+                            {% else %}
+                                Задача от супервизора
+                            {% endif %}
+                        </div>
+                        {% set poster = task.supervisor or task.task_creator %}
+                        {% if poster %}
+                        <div class="small"
+                             style="color: {% if task_from_admin %}#991b1b{% else %}#92400e{% endif %}; opacity: 0.8;">
+                            Поставил(а): <strong>{{ poster.first_name }} {{ poster.last_name }}</strong>
+                            {% if poster.role == 'admin' %}
+                                <span class="badge bg-danger ms-1" style="font-size: 9px;">Администратор</span>
+                            {% elif poster.role == 'supervisor' %}
+                                <span class="badge bg-warning text-dark ms-1" style="font-size: 9px;">Супервизор</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <div class="card-body">
                 {% if task.description %}
-                    <p class="mb-3">{{ task.description }}</p>
+                    <div style="white-space: pre-wrap;">{{ task.description }}</div>
                 {% else %}
                     <p class="mb-3 text-muted">Описание не указано</p>
                 {% endif %}
@@ -125,7 +159,6 @@
 
                 <hr>
 
-                <!-- Форма смены статуса -->
                 <form method="POST" action="{{ url_for('tasks.update_task_status', task_id=task.id) }}">
                     <div class="row g-2">
                         <div class="col-md-6">
@@ -148,9 +181,6 @@
             </div>
         </div>
 
-        <!-- ============================================ -->
-        <!-- КОММЕНТАРИЙ К ПРОСРОЧКЕ -->
-        <!-- ============================================ -->
         {% if task.is_overdue %}
         <div class="card mb-3" style="border-left: 4px solid var(--danger);">
             <div class="card-header" style="background: var(--danger-light);">
@@ -185,9 +215,6 @@
         </div>
         {% endif %}
 
-        <!-- ============================================ -->
-        <!-- ПОДЗАДАЧИ (скрыто для гостя) -->
-        <!-- ============================================ -->
         {% if not is_guest %}
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -200,7 +227,6 @@
                 {% endif %}
             </div>
             <div class="card-body">
-                <!-- Форма создания подзадачи -->
                 {% if can_manage %}
                 <div class="collapse mb-3" id="addSubtaskForm">
                     <div class="card">
@@ -262,7 +288,6 @@
                 </div>
                 {% endif %}
 
-                <!-- Список подзадач -->
                 {% for st in subtasks %}
                 <div class="border rounded p-2 mb-2 {% if st.status == 'completed' %}bg-success-subtle{% elif st.is_overdue %}bg-danger-subtle{% endif %}">
                     <div class="d-flex justify-content-between align-items-start">
@@ -306,7 +331,6 @@
                         </div>
                     </div>
 
-                    <!-- Комментарий к просроченной подзадаче -->
                     {% if st.is_overdue %}
                     <form method="POST" action="{{ url_for('tasks.update_task_comment', task_id=st.id) }}"
                           class="mt-2">
@@ -343,15 +367,11 @@
     <!-- ПРАВАЯ КОЛОНКА -->
     <!-- ============================================================ -->
     <div class="col-md-4">
-        <!-- ============================================ -->
-        <!-- ОТЧЁТ ПО ЗАДАЧЕ -->
-        <!-- ============================================ -->
         <div class="card mb-3">
             <div class="card-header">
                 <i class="bi bi-clipboard-data"></i> Отчёт по задаче
             </div>
             <div class="card-body">
-                <!-- 4 счётчика -->
                 <div class="row g-2 text-center mb-3">
                     <div class="col-6 col-md-3">
                         <div class="p-2 rounded" style="background: var(--bg-tertiary);">
@@ -379,7 +399,6 @@
                     </div>
                 </div>
 
-                <!-- Прогресс -->
                 {% if task_stats.total > 0 %}
                     {% set percent = (task_stats.done / task_stats.total * 100)|int %}
                     <div class="mb-2">
@@ -393,7 +412,6 @@
                     </div>
                 {% endif %}
 
-                <!-- Кнопка PDF (не для гостя) -->
                 {% if not is_guest %}
                 <a href="{{ url_for('pdf.task_report_pdf', task_id=task.id) }}"
                    class="btn btn-outline-secondary w-100 btn-sm mt-2">
@@ -403,9 +421,6 @@
             </div>
         </div>
 
-        <!-- ============================================ -->
-        <!-- ФАЙЛЫ ЗАДАЧИ -->
-        <!-- ============================================ -->
         <div class="card mb-3">
             <div class="card-header">
                 <i class="bi bi-paperclip"></i> Файлы задачи ({{ files|length }})
@@ -452,9 +467,6 @@
             </div>
         </div>
 
-        <!-- ============================================ -->
-        <!-- ПРОСРОЧЕННЫЕ ПОДЗАДАЧИ -->
-        <!-- ============================================ -->
         {% if not is_guest and task_stats.overdue_list %}
         <div class="card mb-3" style="border-left: 4px solid var(--danger);">
             <div class="card-header" style="background: var(--danger-light);">
@@ -492,9 +504,6 @@
         </div>
         {% endif %}
 
-        <!-- ============================================ -->
-        <!-- ИНФОРМАЦИЯ -->
-        <!-- ============================================ -->
         <div class="card">
             <div class="card-header">
                 <i class="bi bi-info-circle"></i> Информация
@@ -520,6 +529,22 @@
                     <strong>ID задачи:</strong> #{{ task.id }}
                 </p>
 
+                {# ← НОВОЕ: постановщик (от администратора/супервизора) #}
+                {% if task_from_privileged %}
+                    {% set poster = task.supervisor or task.task_creator %}
+                    {% if poster %}
+                    <p class="mb-1">
+                        <strong>Поставлена:</strong>
+                        {{ poster.first_name }} {{ poster.last_name }}
+                        {% if task_from_admin %}
+                            <span class="badge bg-danger" style="font-size: 9px;">Администратор</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark" style="font-size: 9px;">Супервизор</span>
+                        {% endif %}
+                    </p>
+                    {% endif %}
+                {% endif %}
+
                 {% if not is_guest and can_manage %}
                 <hr>
                 <form method="POST" action="{{ url_for('tasks.delete_task', task_id=task.id) }}"
@@ -535,7 +560,7 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- МОДАЛКА РЕДАКТИРОВАНИЯ ЗАДАЧИ (ПУНКТ 5) -->
+<!-- МОДАЛКА РЕДАКТИРОВАНИЯ ЗАДАЧИ -->
 <!-- ============================================================ -->
 {% if not is_guest and (can_manage or task.assigned_to == user.id) %}
 <div class="modal fade" id="editTaskModal" tabindex="-1" aria-hidden="true">

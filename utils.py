@@ -8,14 +8,31 @@ def utcnow():
 
 
 # ============================================================
+#  ПРОВЕРКА РОЛЕЙ ПОЛЬЗОВАТЕЛЯ
+# ============================================================
+
+def is_privileged(user):
+    """Админ ИЛИ супервизор — видят всё, могут всё.
+
+    Используется ВМЕСТО `user.role == 'admin'` во всём коде.
+    """
+    return user is not None and user.role in ('admin', 'supervisor')
+
+
+# ============================================================
 #  ДОСТУП К ПРОЕКТУ
 # ============================================================
 
 def check_project_access(project_id, allow_guest=True):
     """Проверяет доступ к проекту."""
     from models import User, ProjectMember
-    user = User.query.get(session['user_id'])
-    if user.role == 'admin':
+    user_id = session.get('user_id')
+    if not user_id:
+        return False
+    user = User.query.get(user_id)
+    if not user:
+        return False
+    if is_privileged(user):
         return True
 
     member = ProjectMember.query.filter_by(user_id=user.id, project_id=project_id).first()
@@ -36,8 +53,13 @@ def check_full_project_access(project_id):
 def get_user_role_in_project(project_id):
     """Возвращает роль пользователя в проекте."""
     from models import User, ProjectMember
-    user = User.query.get(session['user_id'])
-    if user.role == 'admin':
+    user_id = session.get('user_id')
+    if not user_id:
+        return None
+    user = User.query.get(user_id)
+    if not user:
+        return None
+    if is_privileged(user):
         return 'admin'
     member = ProjectMember.query.filter_by(user_id=user.id, project_id=project_id).first()
     return member.role_in_project if member else None
@@ -46,13 +68,18 @@ def get_user_role_in_project(project_id):
 def can_manage_project(project_id):
     """Может ли пользователь управлять проектом."""
     from models import User, ProjectMember
-    user = User.query.get(session['user_id'])
-    if user.role == 'admin':
+    user_id = session.get('user_id')
+    if not user_id:
+        return False
+    user = User.query.get(user_id)
+    if not user:
+        return False
+    if is_privileged(user):
         return True
     member = ProjectMember.query.filter_by(user_id=user.id, project_id=project_id).first()
     if not member or member.is_guest:
         return False
-    return member.role_in_project in ['admin', 'manager']
+    return member.is_manager
 
 
 def is_project_guest(user_id, project_id):
@@ -71,9 +98,10 @@ def is_project_guest(user_id, project_id):
 # ============================================================
 
 def get_user_projects(user):
-    """Возвращает список проектов пользователя (без гостевых)."""
+    """Возвращает список проектов пользователя (без гостевых).
+    Для админа и супервизора — все активные проекты."""
     from models import Project
-    if user.role == 'admin':
+    if is_privileged(user):
         return Project.query.filter_by(is_active=True).all()
     return [m.project for m in user.projects if not m.is_guest]
 
@@ -85,18 +113,12 @@ def get_user_projects(user):
 def get_available_companies(user):
     """Возвращает список уникальных названий филиалов компании,
     которые встречаются в проектах пользователя
-    + собственная компания пользователя (если указана).
-
-    Используется для:
-    - фильтра на дашборде
-    - datalist в формах создания/редактирования проекта
-    - группировки в сайдбаре
-    """
+    + собственная компания пользователя (если указана)."""
     from models import Project
 
     companies = set()
 
-    if user.role == 'admin':
+    if is_privileged(user):
         projects = Project.query.all()
     else:
         projects = [m.project for m in user.projects]
@@ -120,7 +142,7 @@ def get_available_customers(user):
     from models import Customer, Project
     from extensions import db
 
-    if user.role == 'admin':
+    if is_privileged(user):
         return Customer.query.order_by(Customer.name).all()
 
     my_customer_ids = set()
@@ -148,14 +170,13 @@ def get_available_suppliers(user):
     from models import Supplier, Project
     from extensions import db
 
-    if user.role == 'admin':
+    if is_privileged(user):
         return Supplier.query.order_by(Supplier.name).all()
 
     my_supplier_ids = set()
     for member in user.projects:
         if member.project.supplier_id:
             my_supplier_ids.add(member.project.supplier_id)
-        # ← НОВОЕ: учитываем many-to-many субподрядчиков
         for sub in member.project.subcontractors:
             my_supplier_ids.add(sub.id)
 
@@ -163,7 +184,6 @@ def get_available_suppliers(user):
     for (sid,) in db.session.query(Project.supplier_id)\
             .filter(Project.supplier_id.isnot(None)).all():
         bound_ids.add(sid)
-    # ← НОВОЕ: + все, кто привязан через M2M
     for (sid,) in db.session.execute(
         db.text('SELECT DISTINCT supplier_id FROM project_subcontractor')
     ).all():
@@ -175,14 +195,16 @@ def get_available_suppliers(user):
     return sorted(set(assigned) | set(unassigned), key=lambda s: s.name.lower())
 
 
-# ← НОВОЕ: отдельный хелпер для субподрядчиков (для форм проекта)
 def get_available_subcontractors(user):
-    """Возвращает список доступных субподрядчиков (только supplier_type='subcontractor').
-
-    Используется в формах создания/редактирования проекта.
-    """
+    """Возвращает список доступных субподрядчиков (только supplier_type='subcontractor')."""
     all_suppliers = get_available_suppliers(user)
     return [s for s in all_suppliers if s.supplier_type == 'subcontractor']
+
+
+def get_available_am_stanko_suppliers(user):
+    """Возвращает список компаний группы АМ Станко (supplier_type='supplier')."""
+    all_suppliers = get_available_suppliers(user)
+    return [s for s in all_suppliers if s.supplier_type == 'supplier']
 
 
 # ============================================================
@@ -240,16 +262,14 @@ def get_or_create_guest_user(contact_person):
     plain_password заполнен ТОЛЬКО если user только что создан —
     тогда его надо передать в письмо.
 
-    Пароль = email (Вариант A — простой).
+    Пароль = email.
     """
     from models import User
     from extensions import db
 
-    # Уже есть user — возвращаем без пароля
     if contact_person.user_id:
         return User.query.get(contact_person.user_id), None
 
-    # Юзер с таким email уже существует
     if contact_person.email:
         existing = User.query.filter_by(email=contact_person.email).first()
         if existing:
@@ -257,20 +277,23 @@ def get_or_create_guest_user(contact_person):
             db.session.commit()
             return existing, None
 
-    # Создаём нового
     email = contact_person.email or f'contact_{contact_person.id}@guest.local'
 
     parts = (contact_person.full_name or 'Гость').split()
     first_name = parts[0][:50] if parts else 'Гость'
     last_name = ' '.join(parts[1:])[:50] if len(parts) > 1 else '—'
 
-    # ← Пароль = email
     plain_password = email
+
+    company_name = 'Внешний'
+    if contact_person.belongs_to:
+        company_name = contact_person.belongs_to.name
+    company_name = (company_name or 'Внешний')[:100]
 
     user = User(
         first_name=first_name,
         last_name=last_name,
-        company=(contact_person.belongs_to.name if contact_person.belongs_to else 'Внешний')[:100],
+        company=company_name,
         email=email,
         role='user',
         is_active=True,
@@ -312,6 +335,154 @@ def add_guest_to_project(user_id, project_id, invited_by):
 
 
 # ============================================================
+#  СИНХРОНИЗАЦИЯ КОНТАКТОВ ПОСТАВЩИКОВ И СУБПОДРЯДЧИКОВ
+# ============================================================
+
+ROLE_AM_STANKO_DEFAULT = 'am_stanko_member'
+
+
+def is_am_stanko_member(user_id, project_id):
+    """Является ли пользователь членом группы АМ Станко в проекте."""
+    from models import ProjectMember
+    if not user_id:
+        return False
+    member = ProjectMember.query.filter_by(
+        user_id=user_id,
+        project_id=project_id,
+    ).first()
+    if not member:
+        return False
+    return member.is_am_stanko
+
+
+def sync_am_stanko_contacts(supplier, project_id, invited_by,
+                             role=ROLE_AM_STANKO_DEFAULT):
+    """Делает все контакты ПОСТАВЩИКА (Группа компаний АМ Станко)
+    полноценными участниками проекта (is_guest=False).
+
+    Роль по умолчанию — am_stanko_member.
+    Если member уже существует — не понижаем роль, если она из набора АМ Станко
+    (можно вручную повысить до am_stanko_admin / am_stanko_manager / ...).
+
+    Возвращает список (member, plain_password | None) — только что созданных.
+    """
+    from models import ProjectMember
+    from extensions import db
+
+    created = []
+
+    for contact in supplier.contacts:
+        user_obj, plain_password = get_or_create_guest_user(contact)
+
+        member = ProjectMember.query.filter_by(
+            user_id=user_obj.id,
+            project_id=project_id,
+        ).first()
+
+        if member:
+            changed = False
+            if member.is_guest:
+                member.is_guest = False
+                changed = True
+            if member.role_in_project not in ProjectMember.AM_STANKO_ROLES:
+                member.role_in_project = role
+                changed = True
+            if changed:
+                created.append((member, None))
+        else:
+            member = ProjectMember(
+                user_id=user_obj.id,
+                project_id=project_id,
+                role_in_project=role,
+                is_guest=False,
+            )
+            db.session.add(member)
+            created.append((member, plain_password))
+
+    db.session.commit()
+    return created
+
+
+def add_supplier_contacts_as_guests(supplier, project_id, invited_by,
+                                     role='member'):
+    """Делает все контакты СУБПОДРЯДЧИКА гостями проекта (is_guest=True).
+
+    Возвращает список (member, plain_password | None) — только что созданных.
+
+    Не понижает тех, кто уже участник АМ Станко.
+    """
+    from models import ProjectMember
+    from extensions import db
+
+    created = []
+
+    for contact in supplier.contacts:
+        user_obj, plain_password = get_or_create_guest_user(contact)
+
+        member = ProjectMember.query.filter_by(
+            user_id=user_obj.id,
+            project_id=project_id,
+        ).first()
+
+        if member:
+            if member.is_am_stanko:
+                continue
+            if member.is_guest:
+                continue
+            member.is_guest = True
+            member.role_in_project = role
+            created.append((member, None))
+        else:
+            member = ProjectMember(
+                user_id=user_obj.id,
+                project_id=project_id,
+                role_in_project=role,
+                is_guest=True,
+            )
+            db.session.add(member)
+            created.append((member, plain_password))
+
+    db.session.commit()
+    return created
+
+
+def remove_supplier_contacts_from_project(supplier, project_id,
+                                           keep_creator=True,
+                                           only_am_stanko=False):
+    """Убирает контакты поставщика из проекта.
+
+    only_am_stanko=True — удаляем только тех, у кого роль из AM_STANKO_ROLES.
+    only_am_stanko=False — удаляем всех, кроме создателя.
+
+    Возвращает количество удалённых ProjectMember.
+    """
+    from models import ProjectMember, Project
+    from extensions import db
+
+    project = Project.query.get(project_id)
+    if not project:
+        return 0
+
+    contact_user_ids = {c.user_id for c in supplier.contacts if c.user_id}
+    if not contact_user_ids:
+        return 0
+
+    if keep_creator and project.created_by in contact_user_ids:
+        contact_user_ids.discard(project.created_by)
+
+    query = ProjectMember.query.filter(
+        ProjectMember.project_id == project_id,
+        ProjectMember.user_id.in_(contact_user_ids),
+    )
+    if only_am_stanko:
+        query = query.filter(ProjectMember.role_in_project.in_(ProjectMember.AM_STANKO_ROLES))
+
+    removed = query.delete(synchronize_session=False)
+    db.session.commit()
+    return removed
+
+
+# ============================================================
 #  НЕПРОЧИТАННЫЕ СООБЩЕНИЯ
 # ============================================================
 
@@ -319,7 +490,7 @@ def get_unread_counts(user):
     """Возвращает словарь {project_id: count_unread}."""
     from models import MessageRead, Message, Project
 
-    if user.role == 'admin':
+    if is_privileged(user):
         projects = Project.query.filter_by(is_active=True).all()
     else:
         projects = [m.project for m in user.projects if not m.is_guest]
@@ -366,6 +537,103 @@ def mark_project_as_read(user_id, project_id):
         db.session.add(record)
 
     db.session.commit()
+
+# ============================================================
+#  УПОМИНАНИЯ В ЧАТЕ (@Иван Иванов)
+# ============================================================
+
+def get_project_mentionable_users(project_id):
+    """Возвращает список участников проекта, которых можно упомянуть через @.
+
+    Только команда проекта: своя + АМ Станко. Гости — исключены.
+    Возвращает список кортежей (user, member).
+    """
+    from models import ProjectMember
+    members = ProjectMember.query.filter_by(project_id=project_id).all()
+    result = []
+    seen = set()
+    for m in members:
+        if not m.user or m.is_guest:
+            continue
+        if not m.user.is_active:
+            continue
+        if m.user.id in seen:
+            continue
+        seen.add(m.user.id)
+        result.append((m.user, m))
+    # Сортируем по имени
+    result.sort(key=lambda t: (t[0].last_name.lower(), t[0].first_name.lower()))
+    return result
+
+
+def parse_mentions_in_text(text, project_id):
+    """Находит в тексте все @упоминания участников проекта.
+
+    Возвращает set() user_id тех, кого упомянули.
+    Логика: пробегаем по всем участникам проекта, ищем подстроку
+    '@Имя Фамилия' в тексте. Регистр учитываем через .lower().
+    """
+    if not text or '@' not in text:
+        return set()
+
+    mentionable = get_project_mentionable_users(project_id)
+    text_lower = text.lower()
+    found_ids = set()
+
+    for user, _member in mentionable:
+        full_name = f'{user.first_name} {user.last_name}'
+        needle = f'@{full_name}'.lower()
+        if needle in text_lower:
+            found_ids.add(user.id)
+
+    return found_ids
+
+
+def get_unread_mentions_count(user_id):
+    """Общее количество непрочитанных упоминаний пользователя."""
+    from models import MessageMention
+    if not user_id:
+        return 0
+    return MessageMention.query.filter_by(
+        user_id=user_id, is_read=False
+    ).count()
+
+
+def get_unread_mentions_by_project(user_id):
+    """Словарь {project_id: count} непрочитанных упоминаний."""
+    from models import MessageMention
+    from extensions import db
+    from sqlalchemy import func
+
+    if not user_id:
+        return {}
+
+    rows = db.session.query(
+        MessageMention.project_id,
+        func.count(MessageMention.id)
+    ).filter(
+        MessageMention.user_id == user_id,
+        MessageMention.is_read == False,  # noqa: E712
+    ).group_by(MessageMention.project_id).all()
+
+    return {pid: cnt for pid, cnt in rows}
+
+
+def mark_mentions_as_read(user_id, project_id):
+    """Помечает все упоминания пользователя в проекте как прочитанные."""
+    from models import MessageMention
+    from extensions import db
+
+    if not user_id or not project_id:
+        return 0
+
+    updated = MessageMention.query.filter_by(
+        user_id=user_id,
+        project_id=project_id,
+        is_read=False,
+    ).update({'is_read': True}, synchronize_session=False)
+    db.session.commit()
+    return updated
 
 
 # ============================================================

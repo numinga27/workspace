@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1">
+            <i class="bi bi-at"></i> Мои упоминания
+        </h2>
+        <p class="text-muted mb-0">
+            Сообщения, где вас упомянули через <code>@Имя Фамилия</code>
+            {% if total_unread and total_unread.values()|sum > 0 %}
+                · <span class="badge bg-primary">
+                    {{ total_unread.values()|sum }} новых
+                </span>
+            {% endif %}
+        </p>
+    </div>
+
+    {# ← Кнопка «Отметить всё прочитанным» — только если есть непрочитанные #}
+    {% if total_unread and total_unread.values()|sum > 0 %}
+    <form method="POST" action="{{ url_for('chat.my_mentions_mark_all_read') }}" class="d-inline">
+        <button type="submit" class="btn btn-outline-primary">
+            <i class="bi bi-check-all"></i> Отметить всё прочитанным
+        </button>
+    </form>
+    {% endif %}
+</div>
+
+{% if grouped_projects %}
+    {% for project_id, group in grouped_projects %}
+    {% set project = group.project %}
+    <div class="card mb-3"
+         {% if group.unread_count > 0 %}
+         style="border-left: 3px solid var(--accent);"
+         {% endif %}>
+        <div class="card-header py-2 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <i class="bi bi-folder-fill text-warning"></i>
+                {% if project %}
+                    <a href="{{ url_for('projects.view_project', project_id=project.id) }}?mark_read=1#chat"
+                       class="text-decoration-none fw-bold"
+                       style="color: var(--text-primary);">
+                        {{ project.name }}
+                    </a>
+                    {% if project.company_ref %}
+                    <span class="badge text-white"
+                          style="background: {{ project.company_ref.color_hex }}; font-size: 9px;">
+                        <i class="bi bi-building"></i> {{ project.company_ref.name }}
+                    </span>
+                    {% elif project.company_name %}
+                    <span class="badge text-white"
+                          style="background: {{ project.company_color }}; font-size: 9px;">
+                        <i class="bi bi-building"></i> {{ project.company_name }}
+                    </span>
+                    {% endif %}
+                {% else %}
+                    <span class="text-muted fst-italic">Проект удалён</span>
+                {% endif %}
+
+                {% if group.unread_count > 0 %}
+                <span class="badge bg-primary" style="font-size: 10px;">
+                    {{ group.unread_count }} новых
+                </span>
+                {% endif %}
+            </div>
+            {% if project %}
+            <a href="{{ url_for('projects.view_project', project_id=project.id) }}?mark_read=1#chat"
+               class="btn btn-sm btn-outline-secondary"
+               title="Перейти в чат проекта">
+                <i class="bi bi-arrow-right"></i> В чат
+            </a>
+            {% endif %}
+        </div>
+        <div class="card-body p-0">
+            <ul class="list-group list-group-flush">
+                {% for mention in group.mentions %}
+                {% set msg = mention.message %}
+                {% set author = authors.get(msg.user_id) if msg else None %}
+                <li class="list-group-item py-3 {% if not mention.is_read %}bg-info-subtle{% endif %}">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="mention-avatar-lg
+                            {% if not mention.is_read %}mention-avatar-unread{% endif %}">
+                            {% if author %}
+                                {{ author.first_name[0]|upper }}{{ author.last_name[0]|upper }}
+                            {% else %}
+                                ?
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1" style="min-width: 0;">
+                            <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                                <div>
+                                    <strong>
+                                        {% if author %}
+                                            {{ author.first_name }} {{ author.last_name }}
+                                        {% else %}
+                                            Неизвестный автор
+                                        {% endif %}
+                                    </strong>
+                                    {% if author and author.role == 'admin' %}
+                                        <span class="badge bg-danger" style="font-size: 9px;">Администратор</span>
+                                    {% elif author and author.role == 'supervisor' %}
+                                        <span class="badge bg-warning text-dark" style="font-size: 9px;">Супервизор</span>
+                                    {% endif %}
+                                    {% if not mention.is_read %}
+                                        <span class="badge bg-primary ms-2" style="font-size: 9px;">новое</span>
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted text-nowrap">
+                                    <i class="bi bi-clock"></i>
+                                    {{ mention.created_at.strftime('%d.%m.%Y %H:%M') }}
+                                </small>
+                            </div>
+                            <div class="mt-2 p-2 rounded"
+                                 style="background: var(--bg-tertiary); white-space: pre-wrap; font-size: 13.5px; word-break: break-word;">
+                                {% if msg %}
+                                    {{ msg.text }}
+                                {% else %}
+                                    <span class="text-muted fst-italic">Сообщение удалено</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">
+        <i class="bi bi-at"></i>
+    </div>
+    <h5>Упоминаний пока нет</h5>
+    <p>
+        Когда кто-то напишет в чате <code>@Ваше Имя</code> — упоминание появится здесь.
+    </p>
+    <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> К дашборду
+    </a>
+</div>
+{% endif %}
+
+<style>
+.mention-avatar-lg {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+.mention-avatar-unread {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+</style>
+
+{% endblock %}

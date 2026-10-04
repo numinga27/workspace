@@ -26,33 +26,56 @@
         </div>
 
         <!-- ============================================================ -->
-        <!-- ФОРМА ПРИГЛАШЕНИЯ -->
+        <!-- ФОРМА ПРИГЛАШЕНИЯ (автокомплит) -->
         <!-- ============================================================ -->
         <div class="card mb-4">
-            <div class="card-header py-2">
-                <i class="bi bi-person-plus-fill text-primary"></i> Пригласить в проект
+            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                <span>
+                    <i class="bi bi-person-plus-fill text-primary"></i> Пригласить в проект
+                </span>
+                <small class="text-muted">
+                    Кликните на поле — увидите всех зарегистрированных
+                </small>
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ url_for('team.invite_user', project_id=project.id) }}">
+                <form method="POST" action="{{ url_for('team.invite_user', project_id=project.id) }}" id="inviteForm">
                     <div class="row g-2">
-                        <div class="col-md-6">
-                            <label class="form-label small">Email *</label>
-                            <input type="email" name="email" class="form-control"
-                                   placeholder="ivanov@example.com"
+                        <div class="col-md-6 position-relative">
+                            <label class="form-label small">Пользователь / Email *</label>
+                            <input type="text" name="email" id="inviteUserInput"
+                                   class="form-control"
+                                   placeholder="Кликните или начните вводить имя / email / компанию..."
                                    autocomplete="off" required>
+
+                            {# Выпадающий список #}
+                            <div id="inviteUserResults"
+                                 class="list-group position-absolute w-100 shadow-sm"
+                                 style="z-index: 1000; max-height: 360px; overflow-y: auto; display: none; top: 100%; left: 0;">
+                            </div>
+
                             <small class="text-muted">
-                                Если у человека есть аккаунт — добавится сразу.
-                                Если нет — получите ссылку-приглашение.
+                                <i class="bi bi-info-circle"></i>
+                                <strong>Из списка</strong> — если аккаунт уже есть, добавится сразу.
+                                <strong>Вручную</strong> — если нет, будет создана ссылка-приглашение.
                             </small>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small">Роль в проекте</label>
                             <select name="role" class="form-select">
-                                <option value="admin">Руководитель проекта</option>
-                                <option value="manager">Менеджер</option>
-                                <option value="chief_engineer">Главный инженер</option>
-                                <option value="logistic">Логистик</option>
-                                <option value="member" selected>Участник</option>
+                                <optgroup label="Команда проекта">
+                                    <option value="admin">Руководитель проекта</option>
+                                    <option value="manager">Менеджер</option>
+                                    <option value="chief_engineer">Главный инженер</option>
+                                    <option value="logistic">Логистик</option>
+                                    <option value="member" selected>Участник</option>
+                                </optgroup>
+                                <optgroup label="Группа компаний АМ Станко">
+                                    <option value="am_stanko_admin">АМ Станко · Руководитель</option>
+                                    <option value="am_stanko_manager">АМ Станко · Менеджер</option>
+                                    <option value="am_stanko_engineer">АМ Станко · Гл. инженер</option>
+                                    <option value="am_stanko_logistic">АМ Станко · Логистик</option>
+                                    <option value="am_stanko_member">АМ Станко · Участник</option>
+                                </optgroup>
                             </select>
                         </div>
                         <div class="col-md-3 d-flex align-items-end">
@@ -93,7 +116,12 @@
                                         'manager': 'Менеджер',
                                         'chief_engineer': 'Главный инженер',
                                         'logistic': 'Логистик',
-                                        'member': 'Участник'
+                                        'member': 'Участник',
+                                        'am_stanko_admin': 'АМ Станко · Руководитель',
+                                        'am_stanko_manager': 'АМ Станко · Менеджер',
+                                        'am_stanko_engineer': 'АМ Станко · Гл. инженер',
+                                        'am_stanko_logistic': 'АМ Станко · Логистик',
+                                        'am_stanko_member': 'АМ Станко · Участник',
                                     }.get(inv.role, inv.role) }}
                                     · до {{ inv.expires_at.strftime('%d.%m.%Y %H:%M') }}
                                     · создано {{ inv.created_at.strftime('%d.%m.%Y %H:%M') }}
@@ -131,13 +159,13 @@
         {% endif %}
 
         <!-- ============================================================ -->
-        <!-- УЧАСТНИКИ ПРОЕКТА -->
+        <!-- КОМАНДА ПРОЕКТА -->
         <!-- ============================================================ -->
-        <div class="card">
+        <div class="card mb-4">
             <div class="card-header py-2 d-flex justify-content-between align-items-center">
                 <span>
                     <i class="bi bi-people"></i>
-                    Участники ({{ members|length }})
+                    Команда проекта ({{ members|length }})
                 </span>
             </div>
             <div class="card-body p-0">
@@ -146,7 +174,7 @@
                         <tr>
                             <th>Имя</th>
                             <th style="width: 180px;">Email</th>
-                            <th style="width: 180px;">Роль</th>
+                            <th style="width: 220px;">Роль</th>
                             <th style="width: 100px;" class="text-end">Действия</th>
                         </tr>
                     </thead>
@@ -164,8 +192,118 @@
                                             {% if m.user.id == project.created_by %}
                                             <span class="badge bg-primary" style="font-size: 9px;">Создатель</span>
                                             {% endif %}
-                                            {% if m.is_guest %}
-                                            <span class="badge bg-guest" style="font-size: 9px;">Гость</span>
+                                        </div>
+                                        {% if m.user.company %}
+                                        <div class="small text-muted">{{ m.user.company }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ m.user.email }}</small>
+                            </td>
+                            <td>
+                                {% if m.user.id == project.created_by %}
+                                    <span class="badge
+                                        {% if m.role_in_project == 'admin' %}bg-danger
+                                        {% elif m.role_in_project == 'manager' %}bg-warning text-dark
+                                        {% elif m.role_in_project == 'chief_engineer' %}bg-info
+                                        {% elif m.role_in_project == 'logistic' %}bg-success
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ m.role_display }}
+                                    </span>
+                                {% else %}
+                                    <form method="POST"
+                                          action="{{ url_for('team.change_member_role', project_id=project.id, member_id=m.id) }}">
+                                        <select name="role" class="form-select form-select-sm"
+                                                onchange="this.form.submit()">
+                                            <optgroup label="Команда проекта">
+                                                <option value="admin" {% if m.role_in_project == 'admin' %}selected{% endif %}>Руководитель проекта</option>
+                                                <option value="manager" {% if m.role_in_project == 'manager' %}selected{% endif %}>Менеджер</option>
+                                                <option value="chief_engineer" {% if m.role_in_project == 'chief_engineer' %}selected{% endif %}>Главный инженер</option>
+                                                <option value="logistic" {% if m.role_in_project == 'logistic' %}selected{% endif %}>Логистик</option>
+                                                <option value="member" {% if m.role_in_project == 'member' %}selected{% endif %}>Участник</option>
+                                            </optgroup>
+                                            <optgroup label="Перевести в АМ Станко">
+                                                <option value="am_stanko_admin" {% if m.role_in_project == 'am_stanko_admin' %}selected{% endif %}>АМ Станко · Руководитель</option>
+                                                <option value="am_stanko_manager" {% if m.role_in_project == 'am_stanko_manager' %}selected{% endif %}>АМ Станко · Менеджер</option>
+                                                <option value="am_stanko_engineer" {% if m.role_in_project == 'am_stanko_engineer' %}selected{% endif %}>АМ Станко · Гл. инженер</option>
+                                                <option value="am_stanko_logistic" {% if m.role_in_project == 'am_stanko_logistic' %}selected{% endif %}>АМ Станко · Логистик</option>
+                                                <option value="am_stanko_member" {% if m.role_in_project == 'am_stanko_member' %}selected{% endif %}>АМ Станко · Участник</option>
+                                            </optgroup>
+                                        </select>
+                                    </form>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if m.user.id != project.created_by %}
+                                <form method="POST"
+                                      action="{{ url_for('team.remove_member', project_id=project.id, member_id=m.id) }}"
+                                      onsubmit="return confirm('Удалить {{ m.user.first_name }} {{ m.user.last_name }} из проекта?');"
+                                      class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                            style="width: 32px; height: 32px; padding: 0;"
+                                            title="Удалить из проекта">
+                                        <i class="bi bi-trash-fill text-danger"></i>
+                                    </button>
+                                </form>
+                                {% else %}
+                                <span class="text-muted small fst-italic">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                        {% if not members %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4 fst-italic">
+                                Пока в команде только создатель проекта
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- ГРУППА КОМПАНИЙ АМ СТАНКО -->
+        <!-- ============================================================ -->
+        {% if am_stanko_members %}
+        <div class="card mb-4" style="border-left: 3px solid var(--am-stanko);">
+            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                <span style="color: var(--am-stanko);">
+                    <i class="bi bi-people-fill"></i>
+                    Группа компаний АМ Станко ({{ am_stanko_members|length }})
+                </span>
+                <small class="text-muted">
+                    Добавляются автоматически из контактов поставщика
+                </small>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Имя</th>
+                            <th style="width: 180px;">Email</th>
+                            <th style="width: 240px;">Роль</th>
+                            <th style="width: 100px;" class="text-end">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in am_stanko_members %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="avatar-small"
+                                         style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
+                                        {{ m.user.first_name[0]|upper }}{{ m.user.last_name[0]|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">
+                                            {{ m.user.first_name }} {{ m.user.last_name }}
+                                            {% if m.user.id == project.created_by %}
+                                            <span class="badge bg-primary" style="font-size: 9px;">Создатель</span>
                                             {% endif %}
                                         </div>
                                         {% if m.user.company %}
@@ -178,26 +316,27 @@
                                 <small class="text-muted">{{ m.user.email }}</small>
                             </td>
                             <td>
-                                {% if m.user.id == project.created_by or m.is_guest %}
-                                    <span class="badge
-                                        {% if m.role_in_project == 'admin' %}bg-danger
-                                        {% elif m.role_in_project == 'manager' %}bg-warning text-dark
-                                        {% elif m.role_in_project == 'chief_engineer' %}bg-info
-                                        {% elif m.role_in_project == 'logistic' %}bg-success
-                                        {% else %}bg-secondary{% endif %}">
-                                        {{ m.role_display }}
-                                    </span>
+                                {% if m.user.id == project.created_by %}
+                                    <span class="badge bg-primary">{{ m.role_display }}</span>
                                 {% else %}
                                     <form method="POST"
-                                          action="{{ url_for('team.change_member_role', project_id=project.id, member_id=m.id) }}"
-                                          class="d-flex gap-1">
+                                          action="{{ url_for('team.change_member_role', project_id=project.id, member_id=m.id) }}">
                                         <select name="role" class="form-select form-select-sm"
                                                 onchange="this.form.submit()">
-                                            <option value="admin" {% if m.role_in_project == 'admin' %}selected{% endif %}>Руководитель</option>
-                                            <option value="manager" {% if m.role_in_project == 'manager' %}selected{% endif %}>Менеджер</option>
-                                            <option value="chief_engineer" {% if m.role_in_project == 'chief_engineer' %}selected{% endif %}>Гл. инженер</option>
-                                            <option value="logistic" {% if m.role_in_project == 'logistic' %}selected{% endif %}>Логистик</option>
-                                            <option value="member" {% if m.role_in_project == 'member' %}selected{% endif %}>Участник</option>
+                                            <optgroup label="АМ Станко">
+                                                <option value="am_stanko_admin" {% if m.role_in_project == 'am_stanko_admin' %}selected{% endif %}>АМ Станко · Руководитель</option>
+                                                <option value="am_stanko_manager" {% if m.role_in_project == 'am_stanko_manager' %}selected{% endif %}>АМ Станко · Менеджер</option>
+                                                <option value="am_stanko_engineer" {% if m.role_in_project == 'am_stanko_engineer' %}selected{% endif %}>АМ Станко · Гл. инженер</option>
+                                                <option value="am_stanko_logistic" {% if m.role_in_project == 'am_stanko_logistic' %}selected{% endif %}>АМ Станко · Логистик</option>
+                                                <option value="am_stanko_member" {% if m.role_in_project == 'am_stanko_member' %}selected{% endif %}>АМ Станко · Участник</option>
+                                            </optgroup>
+                                            <optgroup label="Перевести в команду проекта">
+                                                <option value="admin" {% if m.role_in_project == 'admin' %}selected{% endif %}>Руководитель проекта</option>
+                                                <option value="manager" {% if m.role_in_project == 'manager' %}selected{% endif %}>Менеджер</option>
+                                                <option value="chief_engineer" {% if m.role_in_project == 'chief_engineer' %}selected{% endif %}>Главный инженер</option>
+                                                <option value="logistic" {% if m.role_in_project == 'logistic' %}selected{% endif %}>Логистик</option>
+                                                <option value="member" {% if m.role_in_project == 'member' %}selected{% endif %}>Участник</option>
+                                            </optgroup>
                                         </select>
                                     </form>
                                 {% endif %}
@@ -224,6 +363,78 @@
                 </table>
             </div>
         </div>
+        {% endif %}
+
+        <!-- ============================================================ -->
+        <!-- ГОСТИ ПРОЕКТА -->
+        <!-- ============================================================ -->
+        {% if guests %}
+        <div class="card mb-4" style="border-left: 3px solid var(--info);">
+            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                <span style="color: #0e7490;">
+                    <i class="bi bi-person-badge"></i>
+                    Гости проекта ({{ guests|length }})
+                </span>
+                <small class="text-muted">
+                    Контакты субподрядчиков и заказчиков
+                </small>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Имя</th>
+                            <th style="width: 220px;">Email</th>
+                            <th style="width: 200px;">Компания</th>
+                            <th style="width: 100px;" class="text-end">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in guests %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="avatar-small"
+                                         style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                        {{ m.user.first_name[0]|upper }}{{ m.user.last_name[0]|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">
+                                            {{ m.user.first_name }} {{ m.user.last_name }}
+                                            <span class="badge bg-guest" style="font-size: 9px;">Гость</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ m.user.email }}</small>
+                            </td>
+                            <td>
+                                {% if m.user.company %}
+                                    <small>{{ m.user.company }}</small>
+                                {% else %}
+                                    <span class="text-muted small fst-italic">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <form method="POST"
+                                      action="{{ url_for('team.remove_member', project_id=project.id, member_id=m.id) }}"
+                                      onsubmit="return confirm('Удалить {{ m.user.first_name }} {{ m.user.last_name }} из проекта?');"
+                                      class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                            style="width: 32px; height: 32px; padding: 0;"
+                                            title="Удалить из проекта">
+                                        <i class="bi bi-trash-fill text-danger"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- ============================================================ -->
         <!-- ИНФО -->
@@ -232,10 +443,12 @@
             <i class="bi bi-info-circle"></i>
             <strong>Как это работает:</strong>
             <ul class="mb-0 mt-1 ps-3">
-                <li>Если у человека <strong>уже есть аккаунт</strong> в системе — он добавляется в проект сразу.</li>
-                <li>Если аккаунта нет — создаётся <strong>ссылка-приглашение</strong>. Скопируйте её и передайте человеку любым способом (мессенджер, email, SMS).</li>
-                <li>По ссылке человек зарегистрируется и автоматически станет участником проекта с указанной ролью.</li>
-                <li>Ссылка действует <strong>7 дней</strong>, после чего нужно создать новую.</li>
+                <li>Если у человека <strong>уже есть аккаунт</strong> — он добавляется в проект сразу.</li>
+                <li>Если аккаунта нет — создаётся <strong>ссылка-приглашение</strong>. Скопируйте её и передайте любым способом.</li>
+                <li><strong>Команда проекта</strong> — сотрудники вашей компании. Роли: руководитель, менеджер, главный инженер, логистик, участник.</li>
+                <li><strong>Группа компаний АМ Станко</strong> — сотрудники одноимённого поставщика. Добавляются автоматически из контактов.</li>
+                <li>Руководитель и менеджер (в том числе АМ Станко) могут управлять проектом, создавать задачи и вехи.</li>
+                <li><strong>Гости проекта</strong> — контакты субподрядчиков и заказчиков, назначенные на конкретные задачи. Видят только свои задачи.</li>
             </ul>
         </div>
 
@@ -256,6 +469,33 @@
     font-size: 12px;
     flex-shrink: 0;
 }
+.avatar-mini {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 11px;
+    flex-shrink: 0;
+}
+#inviteUserResults .list-group-item {
+    border-left: none;
+    border-right: none;
+    cursor: pointer;
+    padding: 8px 12px;
+}
+#inviteUserResults .list-group-item:first-child {
+    border-top: 1px solid var(--border-light);
+}
+#inviteUserResults .list-group-item.active {
+    background: var(--accent-light);
+    color: var(--text-primary);
+    border-color: var(--border-light);
+}
 </style>
 
 <script>
@@ -274,6 +514,159 @@ function copyToClipboard(text, btn) {
         alert('Не удалось скопировать. Выделите текст вручную.');
     });
 }
+
+// ============================================================
+//  АВТОКОМПЛИТ ПОЛЬЗОВАТЕЛЕЙ
+// ============================================================
+(function() {
+    const input = document.getElementById('inviteUserInput');
+    const resultsBox = document.getElementById('inviteUserResults');
+    if (!input || !resultsBox) return;
+
+    // ← Уже добавленные в проект — их не показываем
+    const existingEmails = new Set([
+        {% for m in members %}'{{ m.user.email|lower }}',{% endfor %}
+        {% for m in am_stanko_members %}'{{ m.user.email|lower }}',{% endfor %}
+        {% for m in guests %}'{{ m.user.email|lower }}',{% endfor %}
+    ]);
+
+    let timer = null;
+    let activeIndex = -1;
+    let currentResults = [];
+
+    // ← Показ списка при фокусе (без ввода)
+    input.addEventListener('focus', function() {
+        if (!this.value.trim()) {
+            doSearch('');  // пустой запрос → первые 20
+        }
+    });
+
+    // ← Поиск при вводе
+    input.addEventListener('input', function() {
+        const q = this.value.trim();
+        clearTimeout(timer);
+        timer = setTimeout(() => doSearch(q), 220);
+    });
+
+    input.addEventListener('keydown', function(e) {
+        if (!resultsBox.style.display || resultsBox.style.display === 'none') return;
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            activeIndex = Math.min(activeIndex + 1, currentResults.length - 1);
+            updateActive();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            activeIndex = Math.max(activeIndex - 1, 0);
+            updateActive();
+        } else if (e.key === 'Enter') {
+            if (activeIndex >= 0 && currentResults[activeIndex]) {
+                e.preventDefault();
+                pickUser(currentResults[activeIndex]);
+            }
+        } else if (e.key === 'Escape') {
+            closeResults();
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#inviteUserInput') && !e.target.closest('#inviteUserResults')) {
+            closeResults();
+        }
+    });
+
+    function doSearch(q) {
+        // Если запрос короткий — всё равно шлём, потому что нужно показать "первые 20"
+        const url = '/admin/api/users/search?limit=20' + (q ? '&q=' + encodeURIComponent(q) : '');
+        fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                // ← Отфильтровываем тех, кто уже в проекте
+                const filtered = data.filter(u => !existingEmails.has(u.email.toLowerCase()));
+                currentResults = filtered;
+                activeIndex = -1;
+                render(filtered, q);
+            })
+            .catch(err => {
+                console.error('Search error:', err);
+                closeResults();
+            });
+    }
+
+    function render(results, query) {
+        if (!results.length) {
+            resultsBox.innerHTML = `
+                <div class="list-group-item text-muted small py-3 text-center">
+                    <i class="bi bi-search"></i> ${query ? 'Ничего не найдено' : 'Нет доступных пользователей'}.
+                    <br>${query ? 'Можно ввести email вручную и пригласить по ссылке.' : ''}
+                </div>`;
+            resultsBox.style.display = 'block';
+            return;
+        }
+
+        let html = '';
+        if (!query) {
+            html += `<div class="list-group-item bg-light small text-muted py-1 px-3" style="cursor: default;">
+                <i class="bi bi-people"></i> Первые ${results.length} зарегистрированных (без участников проекта)
+            </div>`;
+        }
+
+        html += results.map((u, i) => `
+            <button type="button" class="list-group-item list-group-item-action d-flex align-items-center gap-2"
+                    data-index="${i}" data-email="${escapeHtml(u.email)}">
+                <div class="avatar-mini">${escapeHtml((u.name || '?')[0].toUpperCase())}</div>
+                <div class="flex-grow-1 text-start" style="min-width: 0;">
+                    <div class="fw-bold small">${escapeHtml(u.name)}</div>
+                    <div class="small text-muted text-truncate">
+                        ${escapeHtml(u.email)}
+                        ${u.company ? ' · ' + escapeHtml(u.company) : ''}
+                    </div>
+                </div>
+                <span class="badge bg-secondary" style="font-size: 9px;">
+                    ${escapeHtml(u.role_display)}
+                </span>
+            </button>
+        `).join('');
+
+        resultsBox.innerHTML = html;
+        resultsBox.style.display = 'block';
+
+        resultsBox.querySelectorAll('button[data-email]').forEach((btn) => {
+            const idx = parseInt(btn.dataset.index, 10);
+            btn.addEventListener('click', () => pickUser(results[idx]));
+            btn.addEventListener('mouseenter', () => {
+                activeIndex = idx;
+                updateActive();
+            });
+        });
+    }
+
+    function pickUser(u) {
+        input.value = u.email;
+        closeResults();
+        input.focus();
+    }
+
+    function updateActive() {
+        resultsBox.querySelectorAll('button[data-email]').forEach((el) => {
+            el.classList.toggle('active', parseInt(el.dataset.index, 10) === activeIndex);
+        });
+        const activeEl = resultsBox.querySelector('button.active');
+        if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
+    }
+
+    function closeResults() {
+        resultsBox.style.display = 'none';
+        resultsBox.innerHTML = '';
+        activeIndex = -1;
+        currentResults = [];
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str == null ? '' : String(str);
+        return div.innerHTML;
+    }
+})();
 </script>
 
 {% endblock %}
