@@ -20,13 +20,17 @@ def users_list():
     """Список всех пользователей с фильтрами и поиском."""
     current_user = User.query.get(session['user_id'])
 
+    # --- Параметры фильтров ---
     q = request.args.get('q', '').strip()
     role_filter = request.args.get('role', '')
     status_filter = request.args.get('status', '')
     sort = request.args.get('sort', 'newest')
+    project_filter = request.args.get('project', '')
+    project_mode = request.args.get('project_mode', 'not_in')
 
     query = User.query
 
+    # Поиск
     if q:
         like = f'%{q}%'
         query = query.filter(
@@ -38,14 +42,33 @@ def users_list():
             )
         )
 
+    # Фильтр по роли
     if role_filter in ('admin', 'supervisor', 'user'):
         query = query.filter(User.role == role_filter)
 
+    # Фильтр по активности
     if status_filter == 'active':
         query = query.filter(User.is_active.is_(True))
     elif status_filter == 'inactive':
         query = query.filter(User.is_active.is_(False))
 
+    # Фильтр по проекту
+    if project_filter:
+        try:
+            pid = int(project_filter)
+            member_user_ids = [
+                m.user_id for m in ProjectMember.query.filter_by(project_id=pid).all()
+            ]
+
+            if project_mode == 'in':
+                query = query.filter(User.id.in_(member_user_ids))
+            else:
+                if member_user_ids:
+                    query = query.filter(~User.id.in_(member_user_ids))
+        except ValueError:
+            pass
+
+    # Сортировка
     if sort == 'oldest':
         query = query.order_by(User.created_at.asc())
     elif sort == 'name':
@@ -57,6 +80,7 @@ def users_list():
 
     users = query.all()
 
+    # Статистика (общая, без учёта фильтров)
     stats = {
         'total': User.query.count(),
         'admins': User.query.filter_by(role='admin').count(),
@@ -64,6 +88,18 @@ def users_list():
         'regular': User.query.filter_by(role='user').count(),
         'inactive': User.query.filter_by(is_active=False).count(),
     }
+
+    # Список активных проектов для селекта
+    all_projects = Project.query.filter_by(is_active=True)\
+        .order_by(Project.name.asc()).all()
+
+    # Инфа о выбранном проекте
+    selected_project = None
+    if project_filter:
+        try:
+            selected_project = Project.query.get(int(project_filter))
+        except ValueError:
+            selected_project = None
 
     return render_template('admin/users.html',
                            user=current_user,
@@ -73,6 +109,10 @@ def users_list():
                            role_filter=role_filter,
                            status_filter=status_filter,
                            sort=sort,
+                           project_filter=project_filter,
+                           project_mode=project_mode,
+                           all_projects=all_projects,
+                           selected_project=selected_project,
                            projects=get_user_projects(current_user))
 
 
@@ -95,6 +135,7 @@ def users_create():
         password = request.form.get('password', '')
         password_confirm = request.form.get('password_confirm', '')
         role = request.form.get('role', 'user')
+        can_view_all_contacts = request.form.get('can_view_all_contacts') == 'on'
 
         errors = []
 
@@ -137,6 +178,7 @@ def users_create():
             email=email[:100],
             role=role,
             is_active=True,
+            can_view_all_contacts=can_view_all_contacts,
             created_by_id=current_user.id,
         )
         new_user.set_password(password)
@@ -162,7 +204,7 @@ def users_create():
 @login_required
 @privileged_required
 def users_edit(user_id):
-    """Редактировать пользователя (имя, компания, email, пароль)."""
+    """Редактировать пользователя (имя, компания, email, пароль, доступ)."""
     current_user = User.query.get(session['user_id'])
     edit_user = User.query.get_or_404(user_id)
 
@@ -202,6 +244,9 @@ def users_edit(user_id):
         edit_user.last_name = last_name[:50]
         edit_user.company = company[:100]
         edit_user.email = email[:100]
+
+        # ← НОВОЕ: сохраняем флаг доступа к контактам
+        edit_user.can_view_all_contacts = request.form.get('can_view_all_contacts') == 'on'
 
         if new_password:
             if len(new_password) < 6:
@@ -310,6 +355,28 @@ def users_toggle_active(user_id):
 
 
 # ============================================================
+#  ПЕРЕКЛЮЧИТЬ ДОСТУП К КОНТАКТАМ (все заказчики/поставщики)
+# ============================================================
+
+@bp.route('/users/<int:user_id>/toggle-contacts-access', methods=['POST'])
+@login_required
+@privileged_required
+def users_toggle_contacts_access(user_id):
+    """Переключить разрешение видеть всех заказчиков и поставщиков."""
+    target = User.query.get_or_404(user_id)
+
+    target.can_view_all_contacts = not target.can_view_all_contacts
+    db.session.commit()
+
+    if target.can_view_all_contacts:
+        flash(f'{target.full_name} теперь видит всех заказчиков и поставщиков.', 'success')
+    else:
+        flash(f'{target.full_name} больше не видит общую базу контактов.', 'info')
+
+    return redirect(url_for('users_admin.users_list'))
+
+
+# ============================================================
 #  УДАЛЕНИЕ ПОЛЬЗОВАТЕЛЯ
 # ============================================================
 
@@ -409,3 +476,119 @@ def api_users_search():
         'company': u.company or '',
         'role_display': u.role_display,
     } for u in users])
+
+
+# ============================================================
+#  НАЗНАЧИТЬ ПОЛЬЗОВАТЕЛЯ НА ПРОЕКТ
+# ============================================================
+
+@bp.route('/users/<int:user_id>/assign', methods=['GET', 'POST'])
+@login_required
+@privileged_required
+def users_assign(user_id):
+    """Назначить пользователя на проект с ролью.
+
+    GET  — показать форму + текущие проекты.
+    POST — сохранить, обновить роль или создать нового участника.
+    """
+    current_user = User.query.get(session['user_id'])
+    target = User.query.get_or_404(user_id)
+
+    all_projects = Project.query.filter_by(is_active=True)\
+        .order_by(Project.name.asc()).all()
+
+    current_memberships = ProjectMember.query.filter_by(user_id=target.id)\
+        .join(Project, ProjectMember.project_id == Project.id)\
+        .order_by(Project.name.asc()).all()
+
+    if request.method == 'POST':
+        project_id_raw = request.form.get('project_id', '').strip()
+        role = request.form.get('role', 'member').strip()
+
+        if not project_id_raw:
+            flash('Выберите проект.', 'warning')
+            return redirect(url_for('users_admin.users_assign', user_id=target.id))
+
+        try:
+            project_id = int(project_id_raw)
+        except ValueError:
+            flash('Некорректный ID проекта.', 'danger')
+            return redirect(url_for('users_admin.users_assign', user_id=target.id))
+
+        project = Project.query.get(project_id)
+        if not project:
+            flash('Проект не найден.', 'danger')
+            return redirect(url_for('users_admin.users_assign', user_id=target.id))
+
+        allowed_roles = dict(ProjectMember.SELECTABLE_ROLES).keys()
+        if role not in allowed_roles:
+            role = 'member'
+
+        existing = ProjectMember.query.filter_by(
+            user_id=target.id,
+            project_id=project.id,
+        ).first()
+
+        if existing:
+            old_role = existing.role_display
+            existing.role_in_project = role
+            if role in ProjectMember.OWN_TEAM_ROLES or role in ProjectMember.AM_STANKO_ROLES:
+                existing.is_guest = False
+            db.session.commit()
+
+            flash(f'Роль {target.full_name} в проекте «{project.name}» изменена: '
+                  f'{old_role} → {existing.role_display}.', 'success')
+        else:
+            new_member = ProjectMember(
+                user_id=target.id,
+                project_id=project.id,
+                role_in_project=role,
+                is_guest=False,
+            )
+            db.session.add(new_member)
+            db.session.commit()
+
+            flash(f'{target.full_name} назначен(а) на проект «{project.name}» '
+                  f'с ролью {new_member.role_display}.', 'success')
+
+        return redirect(url_for('users_admin.users_assign', user_id=target.id))
+
+    return render_template('admin/user_assign.html',
+                           user=current_user,
+                           target=target,
+                           all_projects=all_projects,
+                           current_memberships=current_memberships,
+                           projects=get_user_projects(current_user))
+
+
+# ============================================================
+#  СНЯТЬ ПОЛЬЗОВАТЕЛЯ С ПРОЕКТА
+# ============================================================
+
+@bp.route('/users/<int:user_id>/unassign/<int:project_id>', methods=['POST'])
+@login_required
+@privileged_required
+def users_unassign(user_id, project_id):
+    """Снять пользователя с проекта (удалить ProjectMember)."""
+    target = User.query.get_or_404(user_id)
+    project = Project.query.get_or_404(project_id)
+
+    if project.created_by == target.id:
+        flash('Нельзя снять с проекта его создателя. Сначала передайте проект '
+              'другому пользователю.', 'danger')
+        return redirect(url_for('users_admin.users_assign', user_id=target.id))
+
+    member = ProjectMember.query.filter_by(
+        user_id=target.id,
+        project_id=project.id,
+    ).first()
+
+    if not member:
+        flash('Пользователь не участвует в этом проекте.', 'warning')
+        return redirect(url_for('users_admin.users_assign', user_id=target.id))
+
+    db.session.delete(member)
+    db.session.commit()
+
+    flash(f'{target.full_name} снят(а) с проекта «{project.name}».', 'success')
+    return redirect(url_for('users_admin.users_assign', user_id=target.id))

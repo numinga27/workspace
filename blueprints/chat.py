@@ -14,6 +14,7 @@ from utils import (
     is_project_guest,
     get_user_projects,
 )
+from services.push import notify_new_message
 
 bp = Blueprint('chat', __name__)
 
@@ -57,6 +58,12 @@ def send_message(project_id):
         # Автор прочитал свои же сообщения и упоминания
         mark_project_as_read(user_id, project_id)
         mark_mentions_as_read(user_id, project_id)
+
+        # ← Push-уведомления
+        try:
+            notify_new_message(message, mentioned_user_ids=mentioned_user_ids)
+        except Exception as e:
+            print(f'⚠️ Ошибка отправки push: {e}')
 
     return redirect(url_for('projects.view_project', project_id=project_id) + '#chat')
 

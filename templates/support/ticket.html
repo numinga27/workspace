@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="mb-3">
+    <a href="{{ url_for('support.admin_tickets') if is_admin else url_for('support.my_tickets') }}"
+       class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i>
+        {% if is_admin %}К списку тикетов{% else %}К поддержке{% endif %}
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="bi bi-life-preserver"></i>
+                    <strong>Обращение #{{ ticket.id }}</strong>
+                    {% if ticket.status == 'open' %}
+                        <span class="badge bg-success ms-2">открыт</span>
+                    {% else %}
+                        <span class="badge bg-secondary ms-2">закрыт</span>
+                    {% endif %}
+                </div>
+                <div>
+                    {% if is_admin and ticket.status == 'open' %}
+                    <form method="POST"
+                          action="{{ url_for('support.close_ticket', ticket_id=ticket.id) }}"
+                          class="d-inline"
+                          onsubmit="return confirm('Закрыть обращение #{{ ticket.id }}?');">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Закрыть
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="mb-3 pb-3 border-bottom">
+                    <div class="small text-muted">
+                        <i class="bi bi-person-circle"></i>
+                        Автор: <strong>{{ ticket.user.full_name }}</strong>
+                        ({{ ticket.user.email }})
+                    </div>
+                    <div class="small text-muted mt-1">
+                        <i class="bi bi-calendar3"></i>
+                        Создано: {{ ticket.created_at.strftime('%d.%m.%Y %H:%M') }}
+                    </div>
+                </div>
+
+                <div style="max-height: 500px; overflow-y: auto;">
+                    {% for m in messages %}
+                    <div class="d-flex mb-3
+                        {% if m.role == 'admin' %}justify-content-end{% endif %}">
+                        <div class="p-3 rounded"
+                             style="max-width: 75%;
+                                    {% if m.role == 'admin' %}
+                                        background: var(--accent-light);
+                                        border: 1px solid var(--accent);
+                                    {% else %}
+                                        background: var(--bg-tertiary);
+                                        border: 1px solid var(--border-light);
+                                    {% endif %}">
+                            <div class="small fw-bold mb-1">
+                                {% if m.role == 'admin' %}
+                                    <i class="bi bi-shield-fill-check text-danger"></i>
+                                    {{ m.author.full_name }} (поддержка)
+                                {% else %}
+                                    <i class="bi bi-person-circle"></i>
+                                    {{ m.author.full_name }}
+                                {% endif %}
+                            </div>
+                            <div style="white-space: pre-wrap;">{{ m.text }}</div>
+                            <div class="small text-muted mt-2">
+                                {{ m.created_at.strftime('%d.%m.%Y %H:%M') }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    {% if messages|length == 0 %}
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-chat-dots" style="font-size: 32px; opacity: 0.3;"></i>
+                        <p class="mt-2 mb-0">Сообщений пока нет</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if ticket.status == 'open' or is_admin %}
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-2">
+                        <label class="form-label">
+                            {% if is_admin %}Ответ от поддержки{% else %}Ваше сообщение{% endif %}
+                        </label>
+                        <textarea name="text" class="form-control" rows="3"
+                                  placeholder="Введите текст..."
+                                  required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send"></i> Отправить
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-secondary text-center">
+            <i class="bi bi-info-circle"></i>
+            Обращение закрыто. Чтобы продолжить переписку — создайте новое.
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

@@ -60,7 +60,7 @@
     <div class="card-body">
         <form method="GET" class="row g-2 align-items-end">
 
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label small">Поиск</label>
                 <input type="text" name="q" class="form-control"
                        placeholder="Имя, email, компания..."
@@ -96,6 +96,32 @@
                 </select>
             </div>
 
+            {# Проект #}
+            <div class="col-md-3">
+                <label class="form-label small">Проект</label>
+                <select name="project" class="form-select">
+                    <option value="">— Все пользователи —</option>
+                    {% for p in all_projects|default([]) %}
+                    <option value="{{ p.id }}" {% if project_filter == p.id|string %}selected{% endif %}>
+                        {{ p.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {# Режим фильтра #}
+            <div class="col-md-2">
+                <label class="form-label small">Режим</label>
+                <select name="project_mode" class="form-select">
+                    <option value="not_in" {% if project_mode == 'not_in' %}selected{% endif %}>
+                        Не участвует
+                    </option>
+                    <option value="in" {% if project_mode == 'in' %}selected{% endif %}>
+                        Участвует
+                    </option>
+                </select>
+            </div>
+
             <div class="col-md-2">
                 <label class="form-label small">Сортировка</label>
                 <select name="sort" class="form-select">
@@ -106,20 +132,40 @@
                 </select>
             </div>
 
-            <div class="col-md-2 d-flex gap-1">
-                <button type="submit" class="btn btn-primary flex-grow-1">
+            <div class="col-12 d-flex gap-2 mt-2">
+                <button type="submit" class="btn btn-primary">
                     <i class="bi bi-funnel"></i> Применить
                 </button>
-                {% if q or role_filter or status_filter or sort != 'newest' %}
+                {% if q or role_filter or status_filter or project_filter or sort != 'newest' %}
                 <a href="{{ url_for('users_admin.users_list') }}"
-                   class="btn btn-outline-secondary" title="Сбросить">
-                    <i class="bi bi-x-lg"></i>
+                   class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg"></i> Сбросить фильтры
                 </a>
                 {% endif %}
             </div>
         </form>
     </div>
 </div>
+
+{# Инфа о выбранном проекте #}
+{% if selected_project %}
+<div class="alert alert-info d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <div>
+        <i class="bi bi-folder-fill text-warning"></i>
+        Проект: <strong>{{ selected_project.name }}</strong>
+        —
+        {% if project_mode == 'in' %}
+            показываем <strong>участников</strong> ({{ users|length }})
+        {% else %}
+            показываем тех, <strong>кто не участвует</strong> ({{ users|length }})
+        {% endif %}
+    </div>
+    <a href="{{ url_for('users_admin.users_list') }}"
+       class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-x-lg"></i> Убрать фильтр
+    </a>
+</div>
+{% endif %}
 
 <!-- Таблица пользователей -->
 {% if users %}
@@ -129,11 +175,11 @@
             <thead class="table-light">
                 <tr>
                     <th>Пользователь</th>
-                    <th style="width: 180px;">Компания</th>
-                    <th style="width: 200px;">Email</th>
-                    <th style="width: 200px;">Роль</th>
-                    <th style="width: 110px;">Статус</th>
-                    <th style="width: 180px;" class="text-end">Действия</th>
+                    <th style="width: 170px;">Компания</th>
+                    <th style="width: 190px;">Email</th>
+                    <th style="width: 190px;">Роль</th>
+                    <th style="width: 130px;">Статус</th>
+                    <th style="width: 260px;" class="text-end">Действия</th>
                 </tr>
             </thead>
             <tbody>
@@ -191,10 +237,37 @@
                         {% else %}
                             <span class="badge bg-danger">Заблокирован</span>
                         {% endif %}
+
+                        {# ← Бейдж доступа к контактам #}
+                        {% if u.can_view_all_contacts %}
+                            <span class="badge bg-info" style="font-size: 9px;"
+                                  title="Видит всех заказчиков и поставщиков">
+                                <i class="bi bi-eye-fill"></i> Контакты
+                            </span>
+                        {% endif %}
                     </td>
                     <td class="text-end">
                         <div class="d-flex gap-1 justify-content-end">
-                            {# Смена роли #}
+
+                            {# Назначить на проект #}
+                            <a href="{{ url_for('users_admin.users_assign', user_id=u.id) }}"
+                               class="btn btn-sm btn-outline-secondary action-btn"
+                               title="Назначить на проект">
+                                <i class="bi bi-plus-square text-success"></i>
+                            </a>
+
+                            {# ← Переключатель доступа к контактам #}
+                            <form method="POST"
+                                  action="{{ url_for('users_admin.users_toggle_contacts_access', user_id=u.id) }}"
+                                  class="d-inline">
+                                <button type="submit"
+                                        class="btn btn-sm btn-outline-secondary action-btn"
+                                        title="{% if u.can_view_all_contacts %}Убрать доступ к общей базе контактов{% else %}Дать доступ к общей базе контактов{% endif %}">
+                                    <i class="bi bi-eye{% if u.can_view_all_contacts %}-fill text-info{% else %} text-muted{% endif %}"></i>
+                                </button>
+                            </form>
+
+                            {# Смена роли (dropdown) #}
                             {% if u.id != user.id %}
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-outline-secondary action-btn"
@@ -300,13 +373,13 @@
         <i class="bi bi-people"></i>
     </div>
     <h5>
-        {% if q or role_filter or status_filter %}
+        {% if q or role_filter or status_filter or project_filter %}
             Пользователи не найдены
         {% else %}
             Пользователей пока нет
         {% endif %}
     </h5>
-    {% if q or role_filter or status_filter %}
+    {% if q or role_filter or status_filter or project_filter %}
     <a href="{{ url_for('users_admin.users_list') }}" class="btn btn-outline-secondary">
         <i class="bi bi-x-lg"></i> Сбросить фильтры
     </a>

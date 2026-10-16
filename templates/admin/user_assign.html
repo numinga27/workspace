@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+
+        <div class="mb-3">
+            <a href="{{ url_for('users_admin.users_list') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> К списку пользователей
+            </a>
+        </div>
+
+        <!-- Карточка пользователя -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="avatar-lg
+                        {% if target.role == 'admin' %}avatar-admin
+                        {% elif target.role == 'supervisor' %}avatar-supervisor{% endif %}">
+                        {{ target.first_name[0]|upper }}{{ target.last_name[0]|upper }}
+                    </div>
+                    <div class="flex-grow-1">
+                        <h4 class="mb-1">{{ target.full_name }}</h4>
+                        <div class="small text-muted">
+                            <i class="bi bi-envelope"></i> {{ target.email }}
+                            {% if target.company %}
+                                · <i class="bi bi-building"></i> {{ target.company }}
+                            {% endif %}
+                        </div>
+                        <div class="mt-2">
+                            {% if target.role == 'admin' %}
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-shield-fill-check"></i> Администратор
+                                </span>
+                            {% elif target.role == 'supervisor' %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-eye-fill"></i> Супервизор
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-person"></i> Пользователь
+                                </span>
+                            {% endif %}
+                            {% if not target.is_active %}
+                                <span class="badge bg-danger">Заблокирован</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Форма назначения -->
+        <div class="card mb-4">
+            <div class="card-header py-2">
+                <i class="bi bi-plus-square text-primary"></i> Назначить на проект
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Проект *</label>
+                            <select name="project_id" class="form-select" required>
+                                <option value="">— Выберите —</option>
+                                {% for p in all_projects %}
+                                <option value="{{ p.id }}">
+                                    {{ p.name }}
+                                    {% if p.company_ref %} ({{ p.company_ref.name }}){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Роль в проекте *</label>
+                            <select name="role" class="form-select" required>
+                                <optgroup label="Команда проекта">
+                                    <option value="admin">Руководитель проекта</option>
+                                    <option value="manager">Менеджер</option>
+                                    <option value="chief_engineer">Главный инженер</option>
+                                    <option value="logistic">Логистик</option>
+                                    <option value="member" selected>Участник</option>
+                                </optgroup>
+                                <optgroup label="Группа компаний АМ Станко">
+                                    <option value="am_stanko_admin">АМ Станко · Руководитель</option>
+                                    <option value="am_stanko_manager">АМ Станко · Менеджер</option>
+                                    <option value="am_stanko_engineer">АМ Станко · Гл. инженер</option>
+                                    <option value="am_stanko_logistic">АМ Станко · Логистик</option>
+                                    <option value="am_stanko_member">АМ Станко · Участник</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-3 mb-0 small">
+                        <i class="bi bi-info-circle"></i>
+                        Если пользователь <strong>уже в проекте</strong> — его роль будет
+                        <strong>обновлена</strong> на выбранную. Если <strong>не в проекте</strong> —
+                        он будет добавлен как полноценный участник команды.
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Назначить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Текущие проекты пользователя -->
+        <div class="card">
+            <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                <span>
+                    <i class="bi bi-list-check"></i>
+                    Текущие проекты ({{ current_memberships|length }})
+                </span>
+            </div>
+            <div class="card-body p-0">
+                {% if current_memberships %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Проект</th>
+                                <th style="width: 220px;">Роль</th>
+                                <th style="width: 100px;">Статус</th>
+                                <th style="width: 100px;" class="text-end">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in current_memberships %}
+                            {% set project = m.project %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('projects.view_project', project_id=project.id) }}"
+                                       class="text-decoration-none"
+                                       style="color: var(--text-primary);">
+                                        <i class="bi bi-folder-fill text-warning"></i>
+                                        <strong>{{ project.name }}</strong>
+                                    </a>
+                                    {% if project.company_ref %}
+                                    <span class="badge text-white ms-2"
+                                          style="background: {{ project.company_ref.color_hex }}; font-size: 9px;">
+                                        {{ project.company_ref.name }}
+                                    </span>
+                                    {% endif %}
+                                    {% if project.created_by == target.id %}
+                                    <span class="badge bg-primary ms-2" style="font-size: 9px;">
+                                        Создатель
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if m.is_guest %}
+                                        <span class="badge bg-guest">
+                                            <i class="bi bi-person-badge"></i> Гость
+                                        </span>
+                                    {% elif m.role_in_project == 'admin' %}
+                                        <span class="badge bg-danger">{{ m.role_display }}</span>
+                                    {% elif m.role_in_project == 'manager' %}
+                                        <span class="badge bg-warning text-dark">{{ m.role_display }}</span>
+                                    {% elif m.role_in_project == 'chief_engineer' %}
+                                        <span class="badge bg-info">{{ m.role_display }}</span>
+                                    {% elif m.role_in_project == 'logistic' %}
+                                        <span class="badge bg-success">{{ m.role_display }}</span>
+                                    {% elif m.is_am_stanko %}
+                                        <span class="badge bg-am-stanko">{{ m.role_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ m.role_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if not m.is_guest %}
+                                        <span class="badge bg-success" style="font-size: 9px;">
+                                            Команда
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark" style="font-size: 9px;">
+                                            Гость
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if project.created_by != target.id %}
+                                    <form method="POST"
+                                          action="{{ url_for('users_admin.users_unassign', user_id=target.id, project_id=project.id) }}"
+                                          onsubmit="return confirm('Снять {{ target.full_name }} с проекта «{{ project.name }}»?');"
+                                          class="d-inline">
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-secondary"
+                                                style="width: 32px; height: 32px; padding: 0;"
+                                                title="Снять с проекта">
+                                            <i class="bi bi-x-lg text-danger"></i>
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <span class="text-muted small fst-italic">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-folder-x" style="font-size: 32px; display: block; margin-bottom: 8px; opacity: 0.3;"></i>
+                    Пользователь ещё не участвует ни в одном проекте
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+.avatar-lg {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+.avatar-admin {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+.avatar-supervisor {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+</style>
+
+{% endblock %}

@@ -45,3 +45,17 @@ class Config:
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME', '')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or os.environ.get('MAIL_USERNAME', '')
+
+    # ============================================================
+    #  WEB PUSH (VAPID)
+    # ============================================================
+    VAPID_PUBLIC_KEY = 'BEv4tebHUcKzUGBtwZHmpWOyjNL5b5dG8IK-Gel3z03W7W7NB-snmvPtGu7PvnlAFhGbji77Kia0pXCJHoE2SR4'
+    VAPID_PRIVATE_KEY_PATH = os.path.join(basedir, 'vapid_private.pem')
+    VAPID_CLAIM_EMAIL = 'mailto:numinga27@yandex.ru'    
+      # ============================================================
+    #  ВЕРСИЯ ПРИЛОЖЕНИЯ
+    #  Меняй при каждом релизе APK!
+    # ============================================================
+    APP_VERSION = '1.0.1'
+    APP_VERSION_CODE = 2
+    APP_RELEASE_NOTES = 'Добавлена техподдержка, улучшен интерфейс'

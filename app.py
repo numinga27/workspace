@@ -75,6 +75,7 @@ def create_app(config_class=Config):
             except Exception as e:
                 print(f'⚠️ Ошибка get_unread_tasks_count: {e}')
         return {'unread_tasks_count': 0}
+
     @app.context_processor
     def inject_unread_mentions():
         """Непрочитанные упоминания (@) пользователя — общий счётчик и по проектам."""
@@ -92,6 +93,25 @@ def create_app(config_class=Config):
             'unread_mentions_count': 0,
             'unread_mentions_by_project': {},
         }
+
+    # ← НОВОЕ: счётчик непрочитанных обращений в поддержку (для админов)
+    @app.context_processor
+    def inject_support_unread():
+        """Количество непрочитанных обращений в поддержку — для админов."""
+        from flask import session
+        from models import User, SupportTicket
+        if 'user_id' in session:
+            try:
+                user = User.query.get(session['user_id'])
+                if user and user.role in ('admin', 'supervisor'):
+                    count = db.session.query(
+                        db.func.sum(SupportTicket.unread_for_admin)
+                    ).scalar() or 0
+                    return {'support_unread_count': int(count)}
+            except Exception as e:
+                print(f'⚠️ Ошибка support_unread_count: {e}')
+        return {'support_unread_count': 0}
+
     # ============================================================
     #  СОЗДАНИЕ ТАБЛИЦ И SEED ГЛАВНОГО АДМИНА
     # ============================================================
@@ -122,6 +142,140 @@ def create_app(config_class=Config):
             db.session.add(admin)
             db.session.commit()
             print("✅ Создан администратор: admin@example.com / admin123")
+
+    # ============================================================
+    #  PWA: манифест и Service Worker
+    # ============================================================
+
+    @app.route('/manifest.json')
+    def pwa_manifest():
+        from flask import send_from_directory, make_response
+        response = make_response(send_from_directory(
+            'static', 'manifest.json',
+            mimetype='application/manifest+json'
+        ))
+        response.headers['Content-Type'] = 'application/manifest+json; charset=utf-8'
+        response.headers['Cache-Control'] = 'no-cache'
+        return response
+
+    @app.route('/service-worker.js')
+    def pwa_service_worker():
+        from flask import send_from_directory, make_response
+        response = make_response(send_from_directory(
+            'static', 'service-worker.js',
+            mimetype='application/javascript'
+        ))
+        # Явно убираем Content-Disposition — iOS Safari блокирует SW с ним
+        response.headers.pop('Content-Disposition', None)
+        response.headers['Content-Type'] = 'application/javascript; charset=utf-8'
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Service-Worker-Allowed'] = '/'
+        # Разрешаем CORS — иногда помогает
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
+    @app.route('/sw.js')
+    def pwa_sw():
+        from flask import send_from_directory, make_response
+        response = make_response(send_from_directory(
+            'static', 'sw.js',
+            mimetype='application/javascript'
+        ))
+        # Убираем Content-Disposition — iOS Safari блокирует SW с ним
+        response.headers.pop('Content-Disposition', None)
+        response.headers['Content-Type'] = 'application/javascript; charset=utf-8'
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Service-Worker-Allowed'] = '/'
+        return response
+    # ============================================================
+    #  WEB PUSH: подписка / отписка / VAPID-ключ
+    # ============================================================
+
+    @app.route('/push/vapid-public-key')
+    def push_vapid_public_key():
+        """Отдаём публичный VAPID-ключ для JS."""
+        from flask import jsonify
+        return jsonify({
+            'publicKey': app.config.get('VAPID_PUBLIC_KEY', '')
+        })
+
+    @app.route('/push/subscribe', methods=['POST'])
+    def push_subscribe():
+        """Сохраняем подписку пользователя."""
+        from flask import request, jsonify, session
+        from models import PushSubscription
+
+        if 'user_id' not in session:
+            return jsonify({'ok': False, 'error': 'unauthorized'}), 401
+
+        data = request.get_json(silent=True) or {}
+        endpoint = data.get('endpoint')
+        keys = data.get('keys') or {}
+        p256dh = keys.get('p256dh')
+        auth = keys.get('auth')
+
+        if not endpoint or not p256dh or not auth:
+            return jsonify({'ok': False, 'error': 'invalid_payload'}), 400
+
+        user_id = session['user_id']
+
+        sub = PushSubscription.query.filter_by(endpoint=endpoint).first()
+        if sub:
+            sub.user_id = user_id
+            sub.p256dh = p256dh
+            sub.auth = auth
+            sub.is_active = True
+            sub.user_agent = (request.headers.get('User-Agent') or '')[:255]
+        else:
+            sub = PushSubscription(
+                user_id=user_id,
+                endpoint=endpoint,
+                p256dh=p256dh,
+                auth=auth,
+                user_agent=(request.headers.get('User-Agent') or '')[:255],
+                is_active=True,
+            )
+            db.session.add(sub)
+
+        db.session.commit()
+        return jsonify({'ok': True, 'subscription_id': sub.id})
+
+    @app.route('/push/unsubscribe', methods=['POST'])
+    def push_unsubscribe():
+        """Отключаем подписку."""
+        from flask import request, jsonify, session
+        from models import PushSubscription
+
+        if 'user_id' not in session:
+            return jsonify({'ok': False}), 401
+
+        data = request.get_json(silent=True) or {}
+        endpoint = data.get('endpoint')
+
+        if endpoint:
+            sub = PushSubscription.query.filter_by(endpoint=endpoint).first()
+            if sub and sub.user_id == session['user_id']:
+                sub.is_active = False
+                db.session.commit()
+
+        return jsonify({'ok': True})
+
+    @app.route('/push/test', methods=['POST'])
+    def push_test():
+        """Тестовая отправка пуша текущему пользователю (для отладки)."""
+        from flask import jsonify, session
+        from services.push import send_push_to_user
+
+        if 'user_id' not in session:
+            return jsonify({'ok': False}), 401
+
+        sent = send_push_to_user(
+            user_id=session['user_id'],
+            title='🎉 Тест уведомлений',
+            body='Если видишь это — Web Push работает!',
+            url='/dashboard',
+            tag='test-1',
+        )
+        return jsonify({'ok': True, 'sent': sent})
 
     # ============================================================
     #  CLI-КОМАНДЫ
@@ -190,7 +344,6 @@ def create_app(config_class=Config):
             click.echo(f'❌ Пользователь с email {email} не найден')
             return
 
-        # Нельзя понизить последнего админа
         if user.role == 'admin' and role != 'admin':
             admins_count = User.query.filter_by(role='admin', is_active=True).count()
             if admins_count <= 1:
@@ -226,6 +379,35 @@ def create_app(config_class=Config):
             name = f'{u.first_name} {u.last_name}'[:28]
             click.echo(f'{u.id:<5} {u.role:<12} {name:<30} {u.email:<40} {active:<8}')
         click.echo()
+
+    @app.cli.command('test-push')
+    @click.option('--email', prompt='Email получателя',
+                  help='Кому отправить тестовый push')
+    def test_push_cli(email):
+        """Отправить тестовый push-уведомление пользователю."""
+        from services.push import send_push_to_user
+
+        email = email.strip().lower()
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            click.echo(f'❌ Пользователь с email {email} не найден')
+            return
+
+        sent = send_push_to_user(
+            user_id=user.id,
+            title='🎉 Тест push',
+            body=f'Привет, {user.first_name}! Push работает.',
+            url='/dashboard',
+            tag='cli-test',
+        )
+
+        click.echo()
+        click.echo(f'📤 Отправлено: {sent} подписок')
+        if sent == 0:
+            click.echo('⚠️ Возможно, у пользователя нет активных подписок.')
+            click.echo('   Пусть откроет PWA на iPhone и разрешит уведомления.')
+        else:
+            click.echo('✅ Проверь уведомление на устройстве.')
 
     return app
 

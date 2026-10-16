@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1"><i class="bi bi-life-preserver"></i> Техподдержка</h2>
+        <p class="text-muted mb-0">Опишите проблему — администратор ответит</p>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header py-2">
+        <i class="bi bi-pencil-square"></i> Новое обращение
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('support.create_ticket') }}">
+            <div class="mb-3">
+                <label class="form-label">Опишите, что случилось</label>
+                <textarea name="text" class="form-control" rows="4"
+                          placeholder="Например: не могу зайти в раздел проекты..."
+                          required></textarea>
+                <small class="text-muted">
+                    <i class="bi bi-info-circle"></i>
+                    Обращение создастся автоматически, вы сразу увидите ответ здесь.
+                </small>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-send"></i> Отправить
+            </button>
+        </form>
+    </div>
+</div>
+
+{% if tickets %}
+<h5 class="mb-3"><i class="bi bi-chat-left-text"></i> История обращений</h5>
+
+{% for t in tickets %}
+<a href="{{ url_for('support.ticket_detail', ticket_id=t.id) }}"
+   class="card mb-2 text-decoration-none text-dark"
+   style="display:block;">
+    <div class="card-body py-2 d-flex justify-content-between align-items-center">
+        <div class="flex-grow-1 min-width-0">
+            <div class="fw-bold text-truncate">
+                {{ t.display_subject }}
+            </div>
+            <div class="small text-muted">
+                <i class="bi bi-clock"></i>
+                {{ t.updated_at.strftime('%d.%m.%Y %H:%M') }}
+                {% if t.messages.count() > 0 %}
+                    · {{ t.messages.count() }} сообщ.
+                {% endif %}
+                · {% if t.status == 'open' %}
+                    <span class="badge bg-success">открыт</span>
+                  {% else %}
+                    <span class="badge bg-secondary">закрыт</span>
+                  {% endif %}
+            </div>
+        </div>
+        {% if t.unread_for_user > 0 %}
+            <span class="nav-badge-new ms-2">{{ t.unread_for_user }}</span>
+        {% endif %}
+        <i class="bi bi-chevron-right text-muted ms-2"></i>
+    </div>
+</a>
+{% endfor %}
+
+{% endif %}
+
+{% endblock %}

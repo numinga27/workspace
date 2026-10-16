@@ -40,6 +40,9 @@ class User(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=_utcnow)
 
+    # ← НОВОЕ: разрешение видеть всех заказчиков и поставщиков
+    can_view_all_contacts = db.Column(db.Boolean, default=False)
+
     # ← Дополнительные поля для админки
     last_login_at = db.Column(db.DateTime, nullable=True)
     created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
@@ -84,6 +87,19 @@ class User(db.Model):
     @property
     def full_name(self):
         return f'{self.first_name} {self.last_name}'
+
+    @property
+    def can_view_contacts(self):
+        """Может ли пользователь видеть все заказчики и поставщики.
+        
+        Приоритет:
+        - admin / supervisor — всегда да;
+        - явный флаг can_view_all_contacts — да;
+        - иначе — нет (логика «гость/не гость» решается в utils.py).
+        """
+        if self.is_privileged:
+            return True
+        return bool(self.can_view_all_contacts)
 
     # ---- Relationships ----
     projects = db.relationship('ProjectMember', back_populates='user', lazy=True)
@@ -724,18 +740,13 @@ class MessageRead(db.Model):
 
     user = db.relationship('User', backref='message_reads')
 
+
 # ============================================================
 #  УПОМИНАНИЯ В ЧАТЕ (@Иван Иванов)
 # ============================================================
 
 class MessageMention(db.Model):
-    """Упоминание пользователя в сообщении чата через @.
-
-    Хранится отдельной записью, чтобы:
-    - считать непрочитанные;
-    - фильтровать «мои упоминания»;
-    - помечать прочитанными по одному или пачкой.
-    """
+    """Упоминание пользователя в сообщении чата через @."""
     id = db.Column(db.Integer, primary_key=True)
     message_id = db.Column(
         db.Integer,
@@ -758,7 +769,6 @@ class MessageMention(db.Model):
     created_at = db.Column(db.DateTime, default=_utcnow)
     is_read = db.Column(db.Boolean, default=False, index=True)
 
-    # Отношения
     message = db.relationship(
         'Message',
         backref=db.backref('mentions', lazy=True, cascade='all, delete-orphan')
@@ -772,6 +782,8 @@ class MessageMention(db.Model):
 
     def __repr__(self):
         return f'<MessageMention msg={self.message_id} user={self.user_id} read={self.is_read}>'
+
+
 # ============================================================
 #  УВЕДОМЛЕНИЯ О ЗАДАЧАХ
 # ============================================================
@@ -841,3 +853,113 @@ class Invitation(db.Model):
     created_at = db.Column(db.DateTime, default=_utcnow)
     expires_at = db.Column(db.DateTime, nullable=False)
     is_used = db.Column(db.Boolean, default=False)
+
+
+# ============================================================
+#  PUSH-ПОДПИСКА (Web Push / PWA)
+# ============================================================
+
+class PushSubscription(db.Model):
+    """Подписка пользователя на web-push уведомления.
+
+    Один пользователь может иметь несколько подписок (несколько устройств).
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    endpoint = db.Column(db.Text, nullable=False, unique=True)
+    p256dh = db.Column(db.Text, nullable=False)
+    auth = db.Column(db.Text, nullable=False)
+    user_agent = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.DateTime, default=_utcnow)
+    last_used_at = db.Column(db.DateTime, nullable=True)
+    is_active = db.Column(db.Boolean, default=True, index=True)
+
+    user = db.relationship('User', backref='push_subscriptions')
+
+    def __repr__(self):
+        return f'<PushSubscription user={self.user_id} active={self.is_active}>'   
+
+
+# ============================================================
+#  ТЕХПОДДЕРЖКА
+# ============================================================
+
+class SupportTicket(db.Model):
+    """Обращение в техподдержку.
+
+    Один пользователь — много тикетов. Тикет — набор сообщений.
+    Статус:
+      - 'open'    — открыт (есть непрочитанные со стороны админа или юзера)
+      - 'closed'  — закрыт (админ закрыл)
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    subject = db.Column(db.String(200), nullable=False, default='Обращение в поддержку')
+    status = db.Column(db.String(20), default='open', index=True)
+    created_at = db.Column(db.DateTime, default=_utcnow)
+    updated_at = db.Column(db.DateTime, default=_utcnow, onupdate=_utcnow)
+
+    # Счётчики непрочитанных
+    unread_for_user = db.Column(db.Integer, default=0)   # сколько юзер не прочитал ответов
+    unread_for_admin = db.Column(db.Integer, default=0)  # сколько админ не прочитал от юзера
+
+    # Отношения
+    user = db.relationship('User', backref='support_tickets',
+                           foreign_keys=[user_id])
+    messages = db.relationship(
+        'SupportMessage',
+        backref='ticket',
+        lazy='dynamic',
+        cascade='all, delete-orphan',
+        order_by='SupportMessage.created_at',
+    )
+
+    @property
+    def last_message(self):
+        return self.messages.order_by(SupportMessage.created_at.desc()).first()
+
+    @property
+    def is_closed(self):
+        return self.status == 'closed'
+
+    @property
+    def display_subject(self):
+        """Короткая тема для отображения — по первому сообщению."""
+        first = self.messages.order_by(SupportMessage.created_at.asc()).first()
+        if first:
+            text = first.text.strip().split('\n')[0]
+            return text[:80] + ('…' if len(text) > 80 else '')
+        return self.subject or 'Обращение в поддержку'
+
+
+class SupportMessage(db.Model):
+    """Сообщение внутри тикета поддержки."""
+    id = db.Column(db.Integer, primary_key=True)
+    ticket_id = db.Column(
+        db.Integer,
+        db.ForeignKey('support_ticket.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    author_id = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id', ondelete='CASCADE'),
+        nullable=False,
+    )
+    # 'user' — обычный пользователь, 'admin' — админ/супервизор
+    role = db.Column(db.String(20), default='user', index=True)
+    text = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=_utcnow, index=True)
+    is_read = db.Column(db.Boolean, default=False)
+
+    author = db.relationship('User', foreign_keys=[author_id])     

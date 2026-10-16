@@ -1,0 +1,8 @@
+{
+  "latest_version": "1.0.1",
+  "latest_version_code": 2,
+  "apk_url": "/static/apk/workspace.apk",
+  "release_notes": "Добавлена техподдержка, исправлены ошибки",
+  "min_supported_version": "1.0.0",
+  "force_update": false
+}

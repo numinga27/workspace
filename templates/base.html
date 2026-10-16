@@ -4,6 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Workspace</title>
+
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#5b5bd6">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Workspace">
+
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/static/icons/icon-512.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/static/icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="/static/icons/icon-512.png">
+    <link rel="apple-touch-icon-precomposed" href="/static/icons/apple-touch-icon.png">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -25,23 +40,18 @@
             --bg-primary: #fbfbfd;
             --bg-secondary: #ffffff;
             --bg-tertiary: #f4f5f7;
-
             --sidebar-bg: #0f0f14;
             --sidebar-bg-hover: #1a1a24;
             --sidebar-bg-active: #26262f;
-
             --text-primary: #0d0d12;
             --text-secondary: #52525b;
             --text-tertiary: #a1a1aa;
-
             --border-light: #eaeaea;
             --border-medium: #d4d4d8;
-
             --accent: #5b5bd6;
             --accent-hover: #4a4ac4;
             --accent-light: #eef0ff;
             --accent-soft: #f2f3ff;
-
             --success: #16a34a;
             --success-light: #dcfce7;
             --warning: #f59e0b;
@@ -50,31 +60,24 @@
             --danger-light: #fee2e2;
             --info: #0891b2;
             --info-light: #cffafe;
-
             --am-stanko: #6366f1;
             --am-stanko-light: #eef0ff;
-
             --supervisor: #f59e0b;
             --supervisor-light: #fef3c7;
-
             --sidebar-width: 272px;
             --header-height: 56px;
-
             --radius-sm: 6px;
             --radius-md: 10px;
             --radius-lg: 14px;
             --radius-xl: 20px;
-
             --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
             --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
             --shadow-md: 0 4px 12px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04);
             --shadow-lg: 0 12px 32px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
-
             --transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         html { scroll-padding-top: calc(var(--header-height) + 20px); }
 
         body {
@@ -126,7 +129,7 @@
             margin-left: auto;
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
         }
         .header-right .user-info {
             display: flex;
@@ -152,7 +155,6 @@
             justify-content: center;
             font-weight: 600;
             font-size: 12px;
-            letter-spacing: 0.02em;
         }
         .header-right .user-info .avatar.avatar-admin {
             background: linear-gradient(135deg, #dc2626, #b91c1c);
@@ -189,6 +191,16 @@
             background: var(--bg-tertiary);
             color: var(--text-primary);
             border-color: var(--border-medium);
+        }
+        .header-icon-btn.mobile-btn {
+            color: var(--accent);
+            border-color: var(--accent-light);
+            background: var(--accent-light);
+        }
+        .header-icon-btn.mobile-btn:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
         }
 
         .global-search-wrap {
@@ -251,7 +263,6 @@
             z-index: 1060;
         }
         .global-search-results.show { display: block; }
-
         .global-search-item {
             display: flex;
             align-items: center;
@@ -346,8 +357,6 @@
             background: rgba(255,255,255,0.1);
             border-radius: 2px;
         }
-        .sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
-
         .sidebar .nav-section { padding: 0 12px; margin-bottom: 20px; }
         .sidebar .nav-section .section-title {
             font-size: 11px;
@@ -381,16 +390,6 @@
             opacity: 0.85;
         }
         .sidebar .nav-item.active i { opacity: 1; }
-        .sidebar .nav-item .badge {
-            margin-left: auto;
-            background: rgba(255,255,255,0.08);
-            color: #a1a1aa;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 600;
-        }
-        .sidebar .nav-item.active .badge { background: var(--accent); color: #fff; }
 
         .nav-badge-count {
             margin-left: auto;
@@ -406,36 +405,13 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 0 0 2px var(--sidebar-bg);
-            animation: pulse-badge 2s ease-in-out infinite;
         }
-        @keyframes pulse-badge {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 0 2px var(--sidebar-bg); }
-            50% { transform: scale(1.08); box-shadow: 0 0 0 2px var(--sidebar-bg), 0 0 8px rgba(220, 38, 38, 0.4); }
-        }
-
         .nav-badge-new {
             margin-left: auto;
             min-width: 18px;
             height: 18px;
             padding: 0 5px;
             background: var(--accent);
-            color: white;
-            border-radius: 9px;
-            font-size: 10px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 0 2px var(--sidebar-bg);
-        }
-        .nav-badge-new i { font-size: 9px; margin-right: 2px; }
-
-        .nav-badge-am {
-            margin-left: auto;
-            min-width: 18px;
-            height: 18px;
-            padding: 0 5px;
-            background: var(--am-stanko);
             color: white;
             border-radius: 9px;
             font-size: 10px;
@@ -496,15 +472,49 @@
             width: 15px;
             opacity: 0.7;
         }
-        .sidebar .project-tree .tree-children .tree-item .badge {
-            background: rgba(255,255,255,0.06);
-            color: #71717a;
+
+        .tree-customer-header {
+            padding: 8px 10px 6px 10px;
+            margin-top: 6px;
+            font-size: 11.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            user-select: none;
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .tree-customer-header:hover { background: var(--sidebar-bg-hover); color: #cbd5e1; }
+        .tree-customer-header .customer-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 11.5px;
+        }
+        .tree-customer-header .badge {
+            background: rgba(255,255,255,0.08);
+            color: #a1a1aa;
             font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-weight: 700;
         }
-        .sidebar .project-tree .tree-children .tree-item.active .badge {
-            background: var(--accent);
-            color: #fff;
+        .expand-icon-customer {
+            font-size: 8px;
+            width: 8px;
+            display: inline-block;
+            opacity: 0.5;
+            transition: transform 0.2s ease;
         }
+        .expand-icon-customer.expanded { transform: rotate(90deg); opacity: 1; }
+        .customer-children { padding-left: 8px; margin-bottom: 4px; }
 
         .project-search-input {
             width: 100%;
@@ -523,7 +533,6 @@
             background: rgba(255,255,255,0.08);
             color: #fff;
         }
-        .project-search-input::placeholder { color: #52525b; }
         .project-search-wrap { position: relative; padding: 0 10px; margin-bottom: 6px; }
         .project-search-wrap i {
             position: absolute;
@@ -544,23 +553,13 @@
             scroll-padding-top: 76px;
         }
         .main-content::-webkit-scrollbar { width: 8px; }
-        .main-content::-webkit-scrollbar-track { background: transparent; }
         .main-content::-webkit-scrollbar-thumb {
             background: var(--border-medium);
             border-radius: 4px;
         }
-        .main-content::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
 
-        .nav-tabs, .tab-content,
-        [id="tasks"], [id="todo"], [id="reports"],
-        [id="calendar"], [id="files"], [id="chat"] {
-            scroll-margin-top: calc(var(--header-height) + 24px);
-        }
-
-        h1, h2, h3, h4, h5, h6 { color: var(--text-primary); }
         h2 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
         h5 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
-        .text-muted { color: var(--text-secondary) !important; }
 
         .btn {
             font-weight: 500;
@@ -574,81 +573,20 @@
             gap: 6px;
             line-height: 1.4;
         }
-        .btn i { font-size: 15px; }
-
-        .btn-primary {
-            background: var(--accent);
-            color: white;
-            box-shadow: 0 1px 2px rgba(91, 91, 214, 0.2);
-        }
-        .btn-primary:hover {
-            background: var(--accent-hover);
-            color: white;
-            box-shadow: 0 4px 12px rgba(91, 91, 214, 0.3);
-            transform: translateY(-1px);
-        }
-
-        .btn-outline-primary {
-            background: var(--bg-secondary);
-            border-color: var(--border-medium);
-            color: var(--text-primary);
-        }
-        .btn-outline-primary:hover {
-            background: var(--bg-tertiary);
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        .btn-secondary {
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
-            border-color: var(--border-light);
-        }
-        .btn-secondary:hover { background: var(--border-light); color: var(--text-primary); }
-
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: var(--accent-hover); color: white; }
+        .btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); border-color: var(--border-light); }
         .btn-danger { background: var(--danger); color: white; }
-        .btn-danger:hover { background: #b91c1c; color: white; }
-
-        .btn-outline-danger {
-            background: var(--bg-secondary);
-            border-color: var(--border-medium);
-            color: var(--danger);
-        }
-        .btn-outline-danger:hover {
-            background: var(--danger-light);
-            border-color: var(--danger);
-            color: var(--danger);
-        }
-
-        .btn-outline-secondary {
-            background: var(--bg-secondary);
-            border-color: var(--border-medium);
-            color: var(--text-secondary);
-        }
-        .btn-outline-secondary:hover {
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
-            border-color: var(--border-medium);
-        }
-
+        .btn-outline-primary { background: var(--bg-secondary); border-color: var(--border-medium); color: var(--text-primary); }
+        .btn-outline-secondary { background: var(--bg-secondary); border-color: var(--border-medium); color: var(--text-secondary); }
+        .btn-outline-danger { background: var(--bg-secondary); border-color: var(--border-medium); color: var(--danger); }
         .btn-sm { padding: 5px 10px; font-size: 12.5px; border-radius: var(--radius-sm); }
-        .btn-sm i { font-size: 13px; }
-
-        .btn-link {
-            background: transparent;
-            border: none;
-            color: var(--accent);
-            text-decoration: none;
-            padding: 0;
-        }
-        .btn-link:hover { color: var(--accent-hover); }
 
         .card {
             background: var(--bg-secondary);
             border: 1px solid var(--border-light);
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-xs);
-            transition: var(--transition);
         }
         .card-body { padding: 20px; }
         .card-header {
@@ -658,17 +596,13 @@
             font-weight: 600;
             border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
         }
-        .card:hover { box-shadow: var(--shadow-sm); }
 
         .stat-card {
             background: var(--bg-secondary);
             border-radius: var(--radius-lg);
             padding: 18px;
             border: 1px solid var(--border-light);
-            box-shadow: var(--shadow-xs);
-            transition: var(--transition);
         }
-        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
         .stat-card .stat-icon {
             width: 40px;
             height: 40px;
@@ -684,20 +618,8 @@
             font-weight: 700;
             color: var(--text-primary);
             line-height: 1;
-            letter-spacing: -0.02em;
         }
         .stat-card .stat-label { color: var(--text-secondary); font-size: 13px; margin-top: 4px; }
-
-        .compact-stats {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        .compact-stats .badge {
-            font-size: 12px;
-            padding: 5px 10px;
-        }
 
         .project-card {
             background: var(--bg-secondary);
@@ -709,8 +631,6 @@
             text-decoration: none;
             color: inherit;
             display: block;
-            position: relative;
-            overflow: hidden;
         }
         .project-card:hover {
             transform: translateY(-3px);
@@ -718,16 +638,6 @@
             border-color: var(--accent);
             color: inherit;
         }
-        .project-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--accent), #8b5cf6);
-            opacity: 0;
-            transition: var(--transition);
-        }
-        .project-card:hover::before { opacity: 1; }
         .project-card .project-header {
             display: flex;
             justify-content: space-between;
@@ -740,9 +650,7 @@
             font-weight: 600;
             color: var(--text-primary);
             line-height: 1.4;
-            letter-spacing: -0.01em;
         }
-        .project-card .project-progress { margin-top: 14px; }
         .project-card .project-meta {
             display: flex;
             gap: 14px;
@@ -750,8 +658,6 @@
             font-size: 12.5px;
             color: var(--text-secondary);
         }
-        .project-card .project-meta span { display: flex; align-items: center; gap: 4px; }
-        .project-card .project-meta i { font-size: 13px; opacity: 0.7; }
 
         .progress {
             background-color: var(--bg-tertiary);
@@ -761,8 +667,6 @@
         }
         .progress-bar {
             border-radius: 999px;
-            font-size: 11px;
-            font-weight: 600;
             transition: width 0.6s ease;
         }
         .progress-bar.bg-success { background: linear-gradient(90deg, #16a34a, #22c55e); }
@@ -774,7 +678,6 @@
             padding: 4px 9px;
             border-radius: 6px;
             font-size: 11px;
-            letter-spacing: 0.01em;
         }
         .badge.bg-primary { background: var(--accent) !important; }
         .badge.bg-secondary { background: var(--bg-tertiary) !important; color: var(--text-secondary) !important; }
@@ -793,7 +696,6 @@
             color: #92400e !important;
             border: 1px solid #fde68a;
         }
-
         .badge-new {
             background: var(--accent) !important;
             color: white !important;
@@ -801,12 +703,6 @@
             padding: 3px 7px !important;
             border-radius: 4px;
             font-weight: 700;
-            letter-spacing: 0.05em;
-            animation: pulse-new 2s ease-in-out infinite;
-        }
-        @keyframes pulse-new {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
         }
 
         .form-control, .form-select {
@@ -814,7 +710,6 @@
             border-radius: var(--radius-md);
             padding: 9px 12px;
             font-size: 13.5px;
-            transition: var(--transition);
             background: var(--bg-secondary);
             color: var(--text-primary);
         }
@@ -823,127 +718,22 @@
             box-shadow: 0 0 0 3px rgba(91, 91, 214, 0.12);
             outline: none;
         }
-        .form-control::placeholder { color: var(--text-tertiary); }
         .form-label { font-weight: 500; font-size: 13px; color: var(--text-primary); margin-bottom: 6px; }
-        .form-control-sm, .form-select-sm { padding: 6px 10px; font-size: 12.5px; border-radius: var(--radius-sm); }
-        .form-check-input:checked { background-color: var(--accent); border-color: var(--accent); }
 
         .alert {
             border-radius: var(--radius-md);
-            border: 1px solid transparent;
             padding: 12px 16px;
             font-size: 13.5px;
             display: flex;
             align-items: flex-start;
             gap: 10px;
+            border: 1px solid transparent;
         }
-        .alert i { font-size: 17px; flex-shrink: 0; }
         .alert-success { background: var(--success-light); color: #14532d; border-color: #bbf7d0; }
         .alert-danger { background: var(--danger-light); color: #7f1d1d; border-color: #fecaca; }
         .alert-warning { background: var(--warning-light); color: #78350f; border-color: #fde68a; }
         .alert-info { background: var(--info-light); color: #164e63; border-color: #a5f3fc; }
         .alert-secondary { background: var(--bg-tertiary); color: var(--text-secondary); border-color: var(--border-light); }
-
-        .task-card {
-            border-left: 3px solid var(--border-medium);
-            transition: var(--transition);
-            border-radius: var(--radius-md);
-        }
-        .task-card.completed { border-left-color: var(--success); background: #f0fdf4; }
-        .task-card.in_progress { border-left-color: var(--warning); }
-        .task-card:hover { box-shadow: var(--shadow-sm); transform: translateX(2px); }
-        .task-card.border-danger {
-            border: 2px solid var(--danger) !important;
-            border-left-width: 3px;
-        }
-        .task-card.unread {
-            border-left-color: var(--accent) !important;
-            background: #f5f6ff;
-        }
-
-        .tasks-table { font-size: 13.5px; }
-        .tasks-table thead th {
-            background: var(--bg-tertiary);
-            font-size: 11.5px;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            font-weight: 600;
-            color: var(--text-secondary);
-            padding: 10px 12px;
-            border-bottom: 2px solid var(--border-light);
-            white-space: nowrap;
-        }
-        .tasks-table tbody td {
-            padding: 12px;
-            vertical-align: middle;
-            border-bottom: 1px solid var(--border-light);
-        }
-        .tasks-table tbody tr { transition: background 0.15s ease; }
-        .tasks-table tbody tr:hover { background: var(--bg-tertiary); }
-        .tasks-table .table-success-light { background: #f0fdf4; }
-        .tasks-table .table-danger-light { background: #fef2f2; }
-        .tasks-table .table-unread { background: #f5f6ff; }
-
-        .tasks-table .status-select {
-            font-size: 12px;
-            padding: 4px 8px;
-            border-color: var(--border-light);
-            min-width: 110px;
-        }
-        .tasks-table .status-select[data-status="new"] { background: #f4f4f5; }
-        .tasks-table .status-select[data-status="in_progress"] { background: #fffbeb; color: #92400e; }
-        .tasks-table .status-select[data-status="completed"] { background: #f0fdf4; color: #065f46; }
-
-        .tasks-table .action-btn {
-            width: 30px;
-            height: 30px;
-            padding: 0;
-            border-radius: 6px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .tasks-table .action-btn:hover { background: var(--bg-tertiary); border-color: var(--accent); }
-
-        .chat-box {
-            height: 300px;
-            overflow-y: auto;
-            background-color: var(--bg-tertiary);
-            border-radius: var(--radius-md);
-            padding: 14px;
-        }
-        .chat-box .message {
-            margin-bottom: 10px;
-            padding: 10px 14px;
-            background: white;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border-light);
-            font-size: 13.5px;
-            box-shadow: var(--shadow-xs);
-        }
-        .chat-box .message .author {
-            font-weight: 600;
-            color: var(--accent);
-            font-size: 13px;
-        }
-        .chat-box .message .time {
-            font-size: 11px;
-            color: var(--text-tertiary);
-            margin-left: 8px;
-        }
-        .chat-box .message .mention {
-            background: #fef3c7;
-            color: #92400e;
-            padding: 1px 5px;
-            border-radius: 4px;
-            font-weight: 600;
-            font-size: 12.5px;
-            text-decoration: none;
-            transition: background 0.15s ease;
-        }
-        .chat-box .message .mention:hover {
-            background: #fde68a;
-        }
 
         .empty-state { text-align: center; padding: 64px 20px; }
         .empty-state-icon {
@@ -959,163 +749,36 @@
             margin-bottom: 20px;
         }
         .empty-state h5 { color: var(--text-primary); margin-bottom: 8px; }
-        .empty-state p { color: var(--text-secondary); font-size: 13.5px; margin-bottom: 20px; }
 
-        #calendar, #myCalendar {
-            --fc-border-color: var(--border-light);
-            --fc-today-bg-color: var(--accent-light);
-            --fc-page-bg-color: var(--bg-secondary);
-            font-family: 'Inter', sans-serif;
+        .modal-content { border-radius: var(--radius-lg); border: none; box-shadow: var(--shadow-lg); }
+        .modal-header { border-bottom: 1px solid var(--border-light); padding: 16px 20px; }
+        .modal-body { padding: 20px; }
+        .modal-footer { border-top: 1px solid var(--border-light); padding: 14px 20px; }
+
+        .dropdown-menu {
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-md);
+            padding: 4px;
             font-size: 13.5px;
         }
-        #calendar .fc-toolbar-title,
-        #myCalendar .fc-toolbar-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-        #calendar .fc-button,
-        #myCalendar .fc-button {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-medium);
-            color: var(--text-primary);
-            font-weight: 500;
-            font-size: 12.5px;
-            padding: 6px 12px;
-            border-radius: var(--radius-md);
-            text-transform: capitalize;
-            box-shadow: none;
-        }
-        #calendar .fc-button:hover,
-        #myCalendar .fc-button:hover {
-            background: var(--bg-tertiary);
-            border-color: var(--border-medium);
-            color: var(--text-primary);
-        }
-        #calendar .fc-button-active,
-        #calendar .fc-button:active,
-        #calendar .fc-button-primary:not(:disabled).fc-button-active,
-        #myCalendar .fc-button-active,
-        #myCalendar .fc-button:active,
-        #myCalendar .fc-button-primary:not(:disabled).fc-button-active {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: white;
-        }
-        #calendar .fc-button-primary:disabled,
-        #myCalendar .fc-button-primary:disabled { opacity: 0.5; }
-        #calendar .fc-daygrid-day-number,
-        #calendar .fc-col-header-cell-cushion,
-        #myCalendar .fc-daygrid-day-number,
-        #myCalendar .fc-col-header-cell-cushion {
-            color: var(--text-secondary);
-            font-size: 12.5px;
-            font-weight: 500;
-            text-decoration: none;
-        }
-        #calendar .fc-col-header-cell-cushion,
-        #myCalendar .fc-col-header-cell-cushion {
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 11px;
-            letter-spacing: 0.04em;
-        }
-        #calendar .fc-day-today,
-        #myCalendar .fc-day-today { background: var(--accent-light) !important; }
-        #calendar .fc-event,
-        #myCalendar .fc-event {
-            border-radius: 4px;
-            padding: 1px 4px;
-            font-size: 11.5px;
-            font-weight: 500;
-            cursor: pointer;
-            border: none;
-        }
-        #calendar .fc-event:hover,
-        #myCalendar .fc-event:hover { opacity: 0.9; }
-        #calendar .fc-list-event:hover td,
-        #myCalendar .fc-list-event:hover td { background: var(--bg-tertiary); }
+        .dropdown-item { border-radius: var(--radius-sm); padding: 7px 10px; color: var(--text-primary); }
+        .dropdown-item:hover { background: var(--bg-tertiary); }
 
-        .fc-daygrid-day { cursor: pointer; transition: background 0.15s ease; }
-        .fc-daygrid-day:hover { background: rgba(91, 91, 214, 0.04) !important; }
-
-        .fc-week-number-badge {
-            font-size: 9px;
-            color: var(--text-tertiary);
-            background: var(--bg-tertiary);
-            padding: 1px 4px;
-            border-radius: 3px;
-            font-weight: 700;
-            margin-left: 4px;
+        .color-dot {
             display: inline-block;
-            letter-spacing: 0.03em;
-        }
-        .fc-daygrid-day-top {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            padding-right: 4px;
-        }
-
-        .legend-item {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 3px solid transparent;
             cursor: pointer;
-            user-select: none;
-            padding: 4px 8px;
-            border-radius: 6px;
-            transition: all 0.15s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            border: 1px solid transparent;
         }
-        .legend-item:hover { background: var(--bg-tertiary); border-color: var(--border-light); }
-        .legend-item.legend-disabled {
-            opacity: 0.35;
-            text-decoration: line-through;
-            text-decoration-color: var(--danger);
-        }
-        .legend-item.legend-disabled:hover { opacity: 0.6; }
+        .color-dot.selected { border-color: var(--text-primary); }
 
-        .collapse-icon {
-            transition: transform 0.2s ease;
-            display: inline-block;
-            font-size: 12px;
-            margin-left: 4px;
-        }
-        [aria-expanded="true"] .collapse-icon { transform: rotate(180deg); }
-        [aria-expanded="true"] .collapse-label-closed { display: none; }
-        [aria-expanded="false"] .collapse-label-open { display: none; }
-
-        @keyframes highlight-pulse {
-            0% { box-shadow: 0 0 0 0 rgba(91, 91, 214, 0.6); background-color: rgba(91, 91, 214, 0.08); }
-            50% { box-shadow: 0 0 0 8px rgba(91, 91, 214, 0); background-color: rgba(91, 91, 214, 0.15); }
-            100% { box-shadow: 0 0 0 0 rgba(91, 91, 214, 0); background-color: transparent; }
-        }
-        .highlight-new {
-            animation: highlight-pulse 1.5s ease-in-out 2;
-            border-left-color: var(--accent) !important;
-            position: relative;
-            z-index: 1;
-        }
-        .highlight-new::before {
-            content: '✨ Новая';
-            position: absolute;
-            top: 8px;
-            right: 12px;
-            background: var(--accent);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            animation: fadeInUp 0.3s ease-out;
-        }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .fade-in-up { animation: fadeInUp 0.3s ease-out; }
+        .bg-success-subtle { background-color: #f0fdf4 !important; }
+        .bg-warning-subtle { background-color: #fffbeb !important; }
+        .bg-danger-subtle { background-color: #fef2f2 !important; }
+        .bg-info-subtle { background-color: #f0f9ff !important; }
 
         .sidebar-toggle {
             display: none;
@@ -1133,13 +796,8 @@
             left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.4);
             z-index: 998;
-            backdrop-filter: blur(2px);
         }
         .sidebar-overlay.show { display: block; }
-
-        @media (max-width: 992px) {
-            .global-search-wrap { width: 200px; margin-left: 12px; }
-        }
 
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); }
@@ -1150,88 +808,35 @@
             .header .logo span { display: none; }
             h2 { font-size: 22px; }
             .global-search-wrap { display: none; }
-
-            .tasks-table thead { display: none; }
-            .tasks-table, .tasks-table tbody, .tasks-table tr, .tasks-table td {
-                display: block;
-                width: 100%;
-            }
-            .tasks-table tr {
-                background: white;
-                border: 1px solid var(--border-light);
-                border-radius: var(--radius-md);
-                margin-bottom: 12px;
-                padding: 8px;
-                box-shadow: var(--shadow-xs);
-            }
-            .tasks-table td { border: none; padding: 6px 8px; }
         }
 
-        .text-truncate-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+        .ios-step {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-light);
         }
-
-        .nav-tabs { border-bottom: 1px solid var(--border-light); gap: 4px; }
-        .nav-tabs .nav-link {
-            border: none;
-            color: var(--text-secondary);
-            font-weight: 500;
-            font-size: 13.5px;
-            padding: 9px 14px;
-            border-radius: var(--radius-md) var(--radius-md) 0 0;
-            transition: var(--transition);
-            position: relative;
-        }
-        .nav-tabs .nav-link:hover { color: var(--text-primary); background: var(--bg-tertiary); }
-        .nav-tabs .nav-link.active {
-            color: var(--accent);
-            background: transparent;
-            border-bottom: 2px solid var(--accent);
-            font-weight: 600;
-        }
-        .nav-tabs .nav-link .badge { margin-left: 6px; }
-
-        .modal-content {
-            border-radius: var(--radius-lg);
-            border: none;
-            box-shadow: var(--shadow-lg);
-        }
-        .modal-header { border-bottom: 1px solid var(--border-light); padding: 16px 20px; }
-        .modal-body { padding: 20px; }
-        .modal-footer { border-top: 1px solid var(--border-light); padding: 14px 20px; }
-
-        .dropdown-menu {
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border-light);
-            box-shadow: var(--shadow-md);
-            padding: 4px;
-            font-size: 13.5px;
-        }
-        .dropdown-item { border-radius: var(--radius-sm); padding: 7px 10px; color: var(--text-primary); }
-        .dropdown-item:hover { background: var(--bg-tertiary); }
-        .dropdown-item.text-danger:hover { background: var(--danger-light); color: var(--danger) !important; }
-
-        .color-dot {
-            display: inline-block;
+        .ios-step:last-child { border-bottom: none; }
+        .ios-step-num {
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            border: 3px solid transparent;
-            transition: all 0.15s;
-            cursor: pointer;
+            background: var(--accent);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
         }
-        .color-dot.selected { border-color: var(--text-primary); transform: scale(1.1); }
-        .color-dot:hover { transform: scale(1.05); }
+        .ios-step-text { flex: 1; font-size: 13.5px; }
+        .ios-step-text strong { display: block; margin-bottom: 2px; }
+        .ios-step-text span { color: var(--text-secondary); font-size: 12.5px; }
 
-        .bg-success-subtle { background-color: #f0fdf4 !important; }
-        .bg-warning-subtle { background-color: #fffbeb !important; }
-        .bg-danger-subtle { background-color: #fef2f2 !important; }
-        .bg-info-subtle { background-color: #f0f9ff !important; }
-        .bg-guest-subtle { background-color: #fff7ed !important; }
-        .bg-am-stanko-subtle { background-color: #eef0ff !important; }
+        @keyframes apkUpdateSlideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -1259,6 +864,20 @@
         {% endif %}
 
         <div class="header-right">
+            <a href="/static/apk/workspace.apk"
+               class="header-icon-btn mobile-btn"
+               download
+               title="Скачать приложение для Android">
+                <i class="bi bi-android2"></i>
+            </a>
+            <a href="#"
+               class="header-icon-btn mobile-btn"
+               data-bs-toggle="modal"
+               data-bs-target="#iosInstallModal"
+               title="Установить на iPhone">
+                <i class="bi bi-apple"></i>
+            </a>
+
             <a href="{{ url_for('auth.profile') }}"
                class="user-info"
                title="Профиль и смена пароля">
@@ -1295,9 +914,9 @@
                 <i class="bi bi-check2-square"></i>
                 <span>Мои задачи</span>
                 {% if unread_tasks_count and unread_tasks_count > 0 %}
-                    <span class="nav-badge-new" title="{{ unread_tasks_count }} новых задач">{{ unread_tasks_count }}</span>
+                    <span class="nav-badge-new">{{ unread_tasks_count }}</span>
                 {% elif my_overdue_count and my_overdue_count > 0 %}
-                    <span class="nav-badge-count" title="{{ my_overdue_count }} просроченных">{{ my_overdue_count }}</span>
+                    <span class="nav-badge-count">{{ my_overdue_count }}</span>
                 {% endif %}
             </a>
 
@@ -1306,7 +925,7 @@
                 <i class="bi bi-at"></i>
                 <span>Мои упоминания</span>
                 {% if unread_mentions_count and unread_mentions_count > 0 %}
-                    <span class="nav-badge-new" title="{{ unread_mentions_count }} новых упоминаний">{{ unread_mentions_count }}</span>
+                    <span class="nav-badge-new">{{ unread_mentions_count }}</span>
                 {% endif %}
             </a>
 
@@ -1314,6 +933,32 @@
                 <i class="bi bi-calendar3"></i>
                 <span>Мой календарь</span>
             </a>
+
+            <a href="#"
+               class="nav-item"
+               id="enablePushLink"
+               onclick="event.preventDefault(); window.workspaceSubscribeToPush().then(ok => { if (ok) { this.style.display='none'; alert('✅ Уведомления включены!'); } });"
+               style="display: none;">
+                <i class="bi bi-bell-fill"></i>
+                <span>Включить уведомления</span>
+            </a>
+
+            {% if session.user_role in ['admin', 'supervisor'] %}
+            <a href="{{ url_for('support.admin_tickets') }}"
+               class="nav-item {% if request.endpoint and request.endpoint.startswith('support.') %}active{% endif %}">
+                <i class="bi bi-inbox-fill"></i>
+                <span>Обращения</span>
+                {% if support_unread_count and support_unread_count > 0 %}
+                    <span class="nav-badge-new">{{ support_unread_count }}</span>
+                {% endif %}
+            </a>
+            {% else %}
+            <a href="{{ url_for('support.my_tickets') }}"
+               class="nav-item {% if request.endpoint and request.endpoint.startswith('support.') %}active{% endif %}">
+                <i class="bi bi-life-preserver"></i>
+                <span>Поддержка</span>
+            </a>
+            {% endif %}
         </div>
 
         <div class="nav-section">
@@ -1367,94 +1012,105 @@
             </div>
             {% endif %}
 
-            {# ← УПРОЩЁННОЕ ДЕРЕВО: плоский список проектов, без филиалов и субподрядчиков #}
             <div class="project-tree" id="projectTree">
                 {% if projects %}
+                    {% set customer_groups = {} %}
                     {% for project in projects %}
+                        {% if project.customer %}
+                            {% set cust_name = project.customer.name %}
+                        {% else %}
+                            {% set cust_name = '__no_customer__' %}
+                        {% endif %}
+                        {% if cust_name not in customer_groups %}
+                            {% set _ = customer_groups.update({cust_name: []}) %}
+                        {% endif %}
+                        {% set _ = customer_groups[cust_name].append(project) %}
+                    {% endfor %}
+
+                    {% set sorted_keys = [] %}
+                    {% for key in customer_groups.keys() %}
+                        {% if key != '__no_customer__' %}
+                            {% set _ = sorted_keys.append(key) %}
+                        {% endif %}
+                    {% endfor %}
+                    {% set sorted_keys = sorted_keys|sort %}
+                    {% if '__no_customer__' in customer_groups %}
+                        {% set _ = sorted_keys.append('__no_customer__') %}
+                    {% endif %}
+
+                    {% for cust_key in sorted_keys %}
+                        {% set cust_projects = customer_groups[cust_key] %}
+                        {% set is_no_customer = (cust_key == '__no_customer__') %}
+
                         {% set current_pid = request.view_args.get('project_id') if request.view_args else None %}
-                        {% set is_current = current_pid and current_pid|int == project.id %}
-                        {% set project_unread = unread_counts.get(project.id, 0) %}
-                        {% set project_mentions = unread_mentions_by_project.get(project.id, 0) if unread_mentions_by_project else 0 %}
-
-                        <div class="tree-item {% if is_current %}active{% endif %}"
-                             onclick="toggleProject('{{ project.id }}')">
-                            <span class="expand-icon {% if is_current %}expanded{% endif %}" id="expand-{{ project.id }}">▶</span>
-                            <i class="bi bi-folder-fill folder-icon"></i>
-                            <span class="project-name">{{ project.name }}</span>
-                            {% if project.is_overdue %}
-                                <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 12px;" title="Проект просрочен"></i>
+                        {% set has_current = false %}
+                        {% for p in cust_projects %}
+                            {% if current_pid and current_pid|int == p.id %}
+                                {% set has_current = true %}
                             {% endif %}
+                        {% endfor %}
 
-                            {# Бейдж: упоминания → непрочитанные сообщения → % завершения #}
-                            {% if project_mentions > 0 and not is_current %}
-                                <span class="nav-badge-new" title="{{ project_mentions }} новых упоминаний">
-                                    <i class="bi bi-at"></i>{{ project_mentions }}
-                                </span>
-                            {% elif project_unread > 0 and not is_current %}
-                                <span class="nav-badge-count" title="{{ project_unread }} непрочитанных сообщений">{{ project_unread }}</span>
+                        <div class="tree-customer-header {% if has_current %}expanded{% endif %}"
+                             data-target="customer-children-{{ loop.index }}"
+                             onclick="toggleCustomerGroup(this)">
+                            <span class="expand-icon-customer {% if has_current %}expanded{% endif %}">▶</span>
+                            {% if is_no_customer %}
+                                <i class="bi bi-dash-circle" style="color: #71717a;"></i>
+                                <span class="customer-name">Без заказчика</span>
                             {% else %}
-                                <span class="badge">{{ project.completion_percentage }}%</span>
+                                <i class="bi bi-buildings" style="color: #0891b2;"></i>
+                                <span class="customer-name">{{ cust_key }}</span>
                             {% endif %}
+                            <span class="badge">{{ cust_projects|length }}</span>
                         </div>
 
-                        <div class="tree-children" id="children-{{ project.id }}"
-                             style="display: {% if is_current %}block{% else %}none{% endif %};">
-                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}"
-                               class="tree-item project-tab-link" data-tab="dashboard" data-project-id="{{ project.id }}">
-                                <i class="bi bi-grid"></i><span>Дашборд</span>
-                            </a>
-                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}#tasks"
-                               class="tree-item project-tab-link" data-tab="tasks" data-project-id="{{ project.id }}">
-                                <i class="bi bi-list-task"></i><span>Задачи</span>
-                                <span class="badge">{{ project.tasks|length }}</span>
-                            </a>
-                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}#todo"
-                               class="tree-item project-tab-link" data-tab="todo" data-project-id="{{ project.id }}">
-                                <i class="bi bi-check2-square"></i><span>To-Do</span>
-                            </a>
-                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}#reports"
-                               class="tree-item project-tab-link" data-tab="reports" data-project-id="{{ project.id }}">
-                                <i class="bi bi-file-earmark-text"></i><span>Отчёты</span>
-                            </a>
-                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}#calendar"
-                               class="tree-item project-tab-link" data-tab="calendar" data-project-id="{{ project.id }}">
-                                <i class="bi bi-calendar3"></i><span>Календарь</span>
-                            </a>
-                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}#files"
-                               class="tree-item project-tab-link" data-tab="files" data-project-id="{{ project.id }}">
-                                <i class="bi bi-folder"></i><span>Файлы</span>
-                            </a>
+                        <div class="customer-children"
+                             id="customer-children-{{ loop.index }}"
+                             style="display: {% if has_current %}block{% else %}none{% endif %};">
+                            {% for project in cust_projects %}
+                                {% set current_pid = request.view_args.get('project_id') if request.view_args else None %}
+                                {% set is_current = current_pid and current_pid|int == project.id %}
+                                {% set project_unread = unread_counts.get(project.id, 0) %}
+                                {% set project_mentions = unread_mentions_by_project.get(project.id, 0) if unread_mentions_by_project else 0 %}
 
-                            {# Чат: приоритет у упоминаний #}
-                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}?mark_read=1#chat"
-                               class="tree-item project-tab-link" data-tab="chat" data-project-id="{{ project.id }}">
-                                <i class="bi bi-chat-dots"></i><span>Чат</span>
-                                {% if project_mentions > 0 %}
-                                    <span class="nav-badge-new" title="{{ project_mentions }} новых упоминаний">
-                                        <i class="bi bi-at"></i>{{ project_mentions }}
-                                    </span>
-                                {% elif project_unread > 0 %}
-                                    <span class="nav-badge-count">{{ project_unread }}</span>
-                                {% else %}
-                                    <span class="badge">{{ project.messages|length }}</span>
-                                {% endif %}
-                            </a>
+                                <div class="tree-item {% if is_current %}active{% endif %}"
+                                     onclick="toggleProject('{{ project.id }}')">
+                                    <span class="expand-icon {% if is_current %}expanded{% endif %}"
+                                          id="expand-{{ project.id }}">▶</span>
+                                    <i class="bi bi-folder-fill folder-icon"></i>
+                                    <span class="project-name">{{ project.name }}</span>
+                                    {% if project_mentions > 0 and not is_current %}
+                                        <span class="nav-badge-new"><i class="bi bi-at"></i>{{ project_mentions }}</span>
+                                    {% elif project_unread > 0 and not is_current %}
+                                        <span class="nav-badge-count">{{ project_unread }}</span>
+                                    {% else %}
+                                        <span class="badge">{{ project.completion_percentage }}%</span>
+                                    {% endif %}
+                                </div>
 
-                            {% if session.user_role in ['admin', 'supervisor'] or (user_role and user_role in ['admin', 'manager']) %}
-                            <a href="{{ url_for('team.project_settings', project_id=project.id) }}"
-                               class="tree-item {% if request.endpoint == 'team.project_settings' and is_current %}active{% endif %}">
-                                <i class="bi bi-gear"></i><span>Настройки</span>
-                            </a>
-                            {% endif %}
+                                <div class="tree-children" id="children-{{ project.id }}"
+                                     style="display: {% if is_current %}block{% else %}none{% endif %};">
+                                    <a href="{{ url_for('projects.view_project', project_id=project.id) }}"
+                                       class="tree-item project-tab-link" data-tab="dashboard" data-project-id="{{ project.id }}">
+                                        <i class="bi bi-grid"></i><span>Дашборд</span>
+                                    </a>
+                                    <a href="{{ url_for('projects.view_project', project_id=project.id) }}#tasks"
+                                       class="tree-item project-tab-link" data-tab="tasks" data-project-id="{{ project.id }}">
+                                        <i class="bi bi-list-task"></i><span>Задачи</span>
+                                        <span class="badge">{{ project.tasks|length }}</span>
+                                    </a>
+                                    <a href="{{ url_for('projects.view_project', project_id=project.id) }}#chat"
+                                       class="tree-item project-tab-link" data-tab="chat" data-project-id="{{ project.id }}">
+                                        <i class="bi bi-chat-dots"></i><span>Чат</span>
+                                    </a>
+                                </div>
+                            {% endfor %}
                         </div>
                     {% endfor %}
                 {% else %}
                     <div style="padding: 12px 10px; font-size: 12.5px; color: #52525b; text-align: center;">
                         Нет проектов
                     </div>
-                    <a href="{{ url_for('projects.create_project') }}" class="btn btn-primary btn-sm w-100 mt-2">
-                        <i class="bi bi-plus-lg"></i> Создать проект
-                    </a>
                 {% endif %}
             </div>
         </div>
@@ -1476,7 +1132,317 @@
         {% block content %}{% endblock %}
     </main>
 
+    <div class="modal fade" id="iosInstallModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-apple"></i> Установка на iPhone</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">
+                        Приложение Workspace устанавливается как PWA —
+                        без App Store. Занимает 30 секунд.
+                    </p>
+                    <div class="ios-step">
+                        <div class="ios-step-num">1</div>
+                        <div class="ios-step-text">
+                            <strong>Откройте сайт в Safari</strong>
+                            <span>Именно в Safari! Chrome и Яндекс.Браузер не подходят.</span>
+                        </div>
+                    </div>
+                    <div class="ios-step">
+                        <div class="ios-step-num">2</div>
+                        <div class="ios-step-text">
+                            <strong>Нажмите «Поделиться»</strong>
+                            <span>Квадрат со стрелкой вверх внизу экрана.</span>
+                        </div>
+                    </div>
+                    <div class="ios-step">
+                        <div class="ios-step-num">3</div>
+                        <div class="ios-step-text">
+                            <strong>Выберите «На экран "Домой"»</strong>
+                            <span>В самом низу списка.</span>
+                        </div>
+                    </div>
+                    <div class="ios-step">
+                        <div class="ios-step-num">4</div>
+                        <div class="ios-step-text">
+                            <strong>Нажмите «Добавить»</strong>
+                            <span>Иконка появится на домашнем экране.</span>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mb-0 mt-3 small">
+                        <i class="bi bi-info-circle"></i>
+                        После установки откройте приложение с домашнего экрана
+                        и разрешите уведомления.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Понятно</button>
+                    <a href="https://workspace-kvk.duckdns.org"
+                       class="btn btn-primary"
+                       target="_blank">
+                        <i class="bi bi-box-arrow-up-right"></i> Открыть сайт
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- PWA: SW + Push (iOS-совместимый, /sw.js) -->
+    <script>
+    (function() {
+      if (!('serviceWorker' in navigator)) {
+        console.log('⚠️ Service Worker не поддерживается');
+        return;
+      }
+
+      const pushSupported = 'PushManager' in window && 'Notification' in window;
+
+      function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding)
+          .replace(/\-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+          outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+      }
+
+      async function registerSW() {
+        try {
+          const reg = await navigator.serviceWorker.register('/sw.js');
+          console.log('✅ SW зарегистрирован:', reg.scope);
+          await reg.update();
+          return reg;
+        } catch (err) {
+          console.warn('⚠️ Ошибка SW:', err);
+          return null;
+        }
+      }
+
+      async function subscribeToPush() {
+        if (!pushSupported) {
+          alert('Ваш браузер не поддерживает push-уведомления.');
+          return false;
+        }
+        try {
+          const reg = await navigator.serviceWorker.ready;
+
+          let permission = Notification.permission;
+          if (permission === 'default') {
+            permission = await Notification.requestPermission();
+          }
+          if (permission !== 'granted') {
+            alert('Уведомления не разрешены.\n\nНастройки → Уведомления → Workspace → Разрешить');
+            return false;
+          }
+
+          const resp = await fetch('/push/vapid-public-key');
+          const { publicKey } = await resp.json();
+          if (!publicKey) {
+            alert('Ошибка: сервер не отдаёт VAPID-ключ');
+            return false;
+          }
+
+          let sub = await reg.pushManager.getSubscription();
+          if (!sub) {
+            sub = await reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlBase64ToUint8Array(publicKey),
+            });
+            console.log('✅ Push-подписка создана');
+          } else {
+            console.log('ℹ️ Push-подписка уже существует');
+          }
+
+          await fetch('/push/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(sub),
+          });
+          console.log('✅ Подписка сохранена');
+          return true;
+        } catch (err) {
+          console.warn('⚠️ Ошибка подписки:', err);
+          alert('Не удалось: ' + err.message);
+          return false;
+        }
+      }
+
+      window.addEventListener('load', function() {
+        registerSW().then(reg => {
+          if (!reg) return;
+          if (!pushSupported) return;
+
+          if (Notification.permission === 'denied') {
+            console.log('⚠️ Разрешение отклонено');
+            return;
+          }
+
+          navigator.serviceWorker.ready
+            .then(r => r.pushManager.getSubscription())
+            .then(sub => {
+              if (sub) {
+                console.log('ℹ️ Подписка уже есть');
+                return;
+              }
+              showNotificationBanner();
+              const link = document.getElementById('enablePushLink');
+              if (link) link.style.display = 'flex';
+            })
+            .catch(err => {
+              console.warn('⚠️ Ошибка проверки подписки:', err);
+              showNotificationBanner();
+              const link = document.getElementById('enablePushLink');
+              if (link) link.style.display = 'flex';
+            });
+        });
+      });
+
+      function showNotificationBanner() {
+        if (document.getElementById('notificationBanner')) return;
+        if (localStorage.getItem('notif_banner_dismissed') === '1') return;
+
+        const banner = document.createElement('div');
+        banner.id = 'notificationBanner';
+        banner.style.cssText = `
+          position: fixed;
+          bottom: 16px; left: 16px; right: 16px;
+          background: linear-gradient(135deg, #5b5bd6, #8b5cf6);
+          color: white;
+          padding: 14px 18px;
+          border-radius: 14px;
+          z-index: 99998;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+          font-family: 'Inter', sans-serif;
+          animation: apkUpdateSlideUp 0.4s ease-out;
+        `;
+
+        banner.innerHTML = `
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 700; font-size: 14px; margin-bottom: 2px;">
+              🔔 Включить уведомления
+            </div>
+            <div style="font-size: 12px; opacity: 0.9;">
+              Получайте оповещения о задачах и сообщениях
+            </div>
+          </div>
+          <button id="enableNotifBtn"
+                  style="background: white; color: #5b5bd6;
+                         padding: 9px 16px; border-radius: 8px;
+                         border: none; font-weight: 700;
+                         font-size: 13px; cursor: pointer;
+                         white-space: nowrap;">
+            Включить
+          </button>
+          <button onclick="
+                     document.getElementById('notificationBanner').remove();
+                     localStorage.setItem('notif_banner_dismissed', '1');
+                   "
+                  style="background: transparent; border: none;
+                         color: white; font-size: 22px;
+                         cursor: pointer; padding: 0 4px;
+                         line-height: 1;">
+            ×
+          </button>
+        `;
+
+        document.body.appendChild(banner);
+
+        document.getElementById('enableNotifBtn').addEventListener('click', async () => {
+          const ok = await subscribeToPush();
+          if (ok) {
+            banner.remove();
+            alert('✅ Уведомления включены!');
+          }
+        });
+      }
+
+      window.workspaceSubscribeToPush = subscribeToPush;
+    })();
+    </script>
+
+    <script>
+    (function() {
+      const CURRENT_VERSION_CODE = {{ config.APP_VERSION_CODE|default(1) }};
+      const VERSION_URL = '/static/apk/version.json';
+
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                           || window.navigator.standalone === true;
+      const isAndroid = /Android/i.test(navigator.userAgent);
+
+      if (!isStandalone || !isAndroid) return;
+
+      fetch(VERSION_URL + '?t=' + Date.now())
+        .then(r => r.json())
+        .then(data => {
+          const latestCode = data.latest_version_code || 0;
+          if (latestCode <= CURRENT_VERSION_CODE) return;
+
+          const dismissedKey = 'update_dismissed_' + latestCode;
+          if (localStorage.getItem(dismissedKey) && !data.force_update) return;
+
+          showUpdateBanner(data);
+        })
+        .catch(err => console.warn('[Update] Ошибка:', err));
+
+      function showUpdateBanner(data) {
+        const old = document.getElementById('apkUpdateBanner');
+        if (old) old.remove();
+
+        const banner = document.createElement('div');
+        banner.id = 'apkUpdateBanner';
+        banner.style.cssText = `
+          position: fixed; bottom: 0; left: 0; right: 0;
+          background: linear-gradient(135deg, #5b5bd6, #8b5cf6);
+          color: white; padding: 16px 20px; z-index: 99999;
+          display: flex; align-items: center; gap: 12px;
+          box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+          animation: apkUpdateSlideUp 0.35s ease-out;
+        `;
+
+        banner.innerHTML = `
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 700; font-size: 15px; margin-bottom: 4px;">
+              🎉 Доступна новая версия ${data.latest_version || ''}
+            </div>
+            <div style="font-size: 13px; opacity: 0.9;">
+              ${data.release_notes || 'Обновление готово к установке'}
+            </div>
+          </div>
+          <a href="${data.apk_url || '/static/apk/workspace.apk'}"
+             download
+             style="background: white; color: #5b5bd6;
+                    padding: 10px 18px; border-radius: 8px;
+                    text-decoration: none; font-weight: 700;
+                    font-size: 13px; white-space: nowrap;">
+            Скачать
+          </a>
+          <button onclick="
+                     document.getElementById('apkUpdateBanner').remove();
+                     localStorage.setItem('update_dismissed_${data.latest_version_code}', '1');
+                   "
+                  style="background: transparent; border: none;
+                         color: white; font-size: 26px;
+                         cursor: pointer; padding: 0 8px; line-height: 1;">
+            ×
+          </button>
+        `;
+
+        document.body.appendChild(banner);
+      }
+    })();
+    </script>
+
     <script>
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
@@ -1496,340 +1462,49 @@
             }
         }
 
+        function toggleCustomerGroup(headerEl) {
+            const childrenId = headerEl.dataset.target;
+            const children = document.getElementById(childrenId);
+            if (!children) return;
+            const expandIcon = headerEl.querySelector('.expand-icon-customer');
+            if (children.style.display === 'none') {
+                children.style.display = 'block';
+                headerEl.classList.add('expanded');
+                if (expandIcon) expandIcon.classList.add('expanded');
+            } else {
+                children.style.display = 'none';
+                headerEl.classList.remove('expanded');
+                if (expandIcon) expandIcon.classList.remove('expanded');
+            }
+        }
+
         function filterProjects(query) {
             const q = query.toLowerCase().trim();
-
             document.querySelectorAll('#projectTree .tree-item').forEach(el => {
                 const name = (el.querySelector('.project-name')?.textContent || '').toLowerCase();
                 if (el.querySelector('.project-name')) {
                     el.style.display = (!q || name.includes(q)) ? '' : 'none';
-                    const pid = el.getAttribute('onclick')?.match(/'(\d+)'/)?.[1];
-                    if (pid) {
-                        const children = document.getElementById('children-' + pid);
-                        if (children) children.style.display = 'none';
-                    }
                 }
             });
-        }
-
-        function scrollToTabs() {
-            const tabsContainer = document.querySelector('.nav-tabs');
-            const mainContent = document.querySelector('.main-content');
-            if (!tabsContainer || !mainContent) return;
-            const headerHeight = 56;
-            const tabsRect = tabsContainer.getBoundingClientRect();
-            const mainRect = mainContent.getBoundingClientRect();
-            const offsetInContainer = tabsRect.top - mainRect.top + mainContent.scrollTop;
-            mainContent.scrollTo({
-                top: Math.max(0, offsetInContainer - headerHeight - 16),
-                behavior: 'smooth'
-            });
-        }
-
-        function activateTab(targetId) {
-            const tabLink = document.querySelector(`.nav-tabs a[href="#${targetId}"]`);
-            if (tabLink) {
-                if (typeof bootstrap !== 'undefined') new bootstrap.Tab(tabLink).show();
-                else tabLink.click();
-                setTimeout(scrollToTabs, 50);
-            }
-            if (history.replaceState) history.replaceState(null, null, '#' + targetId);
-            updateSidebarActive(targetId);
-        }
-
-        function updateSidebarActive(tabId) {
-            document.querySelectorAll('.project-tab-link').forEach(el => el.classList.remove('active'));
-            const activeLink = document.querySelector(`.project-tab-link[data-tab="${tabId}"]`);
-            if (activeLink) activeLink.classList.add('active');
-        }
-
-        function markChatAsRead(projectId) {
-            fetch(`/project/${projectId}/mark_read`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    const chatLink = document.querySelector(`.project-tab-link[data-tab="chat"][data-project-id="${projectId}"]`);
-                    if (chatLink) {
-                        const badge = chatLink.querySelector('.nav-badge-count');
-                        if (badge) badge.remove();
-                        const newBadge = chatLink.querySelector('.nav-badge-new');
-                        if (newBadge) newBadge.remove();
-                    }
-                    const children = document.getElementById(`children-${projectId}`);
-                    if (children) {
-                        const projectTreeItem = children.previousElementSibling;
-                        if (projectTreeItem) {
-                            const parentBadge = projectTreeItem.querySelector('.nav-badge-count');
-                            if (parentBadge) parentBadge.remove();
-                            const parentNewBadge = projectTreeItem.querySelector('.nav-badge-new');
-                            if (parentNewBadge) parentNewBadge.remove();
-                        }
-                    }
-                }
-            })
-            .catch(err => console.error('Ошибка отметки чата:', err));
-        }
-
-        (function() {
-            const input = document.getElementById('globalSearchInput');
-            const resultsBox = document.getElementById('globalSearchResults');
-            if (!input || !resultsBox) return;
-
-            let searchTimeout = null;
-            let activeIndex = -1;
-            let currentResults = [];
-
-            document.addEventListener('keydown', function(e) {
-                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-                    e.preventDefault();
-                    input.focus();
-                    input.select();
-                }
-                if (e.key === 'Escape' && document.activeElement === input) {
-                    closeResults();
-                    input.blur();
-                }
-            });
-
-            document.addEventListener('keydown', function(e) {
-                if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-                    e.preventDefault();
-                    input.focus();
-                }
-            });
-
-            input.addEventListener('input', function() {
-                const q = this.value.trim();
-                if (q.length < 2) { closeResults(); return; }
-                clearTimeout(searchTimeout);
-                resultsBox.innerHTML = '<div class="global-search-loading">Поиск...</div>';
-                resultsBox.classList.add('show');
-                searchTimeout = setTimeout(() => doSearch(q), 250);
-            });
-
-            input.addEventListener('keydown', function(e) {
-                if (!resultsBox.classList.contains('show')) return;
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    activeIndex = Math.min(activeIndex + 1, currentResults.length - 1);
-                    updateActiveItem();
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    activeIndex = Math.max(activeIndex - 1, 0);
-                    updateActiveItem();
-                } else if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (activeIndex >= 0 && currentResults[activeIndex]) {
-                        window.location.href = currentResults[activeIndex].url;
-                    }
-                }
-            });
-
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('.global-search-wrap')) closeResults();
-            });
-
-            function doSearch(q) {
-                fetch('/api/search?q=' + encodeURIComponent(q))
-                    .then(r => r.json())
-                    .then(data => {
-                        currentResults = data;
-                        activeIndex = -1;
-                        renderResults(data, q);
-                    })
-                    .catch(err => {
-                        console.error('Search error:', err);
-                        resultsBox.innerHTML = '<div class="global-search-empty">Ошибка поиска</div>';
-                    });
-            }
-
-            function renderResults(results, query) {
-                if (!results || results.length === 0) {
-                    resultsBox.innerHTML = `
-                        <div class="global-search-empty">
-                            <i class="bi bi-search" style="font-size: 24px; display: block; margin-bottom: 6px; opacity: 0.4;"></i>
-                            Ничего не найдено по запросу «${escapeHtml(query)}»
-                        </div>
-                    `;
-                    return;
-                }
-
-                let html = `
-                    <div class="global-search-hint">
-                        <span><kbd>↑</kbd> <kbd>↓</kbd> навигация</span>
-                        <span><kbd>Enter</kbd> открыть</span>
-                        <span><kbd>Esc</kbd> закрыть</span>
-                    </div>
-                `;
-
-                html += results.map((r, i) => `
-                    <a href="${r.url}" class="global-search-item" data-index="${i}">
-                        <div class="gs-icon type-${r.type}"><i class="bi bi-${r.icon}"></i></div>
-                        <div class="gs-content">
-                            <div class="gs-title">${escapeHtml(r.title)}</div>
-                            <div class="gs-subtitle">${escapeHtml(r.subtitle)}</div>
-                        </div>
-                        <i class="bi bi-arrow-right text-muted" style="font-size: 12px;"></i>
-                    </a>
-                `).join('');
-
-                resultsBox.innerHTML = html;
-                resultsBox.classList.add('show');
-
-                resultsBox.querySelectorAll('.global-search-item').forEach((el, i) => {
-                    el.addEventListener('mouseenter', () => {
-                        activeIndex = i;
-                        updateActiveItem();
-                    });
-                });
-            }
-
-            function updateActiveItem() {
-                resultsBox.querySelectorAll('.global-search-item').forEach((el, i) => {
-                    el.classList.toggle('active', i === activeIndex);
-                });
-                const activeEl = resultsBox.querySelector('.global-search-item.active');
-                if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
-            }
-
-            function closeResults() {
-                resultsBox.classList.remove('show');
-                resultsBox.innerHTML = '';
-                activeIndex = -1;
-                currentResults = [];
-            }
-
-            function escapeHtml(str) {
-                const div = document.createElement('div');
-                div.textContent = str;
-                return div.innerHTML;
-            }
-        })();
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.collapse').forEach(el => {
-                if (!el.id) return;
-                const key = 'collapse_' + el.id;
-                if (localStorage.getItem(key) === 'open') {
-                    el.classList.add('show');
-                    const toggler = document.querySelector(`[data-bs-target="#${el.id}"]`);
-                    if (toggler) toggler.setAttribute('aria-expanded', 'true');
-                }
-                el.addEventListener('shown.bs.collapse', () => localStorage.setItem(key, 'open'));
-                el.addEventListener('hidden.bs.collapse', () => localStorage.setItem(key, 'closed'));
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const params = new URLSearchParams(window.location.search);
-            const createdTaskId = params.get('created');
-            const createdTodoId = params.get('created_todo');
-
-            let targetEl = null;
-            if (createdTaskId) targetEl = document.querySelector(`[data-task-id="${createdTaskId}"]`);
-            else if (createdTodoId) targetEl = document.querySelector(`[data-todo-id="${createdTodoId}"]`);
-
-            if (targetEl) {
-                setTimeout(() => {
-                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    targetEl.classList.add('highlight-new');
-                    setTimeout(() => targetEl.classList.remove('highlight-new'), 3000);
-                }, 400);
-
-                if (history.replaceState) {
-                    const cleanSearch = window.location.search.replace(/[?&](created|created_todo)=[^&]+/g, '').replace(/^&/, '?');
-                    history.replaceState(null, null, window.location.pathname + cleanSearch + window.location.hash);
-                }
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.addEventListener('click', function(e) {
-                const sidebar = document.getElementById('sidebar');
-                const toggle = document.querySelector('.sidebar-toggle');
-                const overlay = document.getElementById('sidebarOverlay');
-                if (window.innerWidth <= 768) {
-                    if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
-                        sidebar.classList.remove('open');
-                        overlay.classList.remove('show');
-                    }
-                }
-            });
-
-            document.querySelectorAll('.sidebar .tree-item, .sidebar .nav-item').forEach(link => {
-                link.addEventListener('click', function() {
-                    if (window.innerWidth <= 768) {
-                        document.getElementById('sidebar').classList.remove('open');
-                        document.getElementById('sidebarOverlay').classList.remove('show');
+            document.querySelectorAll('.tree-customer-header').forEach(header => {
+                const childrenId = header.dataset.target;
+                const children = document.getElementById(childrenId);
+                if (!children) return;
+                let hasVisible = false;
+                children.querySelectorAll('.tree-item').forEach(item => {
+                    if (item.querySelector('.project-name') && item.style.display !== 'none') {
+                        hasVisible = true;
                     }
                 });
-            });
-
-            const hash = window.__initialHash || window.location.hash;
-            const isProjectPage = window.location.pathname.match(/^\/project\/\d+$/);
-
-            if (isProjectPage) {
-                if (hash && hash.length > 1) {
-                    const targetId = hash.substring(1);
-                    setTimeout(() => activateTab(targetId), 100);
+                if (!q) {
+                    header.style.display = '';
+                    children.style.display = header.classList.contains('expanded') ? 'block' : 'none';
                 } else {
-                    setTimeout(() => updateSidebarActive('dashboard'), 100);
+                    header.style.display = hasVisible ? '' : 'none';
+                    children.style.display = hasVisible ? 'block' : 'none';
                 }
-            }
-
-            document.querySelectorAll('.project-tab-link').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    const href = this.getAttribute('href');
-                    const tabId = this.dataset.tab;
-                    const projectId = this.dataset.projectId;
-                    const hashIndex = href.indexOf('#');
-
-                    if (tabId === 'chat' && projectId) markChatAsRead(projectId);
-
-                    if (hashIndex > 0) {
-                        const path = href.substring(0, hashIndex);
-                        const cleanPath = path.split('?')[0];
-                        const currentPath = window.location.pathname;
-                        if (cleanPath === currentPath) {
-                            e.preventDefault();
-                            activateTab(tabId);
-                        }
-                    } else {
-                        const path = href.split('?')[0];
-                        const currentPath = window.location.pathname;
-                        if (path === currentPath) {
-                            e.preventDefault();
-                            activateTab('tasks');
-                        }
-                    }
-                });
             });
-
-            document.querySelectorAll('.nav-tabs .nav-link').forEach(tabBtn => {
-                tabBtn.addEventListener('shown.bs.tab', function(e) {
-                    const href = this.getAttribute('href');
-                    if (href && href.startsWith('#')) {
-                        const tabId = href.substring(1);
-                        updateSidebarActive(tabId);
-                        if (history.replaceState) history.replaceState(null, '', '#' + tabId);
-                        if (tabId === 'chat') {
-                            const projectMatch = window.location.pathname.match(/^\/project\/(\d+)$/);
-                            if (projectMatch) markChatAsRead(projectMatch[1]);
-                        }
-                    }
-                });
-            });
-
-            const activeProject = document.querySelector('.project-tree .tree-item.active');
-            if (activeProject) {
-                setTimeout(() => {
-                    activeProject.scrollIntoView({ block: 'center', behavior: 'smooth' });
-                }, 300);
-            }
-        });
+        }
     </script>
 </body>
 </html>

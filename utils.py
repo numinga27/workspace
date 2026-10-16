@@ -94,8 +94,40 @@ def is_project_guest(user_id, project_id):
 
 
 # ============================================================
-#  СПИСКИ ПРОЕКТОВ
+#  ГОСТЕВОЙ СТАТУС — ГЛОБАЛЬНО
 # ============================================================
+
+def is_pure_guest(user):
+    """Проверяет, что пользователь — ТОЛЬКО гость.
+
+    True, если:
+    - есть хотя бы одна запись ProjectMember с is_guest=True;
+    - НЕТ ни одной записи с is_guest=False.
+
+    Т.е. пользователь — «чистый гость»: не участник никакой команды.
+    """
+    from models import ProjectMember
+    if not user or not user.id:
+        return False
+    memberships = ProjectMember.query.filter_by(user_id=user.id).all()
+    if not memberships:
+        return False
+    has_non_guest = any(not m.is_guest for m in memberships)
+    has_guest = any(m.is_guest for m in memberships)
+    return has_guest and not has_non_guest
+
+
+def get_guest_project_ids(user):
+    """Список project_id, где пользователь — гость."""
+    from models import ProjectMember
+    if not user or not user.id:
+        return []
+    return [
+        m.project_id for m in ProjectMember.query.filter_by(
+            user_id=user.id, is_guest=True
+        ).all()
+    ]
+
 
 def get_user_projects(user):
     """Возвращает список проектов пользователя (без гостевых).
@@ -111,88 +143,124 @@ def get_user_projects(user):
 # ============================================================
 
 def get_available_companies(user):
-    """Возвращает список уникальных названий филиалов компании,
-    которые встречаются в проектах пользователя
-    + собственная компания пользователя (если указана)."""
-    from models import Project
+    """Возвращает список филиалов для дашборда и форм.
 
-    companies = set()
-
+    Все активные филиалы (для привилегированных — все).
+    """
+    from models import Company
     if is_privileged(user):
-        projects = Project.query.all()
-    else:
-        projects = [m.project for m in user.projects]
+        return Company.query.order_by(Company.name.asc()).all()
+    return Company.query.filter_by(is_active=True).order_by(Company.name.asc()).all()
 
-    for p in projects:
-        if p.company_name:
-            companies.add(p.company_name)
 
-    if user.company:
-        companies.add(user.company)
-
-    return sorted(companies, key=lambda x: x.lower())
+def get_available_company_names(user):
+    """Возвращает список названий филиалов (для datalist / фильтров)."""
+    return [c.name for c in get_available_companies(user)]
 
 
 # ============================================================
-#  ЗАКАЗЧИКИ
+#  ЗАКАЗЧИКИ — с учётом флага can_view_all_contacts
 # ============================================================
 
 def get_available_customers(user):
-    """Возвращает список доступных заказчиков."""
+    """Возвращает список доступных заказчиков.
+
+    Логика:
+    - admin / supervisor — все;
+    - есть флаг can_view_all_contacts — все;
+    - чистый гость — только заказчики своих проектов;
+    - обычный сотрудник — все.
+    """
     from models import Customer, Project
     from extensions import db
 
+    # Привилегированные — всё
     if is_privileged(user):
         return Customer.query.order_by(Customer.name).all()
 
-    my_customer_ids = set()
-    for member in user.projects:
-        if member.project.customer_id:
-            my_customer_ids.add(member.project.customer_id)
+    # Явное разрешение — всё
+    if getattr(user, 'can_view_all_contacts', False):
+        return Customer.query.order_by(Customer.name).all()
 
-    bound_ids = set()
-    for (cid,) in db.session.query(Project.customer_id)\
-            .filter(Project.customer_id.isnot(None)).all():
-        bound_ids.add(cid)
+    # Чистый гость — только заказчиков своих проектов
+    if is_pure_guest(user):
+        guest_pids = get_guest_project_ids(user)
+        if not guest_pids:
+            return []
 
-    unassigned = Customer.query.filter(~Customer.id.in_(bound_ids)).all() if bound_ids else Customer.query.all()
-    assigned = Customer.query.filter(Customer.id.in_(my_customer_ids)).all() if my_customer_ids else []
+        rows = db.session.query(Project.customer_id)\
+            .filter(Project.id.in_(guest_pids))\
+            .filter(Project.customer_id.isnot(None)).all()
+        cust_ids = {cid for (cid,) in rows}
+        if not cust_ids:
+            return []
 
-    return sorted(set(assigned) | set(unassigned), key=lambda c: c.name.lower())
+        return Customer.query.filter(Customer.id.in_(cust_ids))\
+            .order_by(Customer.name).all()
+
+    # Обычный сотрудник — всё
+    return Customer.query.order_by(Customer.name).all()
 
 
 # ============================================================
-#  ПОСТАВЩИКИ И СУБПОДРЯДЧИКИ
+#  ПОСТАВЩИКИ И СУБПОДРЯДЧИКИ — с учётом флага can_view_all_contacts
 # ============================================================
 
 def get_available_suppliers(user):
-    """Возвращает список доступных поставщиков и субподрядчиков."""
+    """Возвращает список доступных поставщиков и субподрядчиков.
+
+    Логика:
+    - admin / supervisor — все;
+    - есть флаг can_view_all_contacts — все;
+    - чистый гость — только поставщики своих проектов;
+    - обычный сотрудник — все.
+    """
     from models import Supplier, Project
     from extensions import db
 
+    # Привилегированные — всё
     if is_privileged(user):
         return Supplier.query.order_by(Supplier.name).all()
 
-    my_supplier_ids = set()
-    for member in user.projects:
-        if member.project.supplier_id:
-            my_supplier_ids.add(member.project.supplier_id)
-        for sub in member.project.subcontractors:
-            my_supplier_ids.add(sub.id)
+    # Явное разрешение — всё
+    if getattr(user, 'can_view_all_contacts', False):
+        return Supplier.query.order_by(Supplier.name).all()
 
-    bound_ids = set()
-    for (sid,) in db.session.query(Project.supplier_id)\
-            .filter(Project.supplier_id.isnot(None)).all():
-        bound_ids.add(sid)
-    for (sid,) in db.session.execute(
-        db.text('SELECT DISTINCT supplier_id FROM project_subcontractor')
-    ).all():
-        bound_ids.add(sid)
+    # Чистый гость — только поставщиков своих проектов
+    if is_pure_guest(user):
+        guest_pids = get_guest_project_ids(user)
+        if not guest_pids:
+            return []
 
-    unassigned = Supplier.query.filter(~Supplier.id.in_(bound_ids)).all() if bound_ids else Supplier.query.all()
-    assigned = Supplier.query.filter(Supplier.id.in_(my_supplier_ids)).all() if my_supplier_ids else []
+        supplier_ids = set()
 
-    return sorted(set(assigned) | set(unassigned), key=lambda s: s.name.lower())
+        # Поставщики проектов
+        rows = db.session.query(Project.supplier_id)\
+            .filter(Project.id.in_(guest_pids))\
+            .filter(Project.supplier_id.isnot(None)).all()
+        for (sid,) in rows:
+            supplier_ids.add(sid)
+
+        # Субподрядчики проектов (M2M)
+        rows = db.session.execute(
+            db.text('''
+                SELECT DISTINCT ps.supplier_id
+                FROM project_subcontractor ps
+                WHERE ps.project_id IN :pids
+            ''').bindparams(db.bindparam('pids', expanding=True)),
+            {'pids': guest_pids}
+        ).all()
+        for (sid,) in rows:
+            supplier_ids.add(sid)
+
+        if not supplier_ids:
+            return []
+
+        return Supplier.query.filter(Supplier.id.in_(supplier_ids))\
+            .order_by(Supplier.name).all()
+
+    # Обычный сотрудник — всё
+    return Supplier.query.order_by(Supplier.name).all()
 
 
 def get_available_subcontractors(user):
@@ -246,7 +314,7 @@ def _validate_folder_in_project(folder_id, project_id):
 
 
 # ============================================================
-#  ГОСТЕВОЙ ДОСТУП
+#  ГОСТЕВОЙ ДОСТУП (создание User для контактов)
 # ============================================================
 
 def get_contact_for_user(user_id):
@@ -361,8 +429,7 @@ def sync_am_stanko_contacts(supplier, project_id, invited_by,
     полноценными участниками проекта (is_guest=False).
 
     Роль по умолчанию — am_stanko_member.
-    Если member уже существует — не понижаем роль, если она из набора АМ Станко
-    (можно вручную повысить до am_stanko_admin / am_stanko_manager / ...).
+    НЕ понижает роль, если она уже выше (admin, manager и т.д.).
 
     Возвращает список (member, plain_password | None) — только что созданных.
     """
@@ -370,6 +437,12 @@ def sync_am_stanko_contacts(supplier, project_id, invited_by,
     from extensions import db
 
     created = []
+
+    # Роли, которые НЕ перезаписываем (слишком высокие)
+    PROTECTED_ROLES = {
+        'admin', 'manager', 'chief_engineer', 'logistic',
+        'am_stanko_admin', 'am_stanko_manager',
+    }
 
     for contact in supplier.contacts:
         user_obj, plain_password = get_or_create_guest_user(contact)
@@ -384,7 +457,9 @@ def sync_am_stanko_contacts(supplier, project_id, invited_by,
             if member.is_guest:
                 member.is_guest = False
                 changed = True
-            if member.role_in_project not in ProjectMember.AM_STANKO_ROLES:
+            # Переписываем роль только если она ниже am_stanko_member
+            if member.role_in_project not in PROTECTED_ROLES \
+                    and member.role_in_project not in ProjectMember.AM_STANKO_ROLES:
                 member.role_in_project = role
                 changed = True
             if changed:
@@ -407,9 +482,9 @@ def add_supplier_contacts_as_guests(supplier, project_id, invited_by,
                                      role='member'):
     """Делает все контакты СУБПОДРЯДЧИКА гостями проекта (is_guest=True).
 
-    Возвращает список (member, plain_password | None) — только что созданных.
+    НЕ понижает тех, кто уже НЕ гость в проекте.
 
-    Не понижает тех, кто уже участник АМ Станко.
+    Возвращает список (member, plain_password | None) — только что созданных.
     """
     from models import ProjectMember
     from extensions import db
@@ -425,13 +500,12 @@ def add_supplier_contacts_as_guests(supplier, project_id, invited_by,
         ).first()
 
         if member:
-            if member.is_am_stanko:
+            # Уже не гость (команда или АМ Станко) — не трогаем
+            if not member.is_guest:
                 continue
+            # Уже гость — оставляем
             if member.is_guest:
                 continue
-            member.is_guest = True
-            member.role_in_project = role
-            created.append((member, None))
         else:
             member = ProjectMember(
                 user_id=user_obj.id,
@@ -483,62 +557,6 @@ def remove_supplier_contacts_from_project(supplier, project_id,
 
 
 # ============================================================
-#  НЕПРОЧИТАННЫЕ СООБЩЕНИЯ
-# ============================================================
-
-def get_unread_counts(user):
-    """Возвращает словарь {project_id: count_unread}."""
-    from models import MessageRead, Message, Project
-
-    if is_privileged(user):
-        projects = Project.query.filter_by(is_active=True).all()
-    else:
-        projects = [m.project for m in user.projects if not m.is_guest]
-
-    unread = {}
-    for project in projects:
-        read_record = MessageRead.query.filter_by(
-            user_id=user.id, project_id=project.id
-        ).first()
-
-        if read_record:
-            count = Message.query.filter(
-                Message.project_id == project.id,
-                Message.user_id != user.id,
-                Message.created_at > read_record.last_read_at
-            ).count()
-        else:
-            count = Message.query.filter(
-                Message.project_id == project.id,
-                Message.user_id != user.id
-            ).count()
-
-        if count > 0:
-            unread[project.id] = count
-
-    return unread
-
-
-def mark_project_as_read(user_id, project_id):
-    """Отмечает чат проекта как прочитанный."""
-    from models import MessageRead
-    from extensions import db
-
-    record = MessageRead.query.filter_by(user_id=user_id, project_id=project_id).first()
-
-    if record:
-        record.last_read_at = utcnow()
-    else:
-        record = MessageRead(
-            user_id=user_id,
-            project_id=project_id,
-            last_read_at=utcnow()
-        )
-        db.session.add(record)
-
-    db.session.commit()
-
-# ============================================================
 #  УПОМИНАНИЯ В ЧАТЕ (@Иван Иванов)
 # ============================================================
 
@@ -546,7 +564,6 @@ def get_project_mentionable_users(project_id):
     """Возвращает список участников проекта, которых можно упомянуть через @.
 
     Только команда проекта: своя + АМ Станко. Гости — исключены.
-    Возвращает список кортежей (user, member).
     """
     from models import ProjectMember
     members = ProjectMember.query.filter_by(project_id=project_id).all()
@@ -561,7 +578,6 @@ def get_project_mentionable_users(project_id):
             continue
         seen.add(m.user.id)
         result.append((m.user, m))
-    # Сортируем по имени
     result.sort(key=lambda t: (t[0].last_name.lower(), t[0].first_name.lower()))
     return result
 
@@ -570,8 +586,6 @@ def parse_mentions_in_text(text, project_id):
     """Находит в тексте все @упоминания участников проекта.
 
     Возвращает set() user_id тех, кого упомянули.
-    Логика: пробегаем по всем участникам проекта, ищем подстроку
-    '@Имя Фамилия' в тексте. Регистр учитываем через .lower().
     """
     if not text or '@' not in text:
         return set()
@@ -634,6 +648,63 @@ def mark_mentions_as_read(user_id, project_id):
     ).update({'is_read': True}, synchronize_session=False)
     db.session.commit()
     return updated
+
+
+# ============================================================
+#  НЕПРОЧИТАННЫЕ СООБЩЕНИЯ
+# ============================================================
+
+def get_unread_counts(user):
+    """Возвращает словарь {project_id: count_unread}."""
+    from models import MessageRead, Message, Project
+
+    if is_privileged(user):
+        projects = Project.query.filter_by(is_active=True).all()
+    else:
+        projects = [m.project for m in user.projects if not m.is_guest]
+
+    unread = {}
+    for project in projects:
+        read_record = MessageRead.query.filter_by(
+            user_id=user.id, project_id=project.id
+        ).first()
+
+        if read_record:
+            count = Message.query.filter(
+                Message.project_id == project.id,
+                Message.user_id != user.id,
+                Message.created_at > read_record.last_read_at
+            ).count()
+        else:
+            count = Message.query.filter(
+                Message.project_id == project.id,
+                Message.user_id != user.id
+            ).count()
+
+        if count > 0:
+            unread[project.id] = count
+
+    return unread
+
+
+def mark_project_as_read(user_id, project_id):
+    """Отмечает чат проекта как прочитанный."""
+    from models import MessageRead
+    from extensions import db
+
+    record = MessageRead.query.filter_by(user_id=user_id, project_id=project_id).first()
+
+    if record:
+        record.last_read_at = utcnow()
+    else:
+        record = MessageRead(
+            user_id=user_id,
+            project_id=project_id,
+            last_read_at=utcnow()
+        )
+        db.session.add(record)
+
+    db.session.commit()
 
 
 # ============================================================

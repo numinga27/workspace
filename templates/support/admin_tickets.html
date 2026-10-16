@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1"><i class="bi bi-inbox-fill"></i> Обращения в поддержку</h2>
+        <p class="text-muted mb-0">
+            Всего в очереди: {{ total_unread }} новых
+        </p>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <div class="btn-group btn-group-sm">
+            <a href="{{ url_for('support.admin_tickets', status='open') }}"
+               class="btn {% if status_filter == 'open' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                Открытые
+            </a>
+            <a href="{{ url_for('support.admin_tickets', status='closed') }}"
+               class="btn {% if status_filter == 'closed' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                Закрытые
+            </a>
+            <a href="{{ url_for('support.admin_tickets', status='') }}"
+               class="btn {% if not status_filter %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                Все
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if tickets %}
+    {% for t in tickets %}
+    <a href="{{ url_for('support.ticket_detail', ticket_id=t.id) }}"
+       class="card mb-2 text-decoration-none text-dark"
+       style="display:block;">
+        <div class="card-body py-3 d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1 min-width-0">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-secondary">#{{ t.id }}</span>
+                    <strong>{{ t.user.full_name }}</strong>
+                    <small class="text-muted">{{ t.user.email }}</small>
+                    {% if t.status == 'open' %}
+                        <span class="badge bg-success">открыт</span>
+                    {% else %}
+                        <span class="badge bg-secondary">закрыт</span>
+                    {% endif %}
+                </div>
+                <div class="text-truncate" style="max-width: 700px;">
+                    {{ t.display_subject }}
+                </div>
+                <div class="small text-muted mt-1">
+                    <i class="bi bi-clock"></i>
+                    {{ t.updated_at.strftime('%d.%m.%Y %H:%M') }}
+                    · {{ t.messages.count() }} сообщ.
+                </div>
+            </div>
+            {% if t.unread_for_admin > 0 %}
+                <span class="nav-badge-new ms-2" style="align-self: center;">
+                    {{ t.unread_for_admin }}
+                </span>
+            {% endif %}
+        </div>
+    </a>
+    {% endfor %}
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">
+        <i class="bi bi-inbox"></i>
+    </div>
+    <h5>Обращений пока нет</h5>
+    <p>Все тикеты будут появляться здесь</p>
+</div>
+{% endif %}
+
+{% endblock %}

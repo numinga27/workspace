@@ -13,7 +13,7 @@ from utils import (
     can_manage_project, get_user_projects, get_available_customers, get_available_suppliers,
     get_available_companies, get_available_subcontractors,
     mark_project_as_read, is_project_guest,
-    mark_mentions_as_read,   # ← НОВОЕ
+    mark_mentions_as_read,
     get_or_create_guest_user, add_guest_to_project,
     _validate_project_member, _validate_task_in_project, _validate_milestone_in_project,
     sync_am_stanko_contacts,
@@ -24,6 +24,7 @@ from utils import (
 )
 from services.stats import get_todo_stats
 from services.email import send_guest_credentials
+from services.push import notify_new_task, notify_new_subtask  # ← НОВОЕ
 
 bp = Blueprint('projects', __name__)
 
@@ -171,7 +172,6 @@ def create_project():
         customer_id = request.form.get('customer_id') or None
         supplier_id = request.form.get('supplier_id') or None
 
-        # ← Филиал: через справочник Company
         company_id, company_name, company_color = _resolve_company_from_form()
 
         subs = _collect_subcontractors(user)
@@ -238,9 +238,6 @@ def view_project(project_id):
 
     project = Project.query.get_or_404(project_id)
 
-    # ← Отметка чата и упоминаний прочитанными:
-    #   - ?mark_read=1 (клик по «Чат» в сайдбаре)
-    #   - ?_tab=chat (прямой заход на вкладку)
     should_mark_read = (
         request.args.get('mark_read') == '1'
         or request.args.get('_tab') == 'chat'
@@ -420,7 +417,6 @@ def edit_project(project_id):
         project.description = request.form.get('description', '')
         project.status = request.form.get('status', 'active')
 
-        # ← Филиал через Company
         company_id, company_name, company_color = _resolve_company_from_form()
         project.company_id = company_id
         project.company_name = company_name      # legacy
@@ -633,6 +629,17 @@ def create_task(project_id):
     )
     db.session.add(task)
     db.session.commit()
+
+    # ← Push-уведомления
+    try:
+        poster = User.query.get(session['user_id'])
+        if parent_id_int:
+            notify_new_subtask(task, poster)
+        else:
+            notify_new_task(task, poster)
+    except Exception as e:
+        print(f'⚠️ Ошибка отправки push: {e}')
+
     flash('Задача создана!', 'success')
 
     if parent_id_int:

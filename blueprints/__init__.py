@@ -8,7 +8,9 @@ from . import files
 from . import chat
 from . import calendar
 from . import customers
-from . import suppliers          # ← НОВОЕ
+from . import suppliers   
+from . import support
+       # ← НОВОЕ
 from . import contacts           # ← НОВОЕ
 from . import team
 from . import pdf
@@ -35,6 +37,7 @@ ALL_BLUEPRINTS = [
     admin.bp,
     users_admin.bp,
     companies.bp,
+    support.bp,
 ]
 
 

@@ -133,6 +133,32 @@
                     </div>
                     {% endif %}
 
+                    <!-- Доступ к контактам -->
+                    <hr>
+                    <div class="card mb-3" style="background: var(--bg-tertiary); border: 1px solid var(--border-light);">
+                        <div class="card-body">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox"
+                                       name="can_view_all_contacts"
+                                       id="can_view_all_contacts"
+                                       {% if form_data.get('can_view_all_contacts') == 'on'
+                                          or (not form_data and edit_user and edit_user.can_view_all_contacts) %}checked{% endif %}>
+                                <label class="form-check-label" for="can_view_all_contacts">
+                                    <strong>
+                                        <i class="bi bi-eye-fill text-primary"></i>
+                                        Видеть всех заказчиков и поставщиков
+                                    </strong>
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                <i class="bi bi-info-circle"></i>
+                                Если включено — пользователь видит <strong>всю базу</strong>
+                                заказчиков, поставщиков и субподрядчиков, независимо от филиала.
+                                Полезно для гостей, которым нужно работать с общей базой.
+                            </small>
+                        </div>
+                    </div>
+
                     <!-- Кнопки -->
                     <div class="d-flex justify-content-between mt-4">
                         <a href="{{ url_for('users_admin.users_list') }}" class="btn btn-secondary">
@@ -151,7 +177,7 @@
         <div class="card mt-3" style="border-left: 3px solid var(--accent);">
             <div class="card-body small">
                 <h6><i class="bi bi-info-circle"></i> Что означают роли</h6>
-                <ul class="mb-0 ps-3">
+                <ul class="mb-2 ps-3">
                     <li>
                         <strong>Пользователь</strong> — видит только свои проекты
                         (где он участник) и свои задачи.
@@ -166,6 +192,12 @@
                         назначать и удалять других администраторов.
                     </li>
                 </ul>
+                <h6 class="mt-3"><i class="bi bi-eye-fill text-primary"></i> Доступ к контактам</h6>
+                <p class="mb-0">
+                    Если галочка <strong>«Видеть всех заказчиков и поставщиков»</strong> включена —
+                    пользователь видит всю базу контактов независимо от филиала.
+                    Это полезно для гостей или сотрудников, работающих с общими справочниками.
+                </p>
             </div>
         </div>
 
