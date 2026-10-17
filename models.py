@@ -1,10 +1,16 @@
 from datetime import datetime, timezone
 from extensions import db
+from datetime import datetime
+from extensions import db
 
 
 def _utcnow():
-    """Возвращает текущее UTC-время как aware datetime."""
-    return datetime.now(timezone.utc)
+    """Возвращает текущее UTC-время как naive datetime.
+
+    Naive — потому что в БД поля DateTime хранят naive значения,
+    и сравнение aware vs naive даёт TypeError.
+    """
+    return datetime.utcnow()
 
 
 # ============================================================
@@ -963,3 +969,146 @@ class SupportMessage(db.Model):
     is_read = db.Column(db.Boolean, default=False)
 
     author = db.relationship('User', foreign_keys=[author_id])     
+
+# ============================================================
+#  ЖУРНАЛ ДЕЙСТВИЙ
+# ============================================================
+
+class ActivityLog(db.Model):
+    """Журнал действий пользователей.
+
+    Логируются: login, logout, create_*, edit_*, delete_*.
+    НЕ логируются: обычные просмотры страниц, действия админа.
+    Хранение — 30 дней (очистка через cron).
+    """
+    id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id', ondelete='SET NULL'),
+        nullable=True,
+        index=True,
+    )
+    user_name = db.Column(db.String(120), nullable=True)  # снапшот имени
+    user_role = db.Column(db.String(20), nullable=True)
+
+    # Действие: 'login', 'logout', 'create_project', 'delete_task', ...
+    action = db.Column(db.String(50), nullable=False, index=True)
+
+    # Объект: 'project', 'task', 'customer', 'supplier', ...
+    target_type = db.Column(db.String(30), nullable=True, index=True)
+    target_id = db.Column(db.Integer, nullable=True)
+    target_name = db.Column(db.String(200), nullable=True)
+
+    # Дополнительное описание
+    details = db.Column(db.Text, nullable=True)
+
+    ip_address = db.Column(db.String(45), nullable=True)
+    user_agent = db.Column(db.String(255), nullable=True)
+
+    created_at = db.Column(db.DateTime, default=_utcnow, index=True)
+
+    user = db.relationship('User', backref='activity_logs', foreign_keys=[user_id])
+
+    # Действия, которые логируем
+    ACTIONS_DISPLAY = {
+        'login': 'Вход в систему',
+        'logout': 'Выход из системы',
+        'create_project': 'Создание проекта',
+        'edit_project': 'Редактирование проекта',
+        'delete_project': 'Удаление проекта',
+        'create_task': 'Создание задачи',
+        'edit_task': 'Редактирование задачи',
+        'delete_task': 'Удаление задачи',
+        'create_todo': 'Создание To-Do',
+        'edit_todo': 'Редактирование To-Do',
+        'delete_todo': 'Удаление To-Do',
+        'create_milestone': 'Создание вехи',
+        'edit_milestone': 'Редактирование вехи',
+        'delete_milestone': 'Удаление вехи',
+        'create_customer': 'Создание заказчика',
+        'edit_customer': 'Редактирование заказчика',
+        'delete_customer': 'Удаление заказчика',
+        'create_supplier': 'Создание поставщика',
+        'edit_supplier': 'Редактирование поставщика',
+        'delete_supplier': 'Удаление поставщика',
+        'create_subcontractor': 'Создание субподрядчика',
+        'edit_subcontractor': 'Редактирование субподрядчика',
+        'delete_subcontractor': 'Удаление субподрядчика',
+        'create_company': 'Создание филиала',
+        'edit_company': 'Редактирование филиала',
+        'delete_company': 'Удаление филиала',
+        'create_user': 'Создание пользователя',
+        'edit_user': 'Редактирование пользователя',
+        'delete_user': 'Удаление пользователя',
+        'set_role': 'Смена роли пользователя',
+        'toggle_user_active': 'Блокировка/разблокировка',
+    }
+
+    @property
+    def action_display(self):
+        return self.ACTIONS_DISPLAY.get(self.action, self.action)
+
+    @property
+    def user_display(self):
+        """Имя пользователя — из связи или из снапшота."""
+        if self.user:
+            return self.user.full_name
+        return self.user_name or 'Неизвестный'
+
+    @property
+    def target_display(self):
+        """Отображение объекта действия."""
+        if not self.target_type:
+            return ''
+        type_names = {
+            'project': 'Проект',
+            'task': 'Задача',
+            'todo': 'To-Do',
+            'milestone': 'Веха',
+            'customer': 'Заказчик',
+            'supplier': 'Поставщик',
+            'subcontractor': 'Субподрядчик',
+            'company': 'Филиал',
+            'user': 'Пользователь',
+        }
+        label = type_names.get(self.target_type, self.target_type)
+        if self.target_name:
+            return f'{label}: {self.target_name}'
+        if self.target_id:
+            return f'{label} #{self.target_id}'
+        return label
+
+    @property
+    def icon(self):
+        """Иконка по типу действия."""
+        if self.action.startswith('create_'):
+            return 'plus-circle-fill'
+        if self.action.startswith('edit_'):
+            return 'pencil-fill'
+        if self.action.startswith('delete_'):
+            return 'trash-fill'
+        if self.action == 'login':
+            return 'box-arrow-in-right'
+        if self.action == 'logout':
+            return 'box-arrow-right'
+        if self.action == 'set_role':
+            return 'shield-fill'
+        if self.action == 'toggle_user_active':
+            return 'lock-fill'
+        return 'activity'
+
+    @property
+    def color(self):
+        """Цвет иконки по типу действия."""
+        if self.action.startswith('create_'):
+            return 'success'
+        if self.action.startswith('edit_'):
+            return 'warning'
+        if self.action.startswith('delete_'):
+            return 'danger'
+        if self.action == 'login':
+            return 'info'
+        if self.action == 'logout':
+            return 'secondary'
+        return 'primary'    

@@ -8,11 +8,27 @@ from utils import (
     utcnow, check_project_access, check_full_project_access,
     can_manage_project, is_project_guest,
     _validate_project_member,
-    # ← НОВОЕ: для уведомлений
     mark_todo_as_read,
 )
 
 bp = Blueprint('todos', __name__)
+
+
+# ============================================================
+#  ХЕЛПЕР ДЛЯ ЖУРНАЛА
+# ============================================================
+
+def _log(action, todo, details=None):
+    """Безопасно пишет действие в журнал."""
+    try:
+        from services.audit import log_action
+        log_action(action,
+                   target_type='todo',
+                   target_id=todo.id if todo else None,
+                   target_name=todo.title if todo else None,
+                   details=details)
+    except Exception as e:
+        print(f'⚠️ Ошибка логирования {action}: {e}')
 
 
 # ============================================================
@@ -24,7 +40,6 @@ bp = Blueprint('todos', __name__)
 def create_todo(project_id):
     user = User.query.get(session['user_id'])
 
-    # Гость не может создавать To-Do
     if is_project_guest(user.id, project_id):
         flash('Гости не могут создавать To-Do.', 'danger')
         return redirect(url_for('tasks.my_tasks'))
@@ -42,7 +57,6 @@ def create_todo(project_id):
         except ValueError:
             pass
 
-    # Валидация исполнителя
     assigned_to_id = None
     if assigned:
         member = _validate_project_member(project_id, int(assigned))
@@ -60,9 +74,13 @@ def create_todo(project_id):
     )
     db.session.add(todo)
     db.session.commit()
+
+    # ← Логируем создание
+    _log('create_todo', todo,
+         details=f'Проект: {todo.project.name}' if todo.project else None)
+
     flash('Задача добавлена в To-Do!', 'success')
 
-    # Редирект с ID нового To-Do для подсветки
     return redirect(url_for('projects.view_project', project_id=project_id)
                     + f'?_tab=todo&created_todo={todo.id}')
 
@@ -77,7 +95,6 @@ def toggle_todo(todo_id):
     t = Todo.query.get_or_404(todo_id)
     user = User.query.get(session['user_id'])
 
-    # Гость может менять статус только своих To-Do
     if is_project_guest(user.id, t.project_id):
         if t.assigned_to != user.id:
             flash('Нет прав.', 'danger')
@@ -86,13 +103,18 @@ def toggle_todo(todo_id):
         flash('Нет доступа.', 'danger')
         return redirect(url_for('dashboard.dashboard'))
 
-    # ← НОВОЕ: если To-Do назначено на текущего пользователя — отметить прочитанным
     if t.assigned_to == user.id:
         mark_todo_as_read(user.id, t.id)
 
+    old_done = t.is_done
     t.is_done = not t.is_done
     t.done_at = utcnow() if t.is_done else None
     db.session.commit()
+
+    # ← Логируем смену статуса (только для не-админов, log_action сам фильтрует)
+    if old_done != t.is_done:
+        _log('edit_todo', t,
+             details='Отмечено выполненным' if t.is_done else 'Снята отметка о выполнении')
 
     return redirect(request.referrer or url_for('projects.view_project', project_id=t.project_id) + '?_tab=todo')
 
@@ -117,6 +139,9 @@ def update_todo_comment(todo_id):
 
     t.comment = request.form.get('comment', '')
     db.session.commit()
+
+    _log('edit_todo', t, details='Изменён комментарий')
+
     flash('Комментарий сохранён.', 'success')
     return redirect(request.referrer or url_for('projects.view_project', project_id=t.project_id) + '?_tab=todo')
 
@@ -148,11 +173,12 @@ def edit_todo(todo_id):
         flash('Нет прав на редактирование этого To-Do.', 'danger')
         return redirect(url_for('projects.view_project', project_id=t.project_id) + '?_tab=todo')
 
-    # ← НОВОЕ: если To-Do назначено на текущего пользователя — отметить прочитанным
     if t.assigned_to == user.id:
         mark_todo_as_read(user.id, t.id)
 
-    # Обновляем поля
+    old_title = t.title
+    old_assigned = t.assigned_to
+
     t.title = request.form.get('title', t.title).strip() or t.title
     t.comment = request.form.get('comment', '').strip() or None
 
@@ -176,6 +202,17 @@ def edit_todo(todo_id):
         t.assigned_to = None
 
     db.session.commit()
+
+    # ← Логируем изменение
+    changes = []
+    if old_title != t.title:
+        changes.append(f'«{old_title}» → «{t.title}»')
+    if old_assigned != t.assigned_to:
+        changes.append('сменён исполнитель')
+    details = '; '.join(changes) if changes else None
+
+    _log('edit_todo', t, details=details)
+
     flash('To-Do обновлён.', 'success')
     return redirect(url_for('projects.view_project', project_id=t.project_id) + '?_tab=todo')
 
@@ -198,6 +235,9 @@ def delete_todo(todo_id):
     if not can_manage_project(pid):
         flash('Нет прав.', 'danger')
         return redirect(url_for('projects.view_project', project_id=pid) + '?_tab=todo')
+
+    # ← Логируем удаление ДО физического
+    _log('delete_todo', t, details=f'Удалён To-Do «{t.title}»')
 
     db.session.delete(t)
     db.session.commit()

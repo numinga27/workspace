@@ -130,7 +130,15 @@
 </div>
 
 <!-- Задачи -->
-<h5 class="mb-3">📋 Список задач ({{ tasks|length }})</h5>
+<h5 class="mb-3">
+    📋 Список задач 
+    {% if pagination %}
+        ({{ pagination.items|length }} из {{ pagination.total }})
+    {% else %}
+        ({{ tasks|length }})
+    {% endif %}
+</h5>
+
 {% for task in tasks %}
 {# ← ПОДСВЕТКА НЕПРОЧИТАННОЙ ЗАДАЧИ #}
 {% set is_unread = task.id in unread_task_ids %}
@@ -206,6 +214,77 @@
     У вас нет задач по выбранным фильтрам
 </div>
 {% endfor %}
+
+
+{# ============================================================ #}
+{# ПАГИНАЦИЯ                                                    #}
+{# ============================================================ #}
+{% if pagination and pagination.pages > 1 %}
+<nav aria-label="Навигация по страницам" class="mt-4 mb-3">
+    <ul class="pagination justify-content-center flex-wrap">
+        
+        {# Кнопка "Назад" #}
+        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+            <a class="page-link" 
+               href="{{ url_for('tasks.my_tasks', 
+                               page=pagination.prev_num, 
+                               project=filter_project, 
+                               status=filter_status) if pagination.has_prev else '#' }}">
+                <i class="bi bi-chevron-left"></i> Назад
+            </a>
+        </li>
+
+        {# Номера страниц (с умным скрытием длинных списков) #}
+        {% set start_page = [1, pagination.page - 2]|max %}
+        {% set end_page = [pagination.pages, pagination.page + 2]|min %}
+        
+        {% if start_page > 1 %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('tasks.my_tasks', page=1, project=filter_project, status=filter_status) }}">1</a>
+            </li>
+            {% if start_page > 2 %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+        {% endif %}
+
+        {% for p in range(start_page, end_page + 1) %}
+            <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                <a class="page-link" 
+                   href="{{ url_for('tasks.my_tasks', page=p, project=filter_project, status=filter_status) }}">
+                    {{ p }}
+                </a>
+            </li>
+        {% endfor %}
+
+        {% if end_page < pagination.pages %}
+            {% if end_page < pagination.pages - 1 %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('tasks.my_tasks', page=pagination.pages, project=filter_project, status=filter_status) }}">{{ pagination.pages }}</a>
+            </li>
+        {% endif %}
+
+        {# Кнопка "Вперед" #}
+        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+            <a class="page-link" 
+               href="{{ url_for('tasks.my_tasks', 
+                               page=pagination.next_num, 
+                               project=filter_project, 
+                               status=filter_status) if pagination.has_next else '#' }}">
+                Вперед <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+    </ul>
+    
+    {# Подпись: Показано X из Y #}
+    <p class="text-center text-muted small mb-0">
+        Показано {{ pagination.items|length }} из {{ pagination.total }} задач
+        (страница {{ pagination.page }} из {{ pagination.pages }})
+    </p>
+</nav>
+{% endif %}
+
 
 <!-- Мои To-Do -->
 {% if my_todos %}

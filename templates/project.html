@@ -1413,17 +1413,24 @@
                     </div>
                     <div class="card-body">
                         <div id="chatBox" class="chat-box mb-3" style="height: 400px;">
-                            {% for msg in messages %}
-                            <div class="message">
-                                <span class="author">{{ msg.author.first_name }} {{ msg.author.last_name }}</span>
-                                <span class="time">{{ msg.created_at.strftime('%H:%M %d.%m.%Y') }}</span>
-                                <br>
-                                <span class="message-text" data-raw="{{ msg.text }}">{{ msg.text }}</span>
-                            </div>
-                            {% else %}
-                            <div class="text-muted text-center py-5">Сообщений пока нет</div>
-                            {% endfor %}
-                        </div>
+    {% for msg in messages %}
+    {% set is_own = (msg.user_id == user.id) %}
+    <div class="message {% if is_own %}own{% else %}other{% endif %}">
+        <span class="author">
+            {% if is_own %}
+                Вы
+            {% else %}
+                {{ msg.author.first_name }} {{ msg.author.last_name }}
+            {% endif %}
+        </span>
+        <span class="time">{{ msg.created_at.strftime('%H:%M %d.%m.%Y') }}</span>
+        <br>
+        <span class="message-text" data-raw="{{ msg.text }}">{{ msg.text }}</span>
+    </div>
+    {% else %}
+    <div class="text-muted text-center py-5">Сообщений пока нет</div>
+    {% endfor %}
+</div>
 
                         <form method="POST" action="{{ url_for('chat.send_message', project_id=project.id) }}"
                               id="chatForm" autocomplete="off">

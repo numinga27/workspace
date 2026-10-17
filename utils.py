@@ -1,10 +1,31 @@
 from datetime import datetime, timezone
 from flask import session
 
+# ← ИМПОРТ КЭША
+from extensions import cache
+
+
+# ============================================================
+#  БЕЗОПАСНЫЙ ДЕКОРАТОР КЭШИРОВАНИЯ
+# ============================================================
+
+def memoize(timeout=60):
+    """Безопасный декоратор кэширования. 
+    Если Flask-Caching не установлен — просто вызывает функцию.
+    """
+    if cache:
+        return cache.memoize(timeout=timeout)
+    return lambda f: f
+
 
 def utcnow():
-    """Возвращает текущее UTC-время как aware datetime."""
-    return datetime.now(timezone.utc)
+    """Возвращает текущее UTC-время как naive datetime.
+
+    Naive — потому что все даты в БД (due_date, start_date, end_date,
+    created_at) хранятся как naive. Если вернуть aware, любое вычитание
+    с полями БД падает с TypeError.
+    """
+    return datetime.utcnow()
 
 
 # ============================================================
@@ -94,40 +115,8 @@ def is_project_guest(user_id, project_id):
 
 
 # ============================================================
-#  ГОСТЕВОЙ СТАТУС — ГЛОБАЛЬНО
+#  СПИСКИ ПРОЕКТОВ
 # ============================================================
-
-def is_pure_guest(user):
-    """Проверяет, что пользователь — ТОЛЬКО гость.
-
-    True, если:
-    - есть хотя бы одна запись ProjectMember с is_guest=True;
-    - НЕТ ни одной записи с is_guest=False.
-
-    Т.е. пользователь — «чистый гость»: не участник никакой команды.
-    """
-    from models import ProjectMember
-    if not user or not user.id:
-        return False
-    memberships = ProjectMember.query.filter_by(user_id=user.id).all()
-    if not memberships:
-        return False
-    has_non_guest = any(not m.is_guest for m in memberships)
-    has_guest = any(m.is_guest for m in memberships)
-    return has_guest and not has_non_guest
-
-
-def get_guest_project_ids(user):
-    """Список project_id, где пользователь — гость."""
-    from models import ProjectMember
-    if not user or not user.id:
-        return []
-    return [
-        m.project_id for m in ProjectMember.query.filter_by(
-            user_id=user.id, is_guest=True
-        ).all()
-    ]
-
 
 def get_user_projects(user):
     """Возвращает список проектов пользователя (без гостевых).
@@ -143,128 +132,36 @@ def get_user_projects(user):
 # ============================================================
 
 def get_available_companies(user):
-    """Возвращает список филиалов для дашборда и форм.
-
-    Все активные филиалы (для привилегированных — все).
-    """
+    """Возвращает список всех филиалов из справочника.
+    Расширенная видимость — все пользователи видят все филиалы."""
     from models import Company
-    if is_privileged(user):
-        return Company.query.order_by(Company.name.asc()).all()
     return Company.query.filter_by(is_active=True).order_by(Company.name.asc()).all()
 
 
-def get_available_company_names(user):
-    """Возвращает список названий филиалов (для datalist / фильтров)."""
-    return [c.name for c in get_available_companies(user)]
-
-
 # ============================================================
-#  ЗАКАЗЧИКИ — с учётом флага can_view_all_contacts
+#  ЗАКАЗЧИКИ
 # ============================================================
 
 def get_available_customers(user):
-    """Возвращает список доступных заказчиков.
-
-    Логика:
-    - admin / supervisor — все;
-    - есть флаг can_view_all_contacts — все;
-    - чистый гость — только заказчики своих проектов;
-    - обычный сотрудник — все.
-    """
-    from models import Customer, Project
-    from extensions import db
-
-    # Привилегированные — всё
-    if is_privileged(user):
-        return Customer.query.order_by(Customer.name).all()
-
-    # Явное разрешение — всё
-    if getattr(user, 'can_view_all_contacts', False):
-        return Customer.query.order_by(Customer.name).all()
-
-    # Чистый гость — только заказчиков своих проектов
-    if is_pure_guest(user):
-        guest_pids = get_guest_project_ids(user)
-        if not guest_pids:
-            return []
-
-        rows = db.session.query(Project.customer_id)\
-            .filter(Project.id.in_(guest_pids))\
-            .filter(Project.customer_id.isnot(None)).all()
-        cust_ids = {cid for (cid,) in rows}
-        if not cust_ids:
-            return []
-
-        return Customer.query.filter(Customer.id.in_(cust_ids))\
-            .order_by(Customer.name).all()
-
-    # Обычный сотрудник — всё
-    return Customer.query.order_by(Customer.name).all()
+    """Возвращает список всех заказчиков из справочника.
+    Расширенная видимость — все пользователи видят всех заказчиков."""
+    from models import Customer
+    return Customer.query.order_by(Customer.name.asc()).all()
 
 
 # ============================================================
-#  ПОСТАВЩИКИ И СУБПОДРЯДЧИКИ — с учётом флага can_view_all_contacts
+#  ПОСТАВЩИКИ И СУБПОДРЯДЧИКИ
 # ============================================================
 
 def get_available_suppliers(user):
-    """Возвращает список доступных поставщиков и субподрядчиков.
-
-    Логика:
-    - admin / supervisor — все;
-    - есть флаг can_view_all_contacts — все;
-    - чистый гость — только поставщики своих проектов;
-    - обычный сотрудник — все.
-    """
-    from models import Supplier, Project
-    from extensions import db
-
-    # Привилегированные — всё
-    if is_privileged(user):
-        return Supplier.query.order_by(Supplier.name).all()
-
-    # Явное разрешение — всё
-    if getattr(user, 'can_view_all_contacts', False):
-        return Supplier.query.order_by(Supplier.name).all()
-
-    # Чистый гость — только поставщиков своих проектов
-    if is_pure_guest(user):
-        guest_pids = get_guest_project_ids(user)
-        if not guest_pids:
-            return []
-
-        supplier_ids = set()
-
-        # Поставщики проектов
-        rows = db.session.query(Project.supplier_id)\
-            .filter(Project.id.in_(guest_pids))\
-            .filter(Project.supplier_id.isnot(None)).all()
-        for (sid,) in rows:
-            supplier_ids.add(sid)
-
-        # Субподрядчики проектов (M2M)
-        rows = db.session.execute(
-            db.text('''
-                SELECT DISTINCT ps.supplier_id
-                FROM project_subcontractor ps
-                WHERE ps.project_id IN :pids
-            ''').bindparams(db.bindparam('pids', expanding=True)),
-            {'pids': guest_pids}
-        ).all()
-        for (sid,) in rows:
-            supplier_ids.add(sid)
-
-        if not supplier_ids:
-            return []
-
-        return Supplier.query.filter(Supplier.id.in_(supplier_ids))\
-            .order_by(Supplier.name).all()
-
-    # Обычный сотрудник — всё
-    return Supplier.query.order_by(Supplier.name).all()
+    """Возвращает список всех поставщиков и субподрядчиков.
+    Расширенная видимость — все пользователи видят всех."""
+    from models import Supplier
+    return Supplier.query.order_by(Supplier.name.asc()).all()
 
 
 def get_available_subcontractors(user):
-    """Возвращает список доступных субподрядчиков (только supplier_type='subcontractor')."""
+    """Возвращает список субподрядчиков (только supplier_type='subcontractor')."""
     all_suppliers = get_available_suppliers(user)
     return [s for s in all_suppliers if s.supplier_type == 'subcontractor']
 
@@ -314,7 +211,7 @@ def _validate_folder_in_project(folder_id, project_id):
 
 
 # ============================================================
-#  ГОСТЕВОЙ ДОСТУП (создание User для контактов)
+#  ГОСТЕВОЙ ДОСТУП
 # ============================================================
 
 def get_contact_for_user(user_id):
@@ -429,7 +326,8 @@ def sync_am_stanko_contacts(supplier, project_id, invited_by,
     полноценными участниками проекта (is_guest=False).
 
     Роль по умолчанию — am_stanko_member.
-    НЕ понижает роль, если она уже выше (admin, manager и т.д.).
+    Если member уже существует — не понижаем роль, если она из набора АМ Станко
+    (можно вручную повысить до am_stanko_admin / am_stanko_manager / ...).
 
     Возвращает список (member, plain_password | None) — только что созданных.
     """
@@ -437,12 +335,6 @@ def sync_am_stanko_contacts(supplier, project_id, invited_by,
     from extensions import db
 
     created = []
-
-    # Роли, которые НЕ перезаписываем (слишком высокие)
-    PROTECTED_ROLES = {
-        'admin', 'manager', 'chief_engineer', 'logistic',
-        'am_stanko_admin', 'am_stanko_manager',
-    }
 
     for contact in supplier.contacts:
         user_obj, plain_password = get_or_create_guest_user(contact)
@@ -457,9 +349,7 @@ def sync_am_stanko_contacts(supplier, project_id, invited_by,
             if member.is_guest:
                 member.is_guest = False
                 changed = True
-            # Переписываем роль только если она ниже am_stanko_member
-            if member.role_in_project not in PROTECTED_ROLES \
-                    and member.role_in_project not in ProjectMember.AM_STANKO_ROLES:
+            if member.role_in_project not in ProjectMember.AM_STANKO_ROLES:
                 member.role_in_project = role
                 changed = True
             if changed:
@@ -482,9 +372,9 @@ def add_supplier_contacts_as_guests(supplier, project_id, invited_by,
                                      role='member'):
     """Делает все контакты СУБПОДРЯДЧИКА гостями проекта (is_guest=True).
 
-    НЕ понижает тех, кто уже НЕ гость в проекте.
-
     Возвращает список (member, plain_password | None) — только что созданных.
+
+    Не понижает тех, кто уже участник АМ Станко.
     """
     from models import ProjectMember
     from extensions import db
@@ -500,12 +390,13 @@ def add_supplier_contacts_as_guests(supplier, project_id, invited_by,
         ).first()
 
         if member:
-            # Уже не гость (команда или АМ Станко) — не трогаем
-            if not member.is_guest:
+            if member.is_am_stanko:
                 continue
-            # Уже гость — оставляем
             if member.is_guest:
                 continue
+            member.is_guest = True
+            member.role_in_project = role
+            created.append((member, None))
         else:
             member = ProjectMember(
                 user_id=user_obj.id,
@@ -557,106 +448,20 @@ def remove_supplier_contacts_from_project(supplier, project_id,
 
 
 # ============================================================
-#  УПОМИНАНИЯ В ЧАТЕ (@Иван Иванов)
+#  НЕПРОЧИТАННЫЕ СООБЩЕНИЯ (КЭШИРУЕМЫЕ)
 # ============================================================
 
-def get_project_mentionable_users(project_id):
-    """Возвращает список участников проекта, которых можно упомянуть через @.
-
-    Только команда проекта: своя + АМ Станко. Гости — исключены.
-    """
-    from models import ProjectMember
-    members = ProjectMember.query.filter_by(project_id=project_id).all()
-    result = []
-    seen = set()
-    for m in members:
-        if not m.user or m.is_guest:
-            continue
-        if not m.user.is_active:
-            continue
-        if m.user.id in seen:
-            continue
-        seen.add(m.user.id)
-        result.append((m.user, m))
-    result.sort(key=lambda t: (t[0].last_name.lower(), t[0].first_name.lower()))
-    return result
-
-
-def parse_mentions_in_text(text, project_id):
-    """Находит в тексте все @упоминания участников проекта.
-
-    Возвращает set() user_id тех, кого упомянули.
-    """
-    if not text or '@' not in text:
-        return set()
-
-    mentionable = get_project_mentionable_users(project_id)
-    text_lower = text.lower()
-    found_ids = set()
-
-    for user, _member in mentionable:
-        full_name = f'{user.first_name} {user.last_name}'
-        needle = f'@{full_name}'.lower()
-        if needle in text_lower:
-            found_ids.add(user.id)
-
-    return found_ids
-
-
-def get_unread_mentions_count(user_id):
-    """Общее количество непрочитанных упоминаний пользователя."""
-    from models import MessageMention
-    if not user_id:
-        return 0
-    return MessageMention.query.filter_by(
-        user_id=user_id, is_read=False
-    ).count()
-
-
-def get_unread_mentions_by_project(user_id):
-    """Словарь {project_id: count} непрочитанных упоминаний."""
-    from models import MessageMention
-    from extensions import db
-    from sqlalchemy import func
+@memoize(timeout=60)
+def get_unread_counts(user_id):
+    """Возвращает словарь {project_id: count_unread}."""
+    from models import MessageRead, Message, Project, User
 
     if not user_id:
         return {}
 
-    rows = db.session.query(
-        MessageMention.project_id,
-        func.count(MessageMention.id)
-    ).filter(
-        MessageMention.user_id == user_id,
-        MessageMention.is_read == False,  # noqa: E712
-    ).group_by(MessageMention.project_id).all()
-
-    return {pid: cnt for pid, cnt in rows}
-
-
-def mark_mentions_as_read(user_id, project_id):
-    """Помечает все упоминания пользователя в проекте как прочитанные."""
-    from models import MessageMention
-    from extensions import db
-
-    if not user_id or not project_id:
-        return 0
-
-    updated = MessageMention.query.filter_by(
-        user_id=user_id,
-        project_id=project_id,
-        is_read=False,
-    ).update({'is_read': True}, synchronize_session=False)
-    db.session.commit()
-    return updated
-
-
-# ============================================================
-#  НЕПРОЧИТАННЫЕ СООБЩЕНИЯ
-# ============================================================
-
-def get_unread_counts(user):
-    """Возвращает словарь {project_id: count_unread}."""
-    from models import MessageRead, Message, Project
+    user = User.query.get(user_id)
+    if not user:
+        return {}
 
     if is_privileged(user):
         projects = Project.query.filter_by(is_active=True).all()
@@ -705,15 +510,120 @@ def mark_project_as_read(user_id, project_id):
         db.session.add(record)
 
     db.session.commit()
+    invalidate_unread_cache(user_id)  # ← СБРОС КЭША
 
 
 # ============================================================
-#  УВЕДОМЛЕНИЯ О ЗАДАЧАХ / TO-DO
+#  УПОМИНАНИЯ В ЧАТЕ (@Иван Иванов) (КЭШИРУЕМЫЕ)
 # ============================================================
 
+def get_project_mentionable_users(project_id):
+    """Возвращает список участников проекта, которых можно упомянуть через @.
+
+    Только команда проекта: своя + АМ Станко. Гости — исключены.
+    Возвращает список кортежей (user, member).
+    """
+    from models import ProjectMember
+    members = ProjectMember.query.filter_by(project_id=project_id).all()
+    result = []
+    seen = set()
+    for m in members:
+        if not m.user or m.is_guest:
+            continue
+        if not m.user.is_active:
+            continue
+        if m.user.id in seen:
+            continue
+        seen.add(m.user.id)
+        result.append((m.user, m))
+    result.sort(key=lambda t: (t[0].last_name.lower(), t[0].first_name.lower()))
+    return result
+
+
+def parse_mentions_in_text(text, project_id):
+    """Находит в тексте все @упоминания участников проекта.
+
+    Возвращает set() user_id тех, кого упомянули.
+    Логика: пробегаем по всем участникам проекта, ищем подстроку
+    '@Имя Фамилия' в тексте. Регистр учитываем через .lower().
+    """
+    if not text or '@' not in text:
+        return set()
+
+    mentionable = get_project_mentionable_users(project_id)
+    text_lower = text.lower()
+    found_ids = set()
+
+    for user, _member in mentionable:
+        full_name = f'{user.first_name} {user.last_name}'
+        needle = f'@{full_name}'.lower()
+        if needle in text_lower:
+            found_ids.add(user.id)
+
+    return found_ids
+
+
+@memoize(timeout=60)
+def get_unread_mentions_count(user_id):
+    """Общее количество непрочитанных упоминаний пользователя."""
+    from models import MessageMention
+    if not user_id:
+        return 0
+    return MessageMention.query.filter_by(
+        user_id=user_id, is_read=False
+    ).count()
+
+
+@memoize(timeout=60)
+def get_unread_mentions_by_project(user_id):
+    """Словарь {project_id: count} непрочитанных упоминаний."""
+    from models import MessageMention
+    from extensions import db
+    from sqlalchemy import func
+
+    if not user_id:
+        return {}
+
+    rows = db.session.query(
+        MessageMention.project_id,
+        func.count(MessageMention.id)
+    ).filter(
+        MessageMention.user_id == user_id,
+        MessageMention.is_read == False,  # noqa: E712
+    ).group_by(MessageMention.project_id).all()
+
+    return {pid: cnt for pid, cnt in rows}
+
+
+def mark_mentions_as_read(user_id, project_id):
+    """Помечает все упоминания пользователя в проекте как прочитанные."""
+    from models import MessageMention
+    from extensions import db
+
+    if not user_id or not project_id:
+        return 0
+
+    updated = MessageMention.query.filter_by(
+        user_id=user_id,
+        project_id=project_id,
+        is_read=False,
+    ).update({'is_read': True}, synchronize_session=False)
+    db.session.commit()
+    invalidate_unread_cache(user_id)  # ← СБРОС КЭША
+    return updated
+
+
+# ============================================================
+#  УВЕДОМЛЕНИЯ О ЗАДАЧАХ / TO-DO (КЭШИРУЕМЫЕ)
+# ============================================================
+
+@memoize(timeout=60)
 def get_unread_task_ids(user_id):
     """Возвращает set() ID задач, назначенных пользователю и не прочитанных."""
     from models import Task, TaskRead
+
+    if not user_id:
+        return set()
 
     assigned_task_ids = {
         t.id for t in Task.query.filter_by(assigned_to=user_id).all()
@@ -724,9 +634,13 @@ def get_unread_task_ids(user_id):
     return assigned_task_ids - read_task_ids
 
 
+@memoize(timeout=60)
 def get_unread_todo_ids(user_id):
     """Возвращает set() ID To-Do, назначенных пользователю и не прочитанных."""
     from models import Todo, TodoRead
+
+    if not user_id:
+        return set()
 
     assigned_ids = {
         t.id for t in Todo.query.filter_by(assigned_to=user_id).all()
@@ -751,6 +665,7 @@ def mark_task_as_read(user_id, task_id):
     if not existing:
         db.session.add(TaskRead(user_id=user_id, task_id=task_id))
         db.session.commit()
+        invalidate_unread_cache(user_id)  # ← СБРОС КЭША
 
 
 def mark_todo_as_read(user_id, todo_id):
@@ -762,3 +677,53 @@ def mark_todo_as_read(user_id, todo_id):
     if not existing:
         db.session.add(TodoRead(user_id=user_id, todo_id=todo_id))
         db.session.commit()
+        invalidate_unread_cache(user_id)  # ← СБРОС КЭША
+
+
+# ============================================================
+#  НОВЫЕ КЭШИРУЕМЫЕ СЧЕТЧИКИ ДЛЯ САЙДБАРА
+# ============================================================
+
+@memoize(timeout=60)
+def get_overdue_tasks_count(user_id):
+    """Количество просроченных задач пользователя."""
+    from models import Task
+    if not user_id:
+        return 0
+    now = datetime.utcnow()
+    return Task.query.filter_by(assigned_to=user_id)\
+        .filter(Task.status != 'completed')\
+        .filter(Task.due_date < now).count()
+
+
+@memoize(timeout=60)
+def get_support_unread_count(user_id):
+    """Количество непрочитанных тикетов поддержки для админов."""
+    from models import User, SupportTicket
+    from extensions import db
+    if not user_id:
+        return 0
+    user = User.query.get(user_id)
+    if not user or user.role not in ('admin', 'supervisor'):
+        return 0
+    count = db.session.query(
+        db.func.sum(SupportTicket.unread_for_admin)
+    ).scalar() or 0
+    return int(count)
+
+
+# ============================================================
+#  СБРОС КЭША ПРИ ИЗМЕНЕНИЯХ
+# ============================================================
+
+def invalidate_unread_cache(user_id):
+    """Сбрасывает кэш всех счетчиков для пользователя."""
+    if not cache:
+        return
+    cache.delete_memoized(get_overdue_tasks_count, user_id)
+    cache.delete_memoized(get_support_unread_count, user_id)
+    cache.delete_memoized(get_unread_mentions_count, user_id)
+    cache.delete_memoized(get_unread_mentions_by_project, user_id)
+    cache.delete_memoized(get_unread_task_ids, user_id)
+    cache.delete_memoized(get_unread_todo_ids, user_id)
+    cache.delete_memoized(get_unread_counts, user_id)

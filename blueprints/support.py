@@ -7,7 +7,7 @@ from flask import (
 from extensions import db
 from models import User, SupportTicket, SupportMessage
 from decorators import login_required
-from utils import utcnow
+from utils import utcnow, get_user_projects  # ← ДОБАВЛЕН ИМПОРТ
 from services.push import notify_new_support_message
 
 bp = Blueprint('support', __name__, url_prefix='/support')
@@ -58,7 +58,8 @@ def my_tickets():
 
     return render_template('support/my_tickets.html',
                            user=user,
-                           tickets=tickets)
+                           tickets=tickets,
+                           projects=get_user_projects(user))  # ← ДОБАВЛЕНО
 
 
 @bp.route('/new', methods=['POST'])
@@ -176,7 +177,8 @@ def ticket_detail(ticket_id):
                            user=user,
                            ticket=ticket,
                            messages=messages,
-                           is_admin=is_admin)
+                           is_admin=is_admin,
+                           projects=get_user_projects(user))  # ← ДОБАВЛЕНО
 
 
 @bp.route('/ticket/<int:ticket_id>/close', methods=['POST'])
@@ -231,7 +233,8 @@ def admin_tickets():
                            user=user,
                            tickets=tickets,
                            status_filter=status_filter,
-                           total_unread=total_unread)
+                           total_unread=total_unread,
+                           projects=get_user_projects(user))  # ← ДОБАВЛЕНО
 
 
 @bp.route('/admin/unread-count')

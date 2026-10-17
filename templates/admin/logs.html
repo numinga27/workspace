@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1">
+            <i class="bi bi-journal-text"></i> Журнал действий
+        </h2>
+        <p class="text-muted mb-0">
+            Всего записей: <strong>{{ total }}</strong>
+            · хранятся 30 дней
+        </p>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ФИЛЬТРЫ -->
+<!-- ============================================================ -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+
+            <div class="col-md-3">
+                <label class="form-label small">Пользователь</label>
+                <select name="user" class="form-select">
+                    <option value="">— Все —</option>
+                    {% for u in filter_users %}
+                    <option value="{{ u.id }}"
+                            {% if filter_user == u.id|string %}selected{% endif %}>
+                        {{ u.full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label small">Действие</label>
+                <select name="action" class="form-select">
+                    <option value="">— Все —</option>
+                    {% for key, label in available_actions %}
+                    <option value="{{ key }}"
+                            {% if filter_action == key %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small">Дата от</label>
+                <input type="date" name="date_from" class="form-control"
+                       value="{{ filter_from }}">
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small">Дата до</label>
+                <input type="date" name="date_to" class="form-control"
+                       value="{{ filter_to }}">
+            </div>
+
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-primary flex-grow-1">
+                    <i class="bi bi-funnel"></i> Фильтр
+                </button>
+                {% if filter_user or filter_action or filter_from or filter_to %}
+                <a href="{{ url_for('admin_logs.logs_view') }}"
+                   class="btn btn-outline-secondary" title="Сбросить">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+                {% endif %}
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ТАБЛИЦА -->
+<!-- ============================================================ -->
+{% if logs %}
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 150px;">Время</th>
+                    <th style="width: 200px;">Пользователь</th>
+                    <th style="width: 250px;">Действие</th>
+                    <th>Объект</th>
+                    <th style="width: 130px;">IP</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>
+                        <div class="small">
+                            {{ log.created_at.strftime('%d.%m.%Y') }}
+                            <br>
+                            <span class="text-muted">{{ log.created_at.strftime('%H:%M:%S') }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="fw-bold small">{{ log.user_display }}</div>
+                        {% if log.user_role %}
+                        <div class="small text-muted">
+                            {% if log.user_role == 'supervisor' %}Супервизор
+                            {% else %}Пользователь{% endif %}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-{{ log.icon }} text-{{ log.color }}"></i>
+                            <span class="small">{{ log.action_display }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        {% if log.target_display %}
+                        <span class="small">{{ log.target_display }}</span>
+                        {% else %}
+                        <span class="text-muted small">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <small class="text-muted font-monospace">
+                            {{ log.ip_address or '—' }}
+                        </small>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ПАГИНАЦИЯ -->
+<!-- ============================================================ -->
+{% if total_pages > 1 %}
+<nav class="mt-3">
+    <ul class="pagination justify-content-center">
+        {% if page > 1 %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page - 1 }}{% if filter_user %}&user={{ filter_user }}{% endif %}{% if filter_action %}&action={{ filter_action }}{% endif %}{% if filter_from %}&date_from={{ filter_from }}{% endif %}{% if filter_to %}&date_to={{ filter_to }}{% endif %}">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        </li>
+        {% endif %}
+
+        <li class="page-item disabled">
+            <span class="page-link">
+                Стр. {{ page }} из {{ total_pages }}
+            </span>
+        </li>
+
+        {% if page < total_pages %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page + 1 }}{% if filter_user %}&user={{ filter_user }}{% endif %}{% if filter_action %}&action={{ filter_action }}{% endif %}{% if filter_from %}&date_from={{ filter_from }}{% endif %}{% if filter_to %}&date_to={{ filter_to }}{% endif %}">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">
+        <i class="bi bi-journal-text"></i>
+    </div>
+    <h5>
+        {% if filter_user or filter_action or filter_from or filter_to %}
+            По фильтрам ничего не найдено
+        {% else %}
+            Журнал пока пуст
+        {% endif %}
+    </h5>
+    <p>
+        {% if filter_user or filter_action or filter_from or filter_to %}
+            Попробуйте изменить условия фильтрации
+        {% else %}
+            Действия пользователей будут появляться здесь
+        {% endif %}
+    </p>
+</div>
+{% endif %}
+
+{% endblock %}

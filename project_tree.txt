@@ -1,0 +1,106 @@
+.
+├── app.py
+├── app_old_backup.py
+├── blueprints
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── admin_logs.py
+│   ├── auth.py
+│   ├── calendar.py
+│   ├── chat.py
+│   ├── companies.py
+│   ├── contacts.py
+│   ├── customers.py
+│   ├── dashboard.py
+│   ├── files.py
+│   ├── pdf.py
+│   ├── projects.py
+│   ├── reports.py
+│   ├── suppliers.py
+│   ├── support.py
+│   ├── tasks.py
+│   ├── team.py
+│   ├── todos.py
+│   └── users_admin.py
+├── check_mentions.py
+├── config.py
+├── cron_cleanup_logs.py
+├── cron_notifications.py
+├── decorators.py
+├── extensions.py
+├── fix_urls.sh
+├── fix_urls_pdf.sh
+├── models.py
+├── project_tree.txt
+├── requirements.txt
+├── seed.py
+├── services
+│   ├── __init__.py
+│   ├── audit.py
+│   ├── email.py
+│   ├── pdf.py
+│   ├── push.py
+│   └── stats.py
+├── static
+│   ├── apk
+│   │   └── version.json
+│   ├── icons
+│   │   ├── icon-192.png
+│   │   ├── icon-512.png
+│   │   ├── icon-maskable-512.png
+│   │   └── icon.svg
+│   ├── manifest.json
+│   ├── service-worker.js
+│   └── sw.js
+├── templates
+│   ├── admin
+│   │   ├── logs.html
+│   │   ├── user_assign.html
+│   │   ├── user_form.html
+│   │   └── users.html
+│   ├── base.html
+│   ├── companies
+│   │   ├── form.html
+│   │   └── list.html
+│   ├── create_customer.html
+│   ├── create_project.html
+│   ├── create_supplier.html
+│   ├── customer_detail.html
+│   ├── customers.html
+│   ├── dashboard.html
+│   ├── edit_project.html
+│   ├── edit_supplier.html
+│   ├── employee_report.html
+│   ├── errors
+│   │   ├── 404.html
+│   │   └── 500.html
+│   ├── folder.html
+│   ├── login.html
+│   ├── my_calendar.html
+│   ├── my_mentions.html
+│   ├── my_tasks.html
+│   ├── pdf
+│   │   ├── employee_report.html
+│   │   ├── project_report.html
+│   │   └── task_report.html
+│   ├── profile.html
+│   ├── project.html
+│   ├── project_settings.html
+│   ├── register.html
+│   ├── supplier_detail.html
+│   ├── suppliers.html
+│   ├── support
+│   │   ├── admin_tickets.html
+│   │   ├── my_tickets.html
+│   │   └── ticket.html
+│   ├── task_detail.html
+│   └── user_all_tasks.html
+├── test_crud.py
+├── test_project.py
+├── uploads
+│   └── 5ceed3e95a364a078cec79f97e6afc1f.log
+├── utils.py
+├── workspace.tar.gz
+└── wsgi.py
+
+13 directories, 91 files

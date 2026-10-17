@@ -133,7 +133,7 @@
                 </select>
             </div>
 
-            <!-- ← НОВОЕ: Субподрядчик -->
+            <!-- Субподрядчик -->
             <div class="col-md-2">
                 <label class="form-label">
                     <i class="bi bi-people-fill"></i> Субподрядчик
@@ -235,7 +235,7 @@
             </div>
             {% endif %}
 
-            <!-- ← НОВОЕ: Субподрядчик -->
+            <!-- Субподрядчик -->
             {% if project.subcontractor %}
             <div class="small mb-2" style="color: #6366f1; display: flex; align-items: center; gap: 5px;">
                 <i class="bi bi-people-fill"></i> {{ project.subcontractor.name }}
@@ -255,7 +255,7 @@
             </div>
             {% endif %}
 
-            <p class="text-muted small text-truncate-2 mb-0" style="height: 40px; line-height: 1.4;">
+            <p class="text-muted small text-truncate-2 mb-2">
                 {{ project.description or 'Нет описания' }}
             </p>
 

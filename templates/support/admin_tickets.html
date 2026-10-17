@@ -12,7 +12,7 @@
 
 <div class="card mb-3">
     <div class="card-body py-2">
-        <div class="btn-group btn-group-sm">
+        <div class="btn-group btn-group-sm flex-wrap">
             <a href="{{ url_for('support.admin_tickets', status='open') }}"
                class="btn {% if status_filter == 'open' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
                 Открытые
@@ -34,32 +34,52 @@
     <a href="{{ url_for('support.ticket_detail', ticket_id=t.id) }}"
        class="card mb-2 text-decoration-none text-dark"
        style="display:block;">
-        <div class="card-body py-3 d-flex justify-content-between align-items-start">
-            <div class="flex-grow-1 min-width-0">
-                <div class="d-flex align-items-center gap-2 mb-1">
-                    <span class="badge bg-secondary">#{{ t.id }}</span>
-                    <strong>{{ t.user.full_name }}</strong>
-                    <small class="text-muted">{{ t.user.email }}</small>
-                    {% if t.status == 'open' %}
-                        <span class="badge bg-success">открыт</span>
-                    {% else %}
-                        <span class="badge bg-secondary">закрыт</span>
-                    {% endif %}
+        <div class="card-body py-3">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+                <div class="flex-grow-1" style="min-width: 0;">
+                    <!-- Шапка тикета -->
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                        <span class="badge bg-secondary">#{{ t.id }}</span>
+                        <strong class="text-truncate" style="max-width: 200px;">
+                            {{ t.user.full_name }}
+                        </strong>
+                        <small class="text-muted text-truncate" style="max-width: 200px;">
+                            {{ t.user.email }}
+                        </small>
+                        {% if t.status == 'open' %}
+                            <span class="badge bg-success">открыт</span>
+                        {% else %}
+                            <span class="badge bg-secondary">закрыт</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Тема / первое сообщение — с переносом -->
+                    <div class="mb-1"
+                         style="
+                            word-wrap: break-word;
+                            overflow-wrap: break-word;
+                            word-break: break-word;
+                            max-width: 100%;
+                            font-size: 14px;
+                            line-height: 1.4;
+                         ">
+                        {{ t.display_subject }}
+                    </div>
+
+                    <!-- Метаданные -->
+                    <div class="small text-muted">
+                        <i class="bi bi-clock"></i>
+                        {{ t.updated_at.strftime('%d.%m.%Y %H:%M') }}
+                        · {{ t.messages.count() }} сообщ.
+                    </div>
                 </div>
-                <div class="text-truncate" style="max-width: 700px;">
-                    {{ t.display_subject }}
-                </div>
-                <div class="small text-muted mt-1">
-                    <i class="bi bi-clock"></i>
-                    {{ t.updated_at.strftime('%d.%m.%Y %H:%M') }}
-                    · {{ t.messages.count() }} сообщ.
-                </div>
-            </div>
-            {% if t.unread_for_admin > 0 %}
-                <span class="nav-badge-new ms-2" style="align-self: center;">
+
+                {% if t.unread_for_admin > 0 %}
+                <span class="nav-badge-new flex-shrink-0" style="align-self: flex-start;">
                     {{ t.unread_for_admin }}
                 </span>
-            {% endif %}
+                {% endif %}
+            </div>
         </div>
     </a>
     {% endfor %}

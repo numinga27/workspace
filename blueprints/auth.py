@@ -75,6 +75,14 @@ def login():
             session['user_id'] = user.id
             session['user_name'] = f"{user.first_name} {user.last_name}"
             session['user_role'] = user.role
+
+            # ← Логируем вход (для админа пропускается внутри log_action)
+            try:
+                from services.audit import log_action
+                log_action('login')
+            except Exception as e:
+                print(f'⚠️ Ошибка логирования login: {e}')
+
             flash(f'Добро пожаловать, {user.first_name}!', 'success')
             return redirect(url_for('dashboard.dashboard'))
         flash('Неверный email или пароль.', 'danger')
@@ -83,10 +91,16 @@ def login():
 
 @bp.route('/logout')
 def logout():
+    # ← Логируем выход ДО очистки сессии (пока знаем, кто это)
+    try:
+        from services.audit import log_action
+        log_action('logout')
+    except Exception as e:
+        print(f'⚠️ Ошибка логирования logout: {e}')
+
     session.clear()
     flash('Вы вышли из системы.', 'info')
     return redirect(url_for('auth.login'))
-
 
 
 @bp.route('/profile')
@@ -128,5 +142,17 @@ def change_password():
 
     user.set_password(new_password)
     db.session.commit()
+
+    # ← Логируем смену пароля (для админа пропускается)
+    try:
+        from services.audit import log_action
+        log_action('edit_user',
+                   target_type='user',
+                   target_id=user.id,
+                   target_name=user.full_name,
+                   details='Смена пароля (самостоятельно)')
+    except Exception as e:
+        print(f'⚠️ Ошибка логирования change_password: {e}')
+
     flash('Пароль успешно изменён.', 'success')
     return redirect(url_for('auth.profile'))

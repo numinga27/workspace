@@ -1,6 +1,7 @@
 from datetime import datetime
 from flask import Blueprint, render_template, request, session, jsonify, url_for
 from sqlalchemy import or_
+from sqlalchemy.orm import joinedload, selectinload
 
 from models import (
     User, Project, Task, Todo,
@@ -90,8 +91,10 @@ def dashboard():
     unread_task_ids = get_unread_task_ids(user.id)
     unread_todo_ids = get_unread_todo_ids(user.id)
 
+    # ← ИСПРАВЛЕНО: joinedload для project
     my_active_tasks = Task.query.filter_by(assigned_to=user.id)\
         .filter(Task.status.in_(['new', 'in_progress']))\
+        .options(joinedload(Task.project))\
         .order_by(Task.due_date.asc().nullslast()).all()
 
     now = utcnow()
@@ -137,10 +140,14 @@ def api_search():
     user = User.query.get(session['user_id'])
     privileged = is_privileged(user)   # ← было: user.role == 'admin'
 
+    # ← ИСПРАВЛЕНО: selectinload для субподрядчиков, чтобы не было N+1 в цикле ниже
     if privileged:
-        projects = Project.query.filter_by(is_active=True).all()
+        projects = Project.query.options(selectinload(Project.subcontractors))\
+            .filter_by(is_active=True).all()
     else:
-        projects = [m.project for m in user.projects if not m.is_guest]
+        project_ids = [m.project_id for m in user.projects if not m.is_guest]
+        projects = Project.query.options(selectinload(Project.subcontractors))\
+            .filter(Project.id.in_(project_ids)).all()
 
     project_ids = [p.id for p in projects]
     customer_ids = {p.customer_id for p in projects if p.customer_id}

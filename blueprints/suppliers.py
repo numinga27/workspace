@@ -12,9 +12,22 @@ bp = Blueprint('suppliers', __name__)
 #  ХЕЛПЕРЫ
 # ============================================================
 
+def _log(action, supplier, details=None):
+    """Безопасно пишет действие в журнал."""
+    try:
+        from services.audit import log_action
+        log_action(action,
+                   target_type='subcontractor' if (supplier and supplier.is_subcontractor) else 'supplier',
+                   target_id=supplier.id if supplier else None,
+                   target_name=supplier.name if supplier else None,
+                   details=details)
+    except Exception as e:
+        print(f'⚠️ Ошибка логирования {action}: {e}')
+
+
 def _can_view_supplier(user, supplier_id):
     """Проверяет, может ли пользователь видеть карточку поставщика/субподрядчика."""
-    if is_privileged(user):       # ← было: user.role == 'admin'
+    if is_privileged(user):
         return True
 
     for member in user.projects:
@@ -39,7 +52,7 @@ def _can_view_supplier(user, supplier_id):
 
 def _can_edit_supplier(user, supplier_id):
     """Проверяет, может ли пользователь редактировать поставщика/субподрядчика."""
-    if is_privileged(user):       # ← было: user.role == 'admin'
+    if is_privileged(user):
         return True
 
     for member in user.projects:
@@ -130,8 +143,34 @@ def _create_supplier_internal(supplier_type):
     is_sub = supplier_type == 'subcontractor'
 
     if request.method == 'POST':
+        name = (request.form.get('name') or '').strip()
+
+        # ← Проверка на дубликат по имени + типу (регистронезависимо)
+        existing = Supplier.query.filter(
+            db.func.lower(Supplier.name) == name.lower(),
+            Supplier.supplier_type == supplier_type,
+        ).first()
+
+        if existing:
+            label = 'Субподрядчик' if is_sub else 'Компания группы'
+            flash(f'{label} «{existing.name}» уже есть в базе. Измените название.', 'danger')
+            return render_template('create_supplier.html',
+                                   user=user,
+                                   page_type=supplier_type,
+                                   page_title=(
+                                       'Новый субподрядчик' if is_sub
+                                       else 'Новая компания группы'
+                                   ),
+                                   page_icon='bi-person-badge' if is_sub else 'bi-people-fill',
+                                   page_color='info' if is_sub else 'primary',
+                                   list_url=(
+                                       url_for('suppliers.subcontractors_list') if is_sub
+                                       else url_for('suppliers.suppliers_list')
+                                   ),
+                                   projects=get_user_projects(user))
+
         supplier = Supplier(
-            name=request.form['name'],
+            name=name,
             inn=request.form.get('inn'),
             contact_person=request.form.get('contact_person'),
             phone=request.form.get('phone'),
@@ -141,6 +180,10 @@ def _create_supplier_internal(supplier_type):
         )
         db.session.add(supplier)
         db.session.commit()
+
+        # ← Логируем создание
+        action = 'create_subcontractor' if is_sub else 'create_supplier'
+        _log(action, supplier)
 
         label = 'Субподрядчик' if is_sub else 'Компания группы'
         flash(f'{label} добавлен!', 'success')
@@ -253,13 +296,50 @@ def _edit_supplier_internal(supplier_id):
         return redirect(url_for('suppliers.suppliers_list'))
 
     if request.method == 'POST':
-        supplier.name = request.form['name']
+        new_name = (request.form.get('name') or '').strip()
+
+        # ← Проверка на дубликат (исключая текущего)
+        existing = Supplier.query.filter(
+            db.func.lower(Supplier.name) == new_name.lower(),
+            Supplier.supplier_type == supplier.supplier_type,
+            Supplier.id != supplier.id,
+        ).first()
+
+        if existing:
+            flash(f'«{existing.name}» уже есть в базе. Измените название.', 'danger')
+            return render_template('edit_supplier.html',
+                                   supplier=supplier,
+                                   user=user,
+                                   is_subcontractor=is_sub,
+                                   page_title=(
+                                       'Редактирование субподрядчика' if is_sub
+                                       else 'Редактирование компании группы'
+                                   ),
+                                   page_icon='bi-person-badge' if is_sub else 'bi-people-fill',
+                                   page_color='info' if is_sub else 'primary',
+                                   view_url=(
+                                       url_for('suppliers.view_subcontractor', supplier_id=supplier.id)
+                                       if is_sub
+                                       else url_for('suppliers.view_supplier', supplier_id=supplier.id)
+                                   ),
+                                   projects=get_user_projects(user))
+
+        old_name = supplier.name
+
+        supplier.name = new_name
         supplier.inn = request.form.get('inn')
         supplier.contact_person = request.form.get('contact_person')
         supplier.phone = request.form.get('phone')
         supplier.email = request.form.get('email')
         supplier.address = request.form.get('address')
         db.session.commit()
+
+        # ← Логируем изменение
+        action = 'edit_subcontractor' if is_sub else 'edit_supplier'
+        details = None
+        if old_name != new_name:
+            details = f'Переименован: «{old_name}» → «{new_name}»'
+        _log(action, supplier, details=details)
 
         label = 'Субподрядчик' if is_sub else 'Компания группы'
         flash(f'{label} обновлён!', 'success')
@@ -349,7 +429,11 @@ def _delete_supplier_internal(supplier_id):
                 return redirect(url_for('suppliers.view_subcontractor', supplier_id=supplier_id))
             return redirect(url_for('suppliers.view_supplier', supplier_id=supplier_id))
 
+    # ← Логируем удаление ДО физического удаления
     name = supplier.name
+    action = 'delete_subcontractor' if is_sub else 'delete_supplier'
+    _log(action, supplier, details=f'Удалён «{name}»')
+
     db.session.delete(supplier)
     db.session.commit()
 

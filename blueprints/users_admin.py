@@ -10,6 +10,37 @@ bp = Blueprint('users_admin', __name__, url_prefix='/admin')
 
 
 # ============================================================
+#  ХЕЛПЕР ДЛЯ ЖУРНАЛА
+# ============================================================
+
+def _log(action, target_user, details=None):
+    """Безопасно пишет действие в журнал.
+
+    ВАЖНО: логируются только действия над обычными пользователями.
+    Если `target_user` — админ, log_action всё равно запишет, потому что
+    фильтр `if user.role == 'admin': return` внутри log_action проверяет
+    АВТОРА действия, а не цель. Здесь мы передаём автора через сессию.
+    """
+    try:
+        from services.audit import log_action
+        log_action(action,
+                   target_type='user',
+                   target_id=target_user.id if target_user else None,
+                   target_name=target_user.full_name if target_user else None,
+                   details=details)
+    except Exception as e:
+        print(f'⚠️ Ошибка логирования {action}: {e}')
+
+
+def _role_display(role):
+    return {
+        'admin': 'Администратор',
+        'supervisor': 'Супервизор',
+        'user': 'Пользователь',
+    }.get(role, role)
+
+
+# ============================================================
 #  СПИСОК ПОЛЬЗОВАТЕЛЕЙ
 # ============================================================
 
@@ -20,7 +51,6 @@ def users_list():
     """Список всех пользователей с фильтрами и поиском."""
     current_user = User.query.get(session['user_id'])
 
-    # --- Параметры фильтров ---
     q = request.args.get('q', '').strip()
     role_filter = request.args.get('role', '')
     status_filter = request.args.get('status', '')
@@ -30,7 +60,6 @@ def users_list():
 
     query = User.query
 
-    # Поиск
     if q:
         like = f'%{q}%'
         query = query.filter(
@@ -42,17 +71,14 @@ def users_list():
             )
         )
 
-    # Фильтр по роли
     if role_filter in ('admin', 'supervisor', 'user'):
         query = query.filter(User.role == role_filter)
 
-    # Фильтр по активности
     if status_filter == 'active':
         query = query.filter(User.is_active.is_(True))
     elif status_filter == 'inactive':
         query = query.filter(User.is_active.is_(False))
 
-    # Фильтр по проекту
     if project_filter:
         try:
             pid = int(project_filter)
@@ -68,7 +94,6 @@ def users_list():
         except ValueError:
             pass
 
-    # Сортировка
     if sort == 'oldest':
         query = query.order_by(User.created_at.asc())
     elif sort == 'name':
@@ -80,7 +105,6 @@ def users_list():
 
     users = query.all()
 
-    # Статистика (общая, без учёта фильтров)
     stats = {
         'total': User.query.count(),
         'admins': User.query.filter_by(role='admin').count(),
@@ -89,11 +113,9 @@ def users_list():
         'inactive': User.query.filter_by(is_active=False).count(),
     }
 
-    # Список активных проектов для селекта
     all_projects = Project.query.filter_by(is_active=True)\
         .order_by(Project.name.asc()).all()
 
-    # Инфа о выбранном проекте
     selected_project = None
     if project_filter:
         try:
@@ -135,7 +157,6 @@ def users_create():
         password = request.form.get('password', '')
         password_confirm = request.form.get('password_confirm', '')
         role = request.form.get('role', 'user')
-        can_view_all_contacts = request.form.get('can_view_all_contacts') == 'on'
 
         errors = []
 
@@ -178,12 +199,15 @@ def users_create():
             email=email[:100],
             role=role,
             is_active=True,
-            can_view_all_contacts=can_view_all_contacts,
             created_by_id=current_user.id,
         )
         new_user.set_password(password)
         db.session.add(new_user)
         db.session.commit()
+
+        # ← Логируем создание
+        _log('create_user', new_user,
+             details=f'Роль: {_role_display(new_user.role)}')
 
         flash(f'Пользователь {new_user.full_name} создан '
               f'(роль: {new_user.role_display}).', 'success')
@@ -204,7 +228,7 @@ def users_create():
 @login_required
 @privileged_required
 def users_edit(user_id):
-    """Редактировать пользователя (имя, компания, email, пароль, доступ)."""
+    """Редактировать пользователя (имя, компания, email, пароль)."""
     current_user = User.query.get(session['user_id'])
     edit_user = User.query.get_or_404(user_id)
 
@@ -240,14 +264,22 @@ def users_edit(user_id):
                                    form_data=request.form,
                                    projects=get_user_projects(current_user))
 
+        old_name = edit_user.full_name
+        changes = []
+
+        if edit_user.first_name != first_name or edit_user.last_name != last_name:
+            changes.append('изменено имя')
+        if edit_user.company != company:
+            changes.append('изменена компания')
+        if edit_user.email != email:
+            changes.append('изменён email')
+
         edit_user.first_name = first_name[:50]
         edit_user.last_name = last_name[:50]
         edit_user.company = company[:100]
         edit_user.email = email[:100]
 
-        # ← НОВОЕ: сохраняем флаг доступа к контактам
-        edit_user.can_view_all_contacts = request.form.get('can_view_all_contacts') == 'on'
-
+        password_changed = False
         if new_password:
             if len(new_password) < 6:
                 flash('Новый пароль должен быть не короче 6 символов.', 'danger')
@@ -257,9 +289,18 @@ def users_edit(user_id):
                                        form_data=request.form,
                                        projects=get_user_projects(current_user))
             edit_user.set_password(new_password)
-            flash('Пароль обновлён.', 'success')
+            password_changed = True
+            changes.append('изменён пароль')
 
         db.session.commit()
+
+        # ← Логируем изменение
+        details = ', '.join(changes) if changes else None
+        _log('edit_user', edit_user, details=details)
+
+        if password_changed:
+            flash('Пароль обновлён.', 'success')
+
         flash(f'Данные {edit_user.full_name} обновлены.', 'success')
         return redirect(url_for('users_admin.users_list'))
 
@@ -310,17 +351,13 @@ def users_set_role(user_id):
     target.role = new_role
     db.session.commit()
 
+    # ← Логируем смену роли
+    _log('set_role', target,
+         details=f'{_role_display(old_role)} → {_role_display(new_role)}')
+
     flash(f'Роль {target.full_name} изменена: '
           f'{_role_display(old_role)} → {_role_display(new_role)}.', 'success')
     return redirect(url_for('users_admin.users_list'))
-
-
-def _role_display(role):
-    return {
-        'admin': 'Администратор',
-        'supervisor': 'Супервизор',
-        'user': 'Пользователь',
-    }.get(role, role)
 
 
 # ============================================================
@@ -346,6 +383,10 @@ def users_toggle_active(user_id):
     target.is_active = not target.is_active
     db.session.commit()
 
+    # ← Логируем блокировку
+    action = 'Разблокирован' if target.is_active else 'Заблокирован'
+    _log('toggle_user_active', target, details=action)
+
     if target.is_active:
         flash(f'{target.full_name} разблокирован.', 'success')
     else:
@@ -353,29 +394,43 @@ def users_toggle_active(user_id):
 
     return redirect(url_for('users_admin.users_list'))
 
-
 # ============================================================
-#  ПЕРЕКЛЮЧИТЬ ДОСТУП К КОНТАКТАМ (все заказчики/поставщики)
+#  ДОСТУП К КОНТАКТАМ
 # ============================================================
 
 @bp.route('/users/<int:user_id>/toggle-contacts-access', methods=['POST'])
 @login_required
 @privileged_required
 def users_toggle_contacts_access(user_id):
-    """Переключить разрешение видеть всех заказчиков и поставщиков."""
+    """Переключить доступ пользователя к справочнику контактов.
+
+    Когда выключен — пользователь видит только контакты своих проектов.
+    Когда включён — видит все контакты (заказчиков, поставщиков, субподрядчиков).
+    """
+    current_user = User.query.get(session['user_id'])
     target = User.query.get_or_404(user_id)
+
+    if target.id == current_user.id:
+        flash('Нельзя изменить свой собственный доступ.', 'warning')
+        return redirect(url_for('users_admin.users_list'))
+
+    if not hasattr(target, 'can_view_all_contacts'):
+        flash('Функция недоступна: у модели User нет поля can_view_all_contacts.', 'danger')
+        return redirect(url_for('users_admin.users_list'))
 
     target.can_view_all_contacts = not target.can_view_all_contacts
     db.session.commit()
 
+    # ← Логируем
+    _log('toggle_user_active', target,
+         details='Доступ к контактам: ' + ('включён' if target.can_view_all_contacts else 'выключен'))
+
     if target.can_view_all_contacts:
-        flash(f'{target.full_name} теперь видит всех заказчиков и поставщиков.', 'success')
+        flash(f'{target.full_name}: доступ ко всем контактам включён.', 'success')
     else:
-        flash(f'{target.full_name} больше не видит общую базу контактов.', 'info')
+        flash(f'{target.full_name}: доступ ко всем контактам выключен.', 'info')
 
     return redirect(url_for('users_admin.users_list'))
-
-
 # ============================================================
 #  УДАЛЕНИЕ ПОЛЬЗОВАТЕЛЯ
 # ============================================================
@@ -423,6 +478,10 @@ def users_delete(user_id):
         return redirect(url_for('users_admin.users_list'))
 
     name = target.full_name
+
+    # ← Логируем удаление ДО физического
+    _log('delete_user', target, details=f'Удалён пользователь «{name}»')
+
     ProjectMember.query.filter_by(user_id=target.id).delete()
     db.session.delete(target)
     db.session.commit()
@@ -439,15 +498,7 @@ def users_delete(user_id):
 @login_required
 @privileged_required
 def api_users_search():
-    """Поиск зарегистрированных пользователей для автокомплита.
-
-    GET-параметры:
-      q     — строка поиска. Если пусто — возвращаются первые N пользователей.
-      limit — сколько вернуть (по умолчанию 20, максимум 50).
-
-    Возвращает JSON-массив объектов:
-      {id, email, name, company, role_display}
-    """
+    """Поиск зарегистрированных пользователей для автокомплита."""
     q = request.args.get('q', '').strip()
     limit = min(int(request.args.get('limit', 20) or 20), 50)
 
@@ -486,11 +537,7 @@ def api_users_search():
 @login_required
 @privileged_required
 def users_assign(user_id):
-    """Назначить пользователя на проект с ролью.
-
-    GET  — показать форму + текущие проекты.
-    POST — сохранить, обновить роль или создать нового участника.
-    """
+    """Назначить пользователя на проект с ролью."""
     current_user = User.query.get(session['user_id'])
     target = User.query.get_or_404(user_id)
 
@@ -536,6 +583,10 @@ def users_assign(user_id):
                 existing.is_guest = False
             db.session.commit()
 
+            # ← Логируем смену роли в проекте
+            _log('set_role', target,
+                 details=f'Проект «{project.name}»: {old_role} → {existing.role_display}')
+
             flash(f'Роль {target.full_name} в проекте «{project.name}» изменена: '
                   f'{old_role} → {existing.role_display}.', 'success')
         else:
@@ -547,6 +598,10 @@ def users_assign(user_id):
             )
             db.session.add(new_member)
             db.session.commit()
+
+            # ← Логируем добавление в проект
+            _log('set_role', target,
+                 details=f'Добавлен в проект «{project.name}» как {new_member.role_display}')
 
             flash(f'{target.full_name} назначен(а) на проект «{project.name}» '
                   f'с ролью {new_member.role_display}.', 'success')
@@ -586,6 +641,10 @@ def users_unassign(user_id, project_id):
     if not member:
         flash('Пользователь не участвует в этом проекте.', 'warning')
         return redirect(url_for('users_admin.users_assign', user_id=target.id))
+
+    # ← Логируем снятие с проекта ДО удаления
+    _log('set_role', target,
+         details=f'Снят с проекта «{project.name}» (была роль: {member.role_display})')
 
     db.session.delete(member)
     db.session.commit()

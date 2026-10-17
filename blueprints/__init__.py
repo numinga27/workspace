@@ -13,6 +13,7 @@ from . import support
        # ← НОВОЕ
 from . import contacts           # ← НОВОЕ
 from . import team
+from . import admin_logs
 from . import pdf
 from . import admin
 from . import users_admin 
@@ -38,6 +39,7 @@ ALL_BLUEPRINTS = [
     users_admin.bp,
     companies.bp,
     support.bp,
+    admin_logs.bp,
 ]
 
 

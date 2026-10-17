@@ -24,9 +24,27 @@ from utils import (
 )
 from services.stats import get_todo_stats
 from services.email import send_guest_credentials
-from services.push import notify_new_task, notify_new_subtask  # ← НОВОЕ
+from services.push import notify_new_task, notify_new_subtask
 
 bp = Blueprint('projects', __name__)
+
+
+# ============================================================
+#  ХЕЛПЕР ДЛЯ ЖУРНАЛА
+# ============================================================
+
+def _log(action, target=None, target_type=None, target_id=None,
+         target_name=None, details=None):
+    """Безопасно пишет действие в журнал."""
+    try:
+        from services.audit import log_action
+        log_action(action,
+                   target_type=target_type,
+                   target_id=target_id or (target.id if target else None),
+                   target_name=target_name or (getattr(target, 'name', None) or getattr(target, 'title', None) if target else None),
+                   details=details)
+    except Exception as e:
+        print(f'⚠️ Ошибка логирования {action}: {e}')
 
 
 # ============================================================
@@ -184,8 +202,8 @@ def create_project():
             supplier_id=int(supplier_id) if supplier_id else None,
             subcontractor_id=subs[0].id if subs else None,
             company_id=company_id,
-            company_name=company_name,      # legacy
-            company_color=company_color,    # legacy
+            company_name=company_name,
+            company_color=company_color,
             start_date=start_date or utcnow(),
             end_date=end_date,
         )
@@ -204,6 +222,9 @@ def create_project():
 
         _sync_supplier_as_am_stanko(project, inviter=user)
         _sync_subcontractors_as_guests(project, inviter=user)
+
+        # ← Логируем создание
+        _log('create_project', project, target_type='project')
 
         flash('Проект создан! Вы назначены руководителем.', 'success')
         return redirect(url_for('projects.view_project', project_id=project.id))
@@ -412,6 +433,7 @@ def edit_project(project_id):
     if request.method == 'POST':
         previous_sub_ids = {s.id for s in project.subcontractors}
         previous_supplier_id = project.supplier_id
+        old_name = project.name
 
         project.name = request.form['name']
         project.description = request.form.get('description', '')
@@ -419,8 +441,8 @@ def edit_project(project_id):
 
         company_id, company_name, company_color = _resolve_company_from_form()
         project.company_id = company_id
-        project.company_name = company_name      # legacy
-        project.company_color = company_color    # legacy
+        project.company_name = company_name
+        project.company_color = company_color
 
         customer_id = request.form.get('customer_id') or None
         project.customer_id = int(customer_id) if customer_id else None
@@ -454,6 +476,12 @@ def edit_project(project_id):
         _sync_subcontractors_as_guests(
             project, inviter=user, previous_sub_ids=previous_sub_ids
         )
+
+        # ← Логируем изменение
+        details = None
+        if old_name != project.name:
+            details = f'Переименован: «{old_name}» → «{project.name}»'
+        _log('edit_project', project, target_type='project', details=details)
 
         flash('Проект обновлён!', 'success')
         return redirect(url_for('projects.view_project', project_id=project.id))
@@ -501,6 +529,10 @@ def delete_project(project_id):
         return redirect(url_for('projects.view_project', project_id=project_id))
 
     project_name = project.name
+
+    # ← Логируем удаление ДО физического удаления
+    _log('delete_project', project, target_type='project',
+         details=f'Удалён проект «{project_name}»')
 
     for file in File.query.filter_by(project_id=project_id).all():
         path = os.path.join(current_app.config['UPLOAD_FOLDER'], file.stored_name)
@@ -630,6 +662,10 @@ def create_task(project_id):
     db.session.add(task)
     db.session.commit()
 
+    # ← Логируем создание задачи
+    _log('create_task', task, target_type='task',
+         details=f'Проект: {task.project.name}' if task.project else None)
+
     # ← Push-уведомления
     try:
         poster = User.query.get(session['user_id'])
@@ -668,12 +704,17 @@ def create_milestone(project_id):
         .order_by(Milestone.order_index.desc()).first()
     next_index = (last.order_index + 1) if last else 0
 
-    db.session.add(Milestone(
+    milestone = Milestone(
         name=name, description=desc, project_id=project_id,
         order_index=next_index, due_date=due_date,
         created_by=session['user_id']
-    ))
+    )
+    db.session.add(milestone)
     db.session.commit()
+
+    # ← Логируем создание вехи
+    _log('create_milestone', milestone, target_type='milestone')
+
     flash('Веха добавлена!', 'success')
     return redirect(url_for('projects.view_project', project_id=project_id))
 
@@ -689,6 +730,11 @@ def toggle_milestone(milestone_id):
     m.is_completed = not m.is_completed
     m.completed_at = utcnow() if m.is_completed else None
     db.session.commit()
+
+    # ← Логируем изменение вехи
+    _log('edit_milestone', m, target_type='milestone',
+         details='Отмечена выполненной' if m.is_completed else 'Снята отметка о выполнении')
+
     flash('Веха обновлена.', 'success')
     return redirect(url_for('projects.view_project', project_id=m.project_id))
 
@@ -702,7 +748,12 @@ def delete_milestone(milestone_id):
         flash('Нет прав.', 'danger')
         return redirect(url_for('projects.view_project', project_id=pid))
 
+    # ← Логируем удаление ДО физического
+    _log('delete_milestone', m, target_type='milestone',
+         details=f'Удалена веха «{m.name}»')
+
     db.session.delete(m)
     db.session.commit()
+
     flash('Веха удалена.', 'info')
     return redirect(url_for('projects.view_project', project_id=pid))

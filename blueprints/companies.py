@@ -71,23 +71,20 @@ def companies_list():
 
 @bp.route('/create', methods=['GET', 'POST'])
 @login_required
-@privileged_required
 def companies_create():
-    """Создать филиал. Только админ/супервизор."""
+    """Создать филиал. Доступно всем авторизованным."""
     user = User.query.get(session['user_id'])
 
     if request.method == 'POST':
-        name = request.form.get('name', '').strip()
+        name = (request.form.get('name') or '').strip()
 
-        errors = []
-        if not name:
-            errors.append('Название обязательно.')
-        if name and Company.query.filter_by(name=name).first():
-            errors.append(f'Филиал «{name}» уже существует.')
+        # ← Проверка на дубликат по имени (регистронезависимо)
+        existing = Company.query.filter(
+            db.func.lower(Company.name) == name.lower()
+        ).first()
 
-        if errors:
-            for e in errors:
-                flash(e, 'danger')
+        if existing:
+            flash(f'Филиал «{existing.name}» уже есть в базе. Измените название.', 'danger')
             return render_template('companies/form.html',
                                    user=user,
                                    edit_company=None,

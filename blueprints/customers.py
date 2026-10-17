@@ -9,6 +9,23 @@ bp = Blueprint('customers', __name__)
 
 
 # ============================================================
+#  ХЕЛПЕР
+# ============================================================
+
+def _log(action, customer, details=None):
+    """Безопасно пишет действие в журнал (не ломает основной флоу)."""
+    try:
+        from services.audit import log_action
+        log_action(action,
+                   target_type='customer',
+                   target_id=customer.id if customer else None,
+                   target_name=customer.name if customer else None,
+                   details=details)
+    except Exception as e:
+        print(f'⚠️ Ошибка логирования {action}: {e}')
+
+
+# ============================================================
 #  СПИСОК ЗАКАЗЧИКОВ
 # ============================================================
 
@@ -32,8 +49,21 @@ def create_customer():
     user = User.query.get(session['user_id'])
 
     if request.method == 'POST':
+        name = (request.form.get('name') or '').strip()
+
+        # ← Проверка на дубликат по имени (регистронезависимо)
+        existing = Customer.query.filter(
+            db.func.lower(Customer.name) == name.lower()
+        ).first()
+
+        if existing:
+            flash(f'Заказчик «{existing.name}» уже есть в базе. Измените название.', 'danger')
+            return render_template('create_customer.html',
+                                   user=user,
+                                   projects=get_user_projects(user))
+
         customer = Customer(
-            name=request.form['name'],
+            name=name,
             inn=request.form.get('inn'),
             contact_person=request.form.get('contact_person'),
             phone=request.form.get('phone'),
@@ -42,6 +72,10 @@ def create_customer():
         )
         db.session.add(customer)
         db.session.commit()
+
+        # ← Логируем создание
+        _log('create_customer', customer)
+
         flash('Заказчик добавлен!', 'success')
 
         next_url = request.form.get('next') or request.referrer or url_for('customers.customers_list')
@@ -80,13 +114,38 @@ def edit_customer(customer_id):
         return redirect(url_for('customers.customers_list'))
 
     if request.method == 'POST':
-        customer.name = request.form['name']
+        new_name = (request.form.get('name') or '').strip()
+
+        # ← Проверка на дубликат (исключая текущего)
+        existing = Customer.query.filter(
+            db.func.lower(Customer.name) == new_name.lower(),
+            Customer.id != customer.id,
+        ).first()
+
+        if existing:
+            flash(f'Заказчик «{existing.name}» уже есть в базе. Измените название.', 'danger')
+            return render_template('edit_customer.html',
+                                   customer=customer,
+                                   user=user,
+                                   projects=get_user_projects(user))
+
+        # Запоминаем старое имя для логов
+        old_name = customer.name
+
+        customer.name = new_name
         customer.inn = request.form.get('inn')
         customer.contact_person = request.form.get('contact_person')
         customer.phone = request.form.get('phone')
         customer.email = request.form.get('email')
         customer.address = request.form.get('address')
         db.session.commit()
+
+        # ← Логируем изменение
+        details = None
+        if old_name != new_name:
+            details = f'Переименован: «{old_name}» → «{new_name}»'
+        _log('edit_customer', customer, details=details)
+
         flash('Заказчик обновлён!', 'success')
         return redirect(url_for('customers.customers_list'))
 
@@ -184,8 +243,10 @@ def delete_customer(customer_id):
             )
             return redirect(url_for('customers.view_customer', customer_id=customer_id))
 
-    # Всё чисто — удаляем
+    # ← Логируем удаление ДО физического удаления (пока есть id и name)
     name = customer.name
+    _log('delete_customer', customer, details=f'Удалён заказчик «{name}»')
+
     db.session.delete(customer)
     db.session.commit()
 

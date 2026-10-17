@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import click
 
 from config import Config
-from extensions import db, mail, FLASK_MAIL_AVAILABLE
+from extensions import db, mail, FLASK_MAIL_AVAILABLE, cache
 from models import User
 from blueprints import register_blueprints
 
@@ -22,6 +22,13 @@ def create_app(config_class=Config):
 
     # --- Инициализация расширений ---
     db.init_app(app)
+    
+    # --- Инициализация кэша ---
+    if cache:
+        app.config.setdefault('CACHE_TYPE', 'SimpleCache')
+        app.config.setdefault('CACHE_DEFAULT_TIMEOUT', 60)
+        cache.init_app(app)
+
     if FLASK_MAIL_AVAILABLE and mail is not None:
         mail.init_app(app)
 
@@ -39,9 +46,8 @@ def create_app(config_class=Config):
         from utils import get_unread_counts
         if 'user_id' in session:
             try:
-                user = User.query.get(session['user_id'])
-                if user:
-                    return {'unread_counts': get_unread_counts(user)}
+                # ← ИСПРАВЛЕНО: передаем user_id, а не объект user
+                return {'unread_counts': get_unread_counts(session['user_id'])}
             except Exception as e:
                 print(f'⚠️ Ошибка get_unread_counts: {e}')
         return {'unread_counts': {}}
@@ -50,15 +56,11 @@ def create_app(config_class=Config):
     def inject_overdue_count():
         """Просроченные задачи текущего пользователя."""
         from flask import session
-        from models import Task
+        from utils import get_overdue_tasks_count
         if 'user_id' in session:
             try:
-                user = User.query.get(session['user_id'])
-                if user:
-                    overdue_count = Task.query.filter_by(assigned_to=user.id)\
-                        .filter(Task.status != 'completed')\
-                        .filter(Task.due_date < _utcnow()).count()
-                    return {'my_overdue_count': overdue_count}
+                # ← ИСПРАВЛЕНО: используем кэшируемую функцию
+                return {'my_overdue_count': get_overdue_tasks_count(session['user_id'])}
             except Exception as e:
                 print(f'⚠️ Ошибка подсчёта просроченных: {e}')
         return {'my_overdue_count': 0}
@@ -94,20 +96,15 @@ def create_app(config_class=Config):
             'unread_mentions_by_project': {},
         }
 
-    # ← НОВОЕ: счётчик непрочитанных обращений в поддержку (для админов)
     @app.context_processor
     def inject_support_unread():
         """Количество непрочитанных обращений в поддержку — для админов."""
         from flask import session
-        from models import User, SupportTicket
+        from utils import get_support_unread_count
         if 'user_id' in session:
             try:
-                user = User.query.get(session['user_id'])
-                if user and user.role in ('admin', 'supervisor'):
-                    count = db.session.query(
-                        db.func.sum(SupportTicket.unread_for_admin)
-                    ).scalar() or 0
-                    return {'support_unread_count': int(count)}
+                # ← ИСПРАВЛЕНО: используем кэшируемую функцию
+                return {'support_unread_count': get_support_unread_count(session['user_id'])}
             except Exception as e:
                 print(f'⚠️ Ошибка support_unread_count: {e}')
         return {'support_unread_count': 0}
@@ -144,6 +141,57 @@ def create_app(config_class=Config):
             print("✅ Создан администратор: admin@example.com / admin123")
 
     # ============================================================
+    #  ГЛОБАЛЬНЫЕ ОБРАБОТЧИКИ ОШИБОК
+    # ============================================================
+
+    @app.errorhandler(500)
+    def handle_500(e):
+        """Внутренняя ошибка сервера — показываем дружелюбную заглушку."""
+        import traceback
+        print('❌ Ошибка 500:')
+        traceback.print_exception(type(e), e, e.__traceback__)
+
+        try:
+            from flask import render_template
+            return render_template('errors/500.html'), 500
+        except Exception:
+            return (
+                '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+                '<title>Сервер на обслуживании</title>'
+                '<style>body{font-family:sans-serif;text-align:center;padding:80px 20px;'
+                'background:#f5f7fb;color:#0d0d12;}h1{color:#5b5bd6;}</style></head>'
+                '<body><h1>🛠 Сервер на техническом обслуживании</h1>'
+                '<p>Мы улучшаем сервис. Потерпите немного — скоро всё заработает.</p>'
+                '<p><a href="/dashboard" style="color:#5b5bd6;">Обновить</a></p></body></html>',
+                500
+            )
+
+    @app.errorhandler(404)
+    def handle_404(e):
+        """Страница не найдена — показываем дружелюбную заглушку."""
+        try:
+            from flask import render_template
+            return render_template('errors/404.html'), 404
+        except Exception:
+            return (
+                '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+                '<title>Страница не найдена</title></head>'
+                '<body style="font-family:sans-serif;text-align:center;padding:80px;">'
+                '<h1>🔍 Страница не найдена</h1>'
+                '<p><a href="/dashboard">На главную</a></p></body></html>',
+                404
+            )
+
+    @app.errorhandler(403)
+    def handle_403(e):
+        """Доступ запрещён."""
+        try:
+            from flask import render_template
+            return render_template('errors/404.html'), 403
+        except Exception:
+            return '<h1>403 — Доступ запрещён</h1>', 403
+
+    # ============================================================
     #  PWA: манифест и Service Worker
     # ============================================================
 
@@ -165,14 +213,12 @@ def create_app(config_class=Config):
             'static', 'service-worker.js',
             mimetype='application/javascript'
         ))
-        # Явно убираем Content-Disposition — iOS Safari блокирует SW с ним
         response.headers.pop('Content-Disposition', None)
         response.headers['Content-Type'] = 'application/javascript; charset=utf-8'
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Service-Worker-Allowed'] = '/'
-        # Разрешаем CORS — иногда помогает
-        response.headers['Access-Control-Allow-Origin'] = '*'
         return response
+
     @app.route('/sw.js')
     def pwa_sw():
         from flask import send_from_directory, make_response
@@ -180,19 +226,18 @@ def create_app(config_class=Config):
             'static', 'sw.js',
             mimetype='application/javascript'
         ))
-        # Убираем Content-Disposition — iOS Safari блокирует SW с ним
         response.headers.pop('Content-Disposition', None)
         response.headers['Content-Type'] = 'application/javascript; charset=utf-8'
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Service-Worker-Allowed'] = '/'
         return response
+
     # ============================================================
     #  WEB PUSH: подписка / отписка / VAPID-ключ
     # ============================================================
 
     @app.route('/push/vapid-public-key')
     def push_vapid_public_key():
-        """Отдаём публичный VAPID-ключ для JS."""
         from flask import jsonify
         return jsonify({
             'publicKey': app.config.get('VAPID_PUBLIC_KEY', '')
@@ -200,7 +245,6 @@ def create_app(config_class=Config):
 
     @app.route('/push/subscribe', methods=['POST'])
     def push_subscribe():
-        """Сохраняем подписку пользователя."""
         from flask import request, jsonify, session
         from models import PushSubscription
 
@@ -241,7 +285,6 @@ def create_app(config_class=Config):
 
     @app.route('/push/unsubscribe', methods=['POST'])
     def push_unsubscribe():
-        """Отключаем подписку."""
         from flask import request, jsonify, session
         from models import PushSubscription
 
@@ -261,7 +304,6 @@ def create_app(config_class=Config):
 
     @app.route('/push/test', methods=['POST'])
     def push_test():
-        """Тестовая отправка пуша текущему пользователю (для отладки)."""
         from flask import jsonify, session
         from services.push import send_push_to_user
 
@@ -289,7 +331,7 @@ def create_app(config_class=Config):
     @click.option('--password', prompt=True, hide_input=True,
                   confirmation_prompt=True, help='Пароль (мин. 6 символов)')
     def create_supervisor_cli(email, first_name, last_name, company, password):
-        """Создать пользователя с ролью 'supervisor' (полный паритет с админом)."""
+        """Создать пользователя с ролью 'supervisor'."""
         email = email.strip().lower()
 
         if not email or '@' not in email:
@@ -325,11 +367,6 @@ def create_app(config_class=Config):
         click.echo(f'   Email:     {user.email}')
         click.echo(f'   Компания:  {user.company}')
         click.echo(f'   Роль:      {user.role_display}')
-        click.echo()
-        click.echo('🔑 Супервизор имеет полный паритет с администратором:')
-        click.echo('   • видит все проекты и пользователей')
-        click.echo('   • может ставить задачи от своего имени')
-        click.echo('   • может управлять пользователями и справочниками')
 
     @app.cli.command('set-role')
     @click.option('--email', prompt='Email пользователя', help='Email')

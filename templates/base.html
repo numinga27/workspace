@@ -750,6 +750,79 @@
         }
         .empty-state h5 { color: var(--text-primary); margin-bottom: 8px; }
 
+        /* ============================================================ */
+        /* ЧАТ                                                          */
+        /* ============================================================ */
+        .chat-box {
+            height: 300px;
+            overflow-y: auto;
+            background-color: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            padding: 14px;
+        }
+
+        .chat-box .message {
+            margin-bottom: 10px;
+            padding: 10px 14px;
+            background: white;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-light);
+            font-size: 13.5px;
+            box-shadow: var(--shadow-xs);
+            max-width: 75%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .chat-box .message.own {
+            margin-left: auto;
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        .chat-box .message.own .author { color: rgba(255, 255, 255, 0.9); }
+        .chat-box .message.own .time { color: rgba(255, 255, 255, 0.7); }
+        .chat-box .message.own .mention {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+        }
+        .chat-box .message.own .mention:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        .chat-box .message.other {
+            margin-right: auto;
+            background: white;
+            color: var(--text-primary);
+        }
+
+        .chat-box .message .author {
+            font-weight: 600;
+            color: var(--accent);
+            font-size: 13px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .chat-box .message .time {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            display: block;
+            margin-top: 4px;
+        }
+
+        .chat-box .message .mention {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 12.5px;
+            text-decoration: none;
+            transition: background 0.15s ease;
+        }
+        .chat-box .message .mention:hover { background: #fde68a; }
+
         .modal-content { border-radius: var(--radius-lg); border: none; box-shadow: var(--shadow-lg); }
         .modal-header { border-bottom: 1px solid var(--border-light); padding: 16px 20px; }
         .modal-body { padding: 20px; }
@@ -808,6 +881,8 @@
             .header .logo span { display: none; }
             h2 { font-size: 22px; }
             .global-search-wrap { display: none; }
+
+            .chat-box .message { max-width: 85%; }
         }
 
         .ios-step {
@@ -836,6 +911,181 @@
         @keyframes apkUpdateSlideUp {
             from { transform: translateY(100%); opacity: 0; }
             to   { transform: translateY(0);    opacity: 1; }
+        }
+        /* ============================================================ */
+/* ПЛАВНЫЕ ПЕРЕХОДЫ МЕЖДУ СТРАНИЦАМИ (View Transitions)          */
+/* ============================================================ */
+
+/* Включаем кросс-документные переходы для всех страниц */
+@view-transition {
+    navigation: auto;
+}
+
+/* Настройка анимации: старая страница растворяется, новая появляется */
+::view-transition-old(root) {
+    animation: 0.25s ease-out both fadeOut;
+}
+
+::view-transition-new(root) {
+    animation: 0.35s ease-out both fadeInPageTransition;
+}
+
+@keyframes fadeOut {
+    to { opacity: 0; transform: scale(0.98); }
+}
+
+@keyframes fadeInPageTransition {
+    from { opacity: 0; transform: scale(1.02); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Уважение к настройкам доступности (если пользователь отключил анимации) */
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation: none;
+    }
+}           /* ============================================================ */
+        /* ПЛАВНОЕ ПОЯВЛЕНИЕ КОНТЕНТА (fallback для View Transitions)    */
+        /* ============================================================ */
+
+        @keyframes contentFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Плавное появление всего содержимого main-content */
+        .main-content > *:not(script):not(style) {
+            animation: contentFadeIn 0.3s ease-out both;
+        }
+
+        /* Задержка для «лестницы» — flash-сообщения появляются первыми,
+           потом контент страницы */
+        .main-content > .alert:first-child {
+            animation-delay: 0s;
+        }
+
+        .main-content > .alert ~ *:not(script):not(style) {
+            animation-delay: 0.05s;
+        }
+
+        /* Плавное появление карточек и таблиц внутри */
+        .card,
+        .table-responsive,
+        .stat-card,
+        .project-card,
+        .empty-state {
+            animation: contentFadeIn 0.3s ease-out both;
+        }
+
+        /* Уважение к настройкам доступности */
+        @media (prefers-reduced-motion: reduce) {
+            .main-content > *,
+            .card,
+            .table-responsive,
+            .stat-card,
+            .project-card,
+            .empty-state {
+                animation: none;
+            }
+        }
+                /* ============================================================ */
+        /* КАЛЕНДАРЬ — адаптация тулбара на мобильных                   */
+        /* ============================================================ */
+
+        @media (max-width: 768px) {
+            /* Тулбар календаря — flex-wrap, чтобы кнопки переносились */
+            #calendar .fc-toolbar,
+            #myCalendar .fc-toolbar {
+                flex-wrap: wrap;
+                gap: 6px;
+                margin-bottom: 10px !important;
+            }
+
+            /* Каждая часть тулбара — на всю ширину, по центру */
+            #calendar .fc-toolbar-chunk,
+            #myCalendar .fc-toolbar-chunk {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 4px;
+            }
+
+            /* Заголовок (Месяц 2026) — отдельной строкой по центру */
+            #calendar .fc-toolbar-chunk:nth-child(2),
+            #myCalendar .fc-toolbar-chunk:nth-child(2) {
+                order: -1;
+                width: 100%;
+                margin-bottom: 8px;
+            }
+
+            /* Заголовок — компактнее */
+            #calendar .fc-toolbar-title,
+            #myCalendar .fc-toolbar-title {
+                font-size: 15px !important;
+                text-align: center;
+            }
+
+            /* Кнопки — компактнее */
+            #calendar .fc-button,
+            #myCalendar .fc-button {
+                padding: 5px 10px !important;
+                font-size: 11.5px !important;
+                line-height: 1.2 !important;
+            }
+
+            /* Кнопки навигации (стрелки) — квадратные */
+            #calendar .fc-prev-button,
+            #calendar .fc-next-button,
+            #myCalendar .fc-prev-button,
+            #myCalendar .fc-next-button {
+                padding: 5px 8px !important;
+            }
+
+            /* Карточка календаря — overflow hidden, чтобы ничего не вылезало */
+            .card:has(#calendar),
+            .card:has(#myCalendar) {
+                overflow: hidden;
+            }
+        }
+                /* Мобильный сайдбар — прокрутка проектов */
+        @media (max-width: 768px) {
+            .sidebar {
+                height: calc(100vh - var(--header-height));
+                height: calc(100dvh - var(--header-height));   /* для iOS Safari */
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;             /* плавный скролл на iOS */
+                padding-bottom: 80px;                           /* отступ снизу, чтобы не обрезалось */
+            }
+
+            .sidebar .project-tree {
+                max-height: none;
+                overflow: visible;
+            }
+
+            /* Папки и заголовки — не сжимаются */
+            .sidebar .project-tree .tree-customer-header,
+            .sidebar .project-tree .tree-item {
+                flex-shrink: 0;
+            }
+        }
+                /* Карточки тикетов на мобильном */
+        @media (max-width: 768px) {
+            .card-body {
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }
+
+            /* Никакой горизонтальный скролл */
+            body {
+                overflow-x: hidden;
+            }
         }
     </style>
 </head>
@@ -969,6 +1219,15 @@
                class="nav-item {% if request.endpoint and request.endpoint.startswith('users_admin.') %}active{% endif %}">
                 <i class="bi bi-shield-fill-check"></i>
                 <span>Пользователи</span>
+            </a>
+            {% endif %}
+
+            {# ← ЖУРНАЛ ДЕЙСТВИЙ — ТОЛЬКО ДЛЯ АДМИНА #}
+            {% if session.user_role == 'admin' %}
+            <a href="{{ url_for('admin_logs.logs_view') }}"
+               class="nav-item {% if request.endpoint and request.endpoint.startswith('admin_logs.') %}active{% endif %}">
+                <i class="bi bi-journal-text"></i>
+                <span>Журнал действий</span>
             </a>
             {% endif %}
 
@@ -1477,7 +1736,22 @@
                 if (expandIcon) expandIcon.classList.remove('expanded');
             }
         }
-
+                // ============================================================
+        //  При загрузке — разворачиваем все группы проектов на мобильном,
+        //  чтобы пользователь сразу видел проекты
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.innerWidth <= 768) {
+                document.querySelectorAll('.customer-children').forEach(el => {
+                    el.style.display = 'block';
+                });
+                document.querySelectorAll('.tree-customer-header').forEach(el => {
+                    el.classList.add('expanded');
+                    const icon = el.querySelector('.expand-icon-customer');
+                    if (icon) icon.classList.add('expanded');
+                });
+            }
+        });
         function filterProjects(query) {
             const q = query.toLowerCase().trim();
             document.querySelectorAll('#projectTree .tree-item').forEach(el => {
