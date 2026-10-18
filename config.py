@@ -24,6 +24,18 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # ============================================================
+    #  ПУЛ СОЕДИНЕНИЙ SQLALCHEMY
+    #  Решает проблему "server closed the connection unexpectedly"
+    #  в Celery-воркерах (соединение простаивает и Postgres его закрывает).
+    # ============================================================
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,       # проверять соединение перед каждым запросом
+        'pool_recycle': 280,         # пересоздавать соединение каждые 280 сек
+        'pool_size': 10,             # размер пула
+        'max_overflow': 20,          # максимум дополнительных соединений
+    }
+
+    # ============================================================
     #  ЗАГРУЗКА ФАЙЛОВ
     # ============================================================
     UPLOAD_FOLDER = os.path.join(basedir, 'uploads')
@@ -51,8 +63,9 @@ class Config:
     # ============================================================
     VAPID_PUBLIC_KEY = 'BEv4tebHUcKzUGBtwZHmpWOyjNL5b5dG8IK-Gel3z03W7W7NB-snmvPtGu7PvnlAFhGbji77Kia0pXCJHoE2SR4'
     VAPID_PRIVATE_KEY_PATH = os.path.join(basedir, 'vapid_private.pem')
-    VAPID_CLAIM_EMAIL = 'mailto:numinga27@yandex.ru'    
-      # ============================================================
+    VAPID_CLAIM_EMAIL = 'mailto:numinga27@yandex.ru'
+
+    # ============================================================
     #  ВЕРСИЯ ПРИЛОЖЕНИЯ
     #  Меняй при каждом релизе APK!
     # ============================================================

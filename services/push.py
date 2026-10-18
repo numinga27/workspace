@@ -1,6 +1,8 @@
 """Сервис web-push уведомлений (PWA).
 
 Использует pywebpush для отправки пушей через Apple Push Service / Mozilla.
+ВНИМАНИЕ: Функции notify_* теперь НЕ отправляют push, а возвращают данные
+для фоновой отправки через Celery (send_push_async.delay).
 """
 import json
 import os
@@ -25,16 +27,15 @@ def _is_configured():
     )
 
 
+# ============================================================
+#  НИЗКОУРОВНЕВАЯ ОТПРАВКА (синхронная, используется Celery)
+# ============================================================
+
 def send_push_to_user(user_id, title, body, url=None, tag=None, icon=None):
     """Отправить push-уведомление всем активным подпискам пользователя.
-
-    Параметры:
-        user_id: ID получателя
-        title:   заголовок уведомления
-        body:    текст
-        url:     куда открыть при клике
-        tag:     уникальный тег (одинаковые теги заменяют друг друга)
-        icon:    путь к иконке
+    
+    ВНИМАНИЕ: Эта функция синхронная. Вызывайте её из Celery-задачи
+    (send_push_async), а не напрямую из blueprint'ов.
     """
     if not _is_configured():
         print('⚠️ Web Push не настроен (VAPID ключи отсутствуют)')
@@ -93,7 +94,6 @@ def send_push_to_user(user_id, title, body, url=None, tag=None, icon=None):
 
         except WebPushException as e:
             status = getattr(e.response, 'status_code', None)
-
             if status in (404, 410):
                 sub.is_active = False
                 removed += 1
@@ -116,21 +116,27 @@ def send_push_to_user(user_id, title, body, url=None, tag=None, icon=None):
 
 
 # ============================================================
-#  ХЕЛПЕРЫ ДЛЯ КОНКРЕТНЫХ СОБЫТИЙ
+#  ХЕЛПЕРЫ ДЛЯ КОНКРЕТНЫХ СОБЫТИЙ (возвращают данные, не отправляют)
 # ============================================================
 
 def notify_new_task(task, poster):
-    """Push: назначена новая задача."""
+    """Возвращает dict для отправки push о новой задаче.
+    
+    Использование в blueprint:
+        push_data = notify_new_task(task, poster)
+        if push_data:
+            send_push_async.delay(**push_data)
+    """
     if not task.assigned_to:
-        return 0
+        return None
 
     from models import User
     assignee = User.query.get(task.assigned_to)
     if not assignee:
-        return 0
+        return None
 
     if poster and assignee.id == poster.id:
-        return 0
+        return None
 
     project_name = task.project.name if task.project else '—'
     due_text = (
@@ -138,44 +144,53 @@ def notify_new_task(task, poster):
         if task.due_date else 'Без дедлайна'
     )
 
-    return send_push_to_user(
-        user_id=assignee.id,
-        title='📋 Новая задача',
-        body=f'{task.title}\n{project_name} · {due_text}',
-        url=f'/task/{task.id}',
-        tag=f'task-{task.id}',
-    )
+    return {
+        'user_id': assignee.id,
+        'title': '📋 Новая задача',
+        'body': f'{task.title}\n{project_name} · {due_text}',
+        'url': f'/task/{task.id}',
+        'tag': f'task-{task.id}',
+    }
 
 
 def notify_new_subtask(subtask, poster):
-    """Push: назначена новая подзадача."""
+    """Возвращает dict для отправки push о новой подзадаче."""
     if not subtask.assigned_to:
-        return 0
+        return None
 
     from models import User
     assignee = User.query.get(subtask.assigned_to)
     if not assignee:
-        return 0
+        return None
 
     if poster and assignee.id == poster.id:
-        return 0
+        return None
 
     project_name = subtask.project.name if subtask.project else '—'
     parent_title = subtask.parent_task.title if subtask.parent_task else ''
 
-    return send_push_to_user(
-        user_id=assignee.id,
-        title='📋 Новая подзадача',
-        body=f'{subtask.title}\nВ задаче: {parent_title} · {project_name}',
-        url=f'/task/{subtask.id}',
-        tag=f'subtask-{subtask.id}',
-    )
+    return {
+        'user_id': assignee.id,
+        'title': '📋 Новая подзадача',
+        'body': f'{subtask.title}\nВ задаче: {parent_title} · {project_name}',
+        'url': f'/task/{subtask.id}',
+        'tag': f'subtask-{subtask.id}',
+    }
 
 
 def notify_new_message(message, mentioned_user_ids=None):
-    """Push: новое сообщение в чате проекта."""
+    """Возвращает СПИСОК dict для отправки push о новом сообщении в чате.
+    
+    Возвращает список, потому что сообщение может уйти нескольким получателям.
+    
+    Использование в blueprint:
+        push_data_list = notify_new_message(message, mentioned_user_ids=...)
+        if push_data_list:
+            for push_data in push_data_list:
+                send_push_async.delay(**push_data)
+    """
     if not message.project:
-        return 0
+        return []
 
     from models import ProjectMember
 
@@ -185,14 +200,16 @@ def notify_new_message(message, mentioned_user_ids=None):
     author_name = f'{author.first_name} {author.last_name}' if author else '—'
     text_preview = message.text[:120].replace('\n', ' ')
 
-    sent = 0
+    result = []
+    mentioned_user_ids = mentioned_user_ids or set()
+
     for m in members:
         if m.user_id == message.user_id:
             continue
         if m.is_guest:
             continue
 
-        if mentioned_user_ids and m.user_id in mentioned_user_ids:
+        if m.user_id in mentioned_user_ids:
             title = f'💬 {author_name} упомянул(а) вас'
             body = text_preview
             tag = f'mention-{message.id}'
@@ -201,23 +218,24 @@ def notify_new_message(message, mentioned_user_ids=None):
             body = f'{message.project.name}\n{text_preview}'
             tag = f'msg-{message.id}'
 
-        sent += send_push_to_user(
-            user_id=m.user_id,
-            title=title,
-            body=body,
-            url=f'/project/{message.project_id}?mark_read=1#chat',
-            tag=tag,
-        )
+        result.append({
+            'user_id': m.user_id,
+            'title': title,
+            'body': body,
+            'url': f'/project/{message.project_id}?mark_read=1#chat',
+            'tag': tag,
+        })
 
-    return sent
+    return result
+
 
 # ============================================================
-#  ХЕЛПЕРЫ ДЛЯ ТЕХПОДДЕРЖКИ
+#  ХЕЛПЕРЫ ДЛЯ ТЕХПОДДЕРЖКИ (возвращают данные, не отправляют)
 # ============================================================
 
 def notify_new_support_message(ticket, message, for_admin=True):
-    """Push: новое сообщение в тикете поддержки.
-
+    """Возвращает СПИСОК dict для отправки push о новом сообщении в тикете.
+    
     Параметры:
         ticket: SupportTicket
         message: SupportMessage (только что созданное)
@@ -226,9 +244,9 @@ def notify_new_support_message(ticket, message, for_admin=True):
     """
     from models import User
 
-    # Кому шлём
+    result = []
+
     if for_admin:
-        # Всем админам и супервизорам
         recipients = User.query.filter(
             User.role.in_(['admin', 'supervisor']),
             User.is_active.is_(True),
@@ -238,23 +256,21 @@ def notify_new_support_message(ticket, message, for_admin=True):
         url = f'/support/ticket/{ticket.id}'
         tag = f'support-ticket-{ticket.id}'
     else:
-        # Автору тикета — об ответе админа
         recipients = [ticket.user] if ticket.user else []
         title = f'💬 Ответ поддержки по обращению #{ticket.id}'
         body = f'{message.author.full_name}: {message.text[:100]}'
         url = f'/support/ticket/{ticket.id}'
         tag = f'support-ticket-{ticket.id}'
 
-    sent = 0
     for recipient in recipients:
-        # Автору сообщения не шлём
         if recipient.id == message.author_id:
             continue
-        sent += send_push_to_user(
-            user_id=recipient.id,
-            title=title,
-            body=body,
-            url=url,
-            tag=tag,
-        )
-    return sent
+        result.append({
+            'user_id': recipient.id,
+            'title': title,
+            'body': body,
+            'url': url,
+            'tag': tag,
+        })
+
+    return result

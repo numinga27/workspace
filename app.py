@@ -9,6 +9,27 @@ from blueprints import register_blueprints
 
 
 # ============================================================
+#  ИНИЦИАЛИЗАЦИЯ CELERY
+# ============================================================
+
+def celery_init_app(app):
+    """Создает и настраивает Celery, привязанный к Flask-приложению."""
+    from celery import Celery, Task
+
+    class FlaskTask(Task):
+        """Задача, которая выполняется в контексте Flask-приложения."""
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery_app = Celery(app.name, task_cls=FlaskTask)
+    celery_app.config_from_object(app.config["CELERY"])
+    celery_app.set_default()
+    app.extensions["celery"] = celery_app
+    return celery_app
+
+
+# ============================================================
 #  ХЕЛПЕРЫ ДЛЯ CONTEXT PROCESSORS
 # ============================================================
 
@@ -19,6 +40,13 @@ def _utcnow():
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+
+    # --- Настройка Celery (прямое присваивание, чтобы перезаписать любые старые настройки) ---
+    app.config['CELERY'] = {
+        'broker_url': 'redis://localhost:6379/0',
+        'result_backend': 'redis://localhost:6379/0',
+        'task_ignore_result': True,
+    }
 
     # --- Инициализация расширений ---
     db.init_app(app)
@@ -32,6 +60,9 @@ def create_app(config_class=Config):
     if FLASK_MAIL_AVAILABLE and mail is not None:
         mail.init_app(app)
 
+    # --- Инициализация Celery ---
+    celery_init_app(app)
+
     # --- Регистрация Blueprints ---
     register_blueprints(app)
 
@@ -41,12 +72,10 @@ def create_app(config_class=Config):
 
     @app.context_processor
     def inject_unread_counts():
-        """Непрочитанные сообщения в чатах проектов."""
         from flask import session
         from utils import get_unread_counts
         if 'user_id' in session:
             try:
-                # ← ИСПРАВЛЕНО: передаем user_id, а не объект user
                 return {'unread_counts': get_unread_counts(session['user_id'])}
             except Exception as e:
                 print(f'⚠️ Ошибка get_unread_counts: {e}')
@@ -54,12 +83,10 @@ def create_app(config_class=Config):
 
     @app.context_processor
     def inject_overdue_count():
-        """Просроченные задачи текущего пользователя."""
         from flask import session
         from utils import get_overdue_tasks_count
         if 'user_id' in session:
             try:
-                # ← ИСПРАВЛЕНО: используем кэшируемую функцию
                 return {'my_overdue_count': get_overdue_tasks_count(session['user_id'])}
             except Exception as e:
                 print(f'⚠️ Ошибка подсчёта просроченных: {e}')
@@ -67,7 +94,6 @@ def create_app(config_class=Config):
 
     @app.context_processor
     def inject_unread_tasks_count():
-        """Количество непрочитанных задач, назначенных текущему пользователю."""
         from flask import session
         from utils import get_unread_tasks_count
         if 'user_id' in session:
@@ -80,7 +106,6 @@ def create_app(config_class=Config):
 
     @app.context_processor
     def inject_unread_mentions():
-        """Непрочитанные упоминания (@) пользователя — общий счётчик и по проектам."""
         from flask import session
         from utils import get_unread_mentions_count, get_unread_mentions_by_project
         if 'user_id' in session:
@@ -98,12 +123,10 @@ def create_app(config_class=Config):
 
     @app.context_processor
     def inject_support_unread():
-        """Количество непрочитанных обращений в поддержку — для админов."""
         from flask import session
         from utils import get_support_unread_count
         if 'user_id' in session:
             try:
-                # ← ИСПРАВЛЕНО: используем кэшируемую функцию
                 return {'support_unread_count': get_support_unread_count(session['user_id'])}
             except Exception as e:
                 print(f'⚠️ Ошибка support_unread_count: {e}')
@@ -116,7 +139,6 @@ def create_app(config_class=Config):
     with app.app_context():
         db.create_all()
 
-        # ← Автомиграция старых ролей (на случай, если в БД осталось 'am_stanko')
         from models import ProjectMember
         old_rows = ProjectMember.query.filter_by(role_in_project='am_stanko').all()
         if old_rows:
@@ -126,7 +148,6 @@ def create_app(config_class=Config):
             print(f"✅ Автомиграция: {len(old_rows)} участников переведены "
                   f"из 'am_stanko' в 'am_stanko_member'")
 
-        # Первичный админ
         if not User.query.first():
             admin = User(
                 first_name='Иван',
@@ -146,11 +167,9 @@ def create_app(config_class=Config):
 
     @app.errorhandler(500)
     def handle_500(e):
-        """Внутренняя ошибка сервера — показываем дружелюбную заглушку."""
         import traceback
         print('❌ Ошибка 500:')
         traceback.print_exception(type(e), e, e.__traceback__)
-
         try:
             from flask import render_template
             return render_template('errors/500.html'), 500
@@ -168,7 +187,6 @@ def create_app(config_class=Config):
 
     @app.errorhandler(404)
     def handle_404(e):
-        """Страница не найдена — показываем дружелюбную заглушку."""
         try:
             from flask import render_template
             return render_template('errors/404.html'), 404
@@ -184,7 +202,6 @@ def create_app(config_class=Config):
 
     @app.errorhandler(403)
     def handle_403(e):
-        """Доступ запрещён."""
         try:
             from flask import render_template
             return render_template('errors/404.html'), 403

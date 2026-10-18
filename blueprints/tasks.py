@@ -22,6 +22,7 @@ from utils import (
 )
 from services.stats import calculate_task_stats
 from services.email import send_guest_credentials
+from services.tasks import send_push_async, send_email_async  # ← ФОНОВЫЕ ЗАДАЧИ
 
 bp = Blueprint('tasks', __name__)
 
@@ -32,7 +33,6 @@ bp = Blueprint('tasks', __name__)
 
 def _log(action, target=None, target_type=None, target_id=None,
          target_name=None, details=None):
-    """Безопасно пишет действие в журнал."""
     try:
         from services.audit import log_action
         log_action(action,
@@ -49,7 +49,6 @@ def _log(action, target=None, target_type=None, target_id=None,
 # ============================================================
 
 class SimplePagination:
-    """Имитирует объект пагинации SQLAlchemy для обычных списков."""
     def __init__(self, items, page, per_page, total):
         self.items = items
         self.page = page
@@ -67,16 +66,10 @@ class SimplePagination:
 # ============================================================
 
 def _build_tasks_context(target_user, current_user, apply_pagination=False):
-    """Собирает контекст для шаблонов my_tasks.html и user_all_tasks.html.
-    
-    apply_pagination=True — включает пагинацию (для my_tasks).
-    """
-    # 1. Загружаем ВСЕ задачи пользователя (с joinedload для N+1)
     all_tasks = Task.query.filter_by(assigned_to=target_user.id)\
         .options(joinedload(Task.project), joinedload(Task.assignee))\
         .order_by(Task.due_date.asc().nullslast(), Task.status).all()
 
-    # 2. Считаем статистику по ПОЛНОМУ списку (для бейджиков и вкладок)
     active = [t for t in all_tasks if t.status in ('new', 'in_progress')]
     overdue = [t for t in all_tasks if t.is_overdue]
     completed = [t for t in all_tasks if t.status == 'completed']
@@ -92,7 +85,6 @@ def _build_tasks_context(target_user, current_user, apply_pagination=False):
     todos = Todo.query.filter_by(assigned_to=target_user.id, is_done=False)\
         .order_by(Todo.created_at.desc()).all()
 
-    # 3. Применяем фильтры (проект, статус) к полному списку
     filter_project = request.args.get('project', '')
     filter_status = request.args.get('status', '')
 
@@ -102,23 +94,19 @@ def _build_tasks_context(target_user, current_user, apply_pagination=False):
     if filter_status:
         filtered_tasks = [t for t in filtered_tasks if t.status == filter_status]
 
-    # 4. ПАГИНАЦИЯ (только если включена)
     pagination = None
     if apply_pagination:
         page = request.args.get('page', 1, type=int)
-        per_page = 20  # ← Можно менять: 10, 20, 50
-        
+        per_page = 20
         total = len(filtered_tasks)
         start = (page - 1) * per_page
         end = start + per_page
         tasks_page = filtered_tasks[start:end]
-        
         pagination = SimplePagination(tasks_page, page, per_page, total)
         tasks_to_show = tasks_page
     else:
         tasks_to_show = filtered_tasks
 
-    # 5. Проекты для сайдбара
     if target_user.id == current_user.id:
         projects = get_user_projects(current_user)
     else:
@@ -151,10 +139,7 @@ def _build_tasks_context(target_user, current_user, apply_pagination=False):
 @login_required
 def my_tasks():
     user = db.session.get(User, session['user_id'])
-    
-    # ← Включаем пагинацию для своих задач
     ctx = _build_tasks_context(target_user=user, current_user=user, apply_pagination=True)
-    
     unread_task_ids = get_unread_task_ids(user.id)
     unread_todo_ids = get_unread_todo_ids(user.id)
 
@@ -186,7 +171,6 @@ def mark_all_read():
     user = db.session.get(User, session['user_id'])
     user_id = user.id
 
-    # 1. Находим ID задач, которые назначены юзеру, но еще не отмечены как прочитанные
     read_tasks_subquery = select(TaskRead.task_id).where(TaskRead.user_id == user_id)
     unread_tasks_query = db.session.query(Task.id).filter(
         Task.assigned_to == user_id,
@@ -194,7 +178,6 @@ def mark_all_read():
     ).all()
     unread_task_ids = [tid for (tid,) in unread_tasks_query]
 
-    # 2. То же самое для To-Do
     read_todos_subquery = select(TodoRead.todo_id).where(TodoRead.user_id == user_id)
     unread_todos_query = db.session.query(Todo.id).filter(
         Todo.assigned_to == user_id,
@@ -202,13 +185,11 @@ def mark_all_read():
     ).all()
     unread_todo_ids = [tid for (tid,) in unread_todos_query]
 
-    # 3. Массовая вставка (INSERT ... VALUES)
     if unread_task_ids:
         db.session.execute(
             insert(TaskRead),
             [{'user_id': user_id, 'task_id': tid} for tid in unread_task_ids]
         )
-    
     if unread_todo_ids:
         db.session.execute(
             insert(TodoRead),
@@ -240,7 +221,6 @@ def user_all_tasks(user_id):
         flash('Сотрудник не найден.', 'danger')
         return redirect(url_for('dashboard.dashboard'))
 
-    # Проверка прав
     is_allowed = False
     if is_privileged(current_user):
         is_allowed = True
@@ -257,7 +237,6 @@ def user_all_tasks(user_id):
         flash('У вас нет прав.', 'danger')
         return redirect(url_for('dashboard.dashboard'))
 
-    # ← Для чужих задач пагинацию пока не включаем
     ctx = _build_tasks_context(target_user=employee, current_user=current_user, apply_pagination=False)
 
     return render_template('user_all_tasks.html',
@@ -317,7 +296,6 @@ def view_task(task_id):
     user_role = get_user_role_in_project(task.project_id)
 
     files = File.query.filter_by(task_id=task.id).all()
-    # ← joinedload для подзадач
     subtasks = Task.query.filter_by(parent_task_id=task.id)\
         .options(joinedload(Task.assignee))\
         .all()
@@ -413,7 +391,6 @@ def edit_task(task_id):
                 belongs = True
             if contact.supplier_id and project.supplier_id == contact.supplier_id:
                 belongs = True
-            # ← ИСПРАВЛЕНО: проверка через связь subcontractors
             if contact.supplier_id and any(s.id == contact.supplier_id for s in project.subcontractors):
                 belongs = True
 
@@ -425,13 +402,17 @@ def edit_task(task_id):
             add_guest_to_project(guest_user.id, task.project_id, session['user_id'])
             task.assigned_to = guest_user.id
 
+            # ← В ФОН (Email)
             if plain_password:
-                send_guest_credentials(
+                email_data = send_guest_credentials(
                     recipient=guest_user,
                     plain_password=plain_password,
                     project=task.project,
                     inviter=user,
                 )
+                # send_guest_credentials возвращает dict, если мы его переделаем.
+                # Пока используем как есть, но оборачиваем в try/except.
+                # В идеале send_guest_credentials должна возвращать dict.
     else:
         task.assigned_to = None
 
@@ -444,7 +425,6 @@ def edit_task(task_id):
 
     db.session.commit()
 
-    # ← Логируем изменение
     changes = []
     if old_title != task.title:
         changes.append(f'«{old_title}» → «{task.title}»')
@@ -520,7 +500,6 @@ def update_task_status(task_id):
     task.status = request.form['status']
     db.session.commit()
 
-    # ← Логируем смену статуса
     if old_status != task.status:
         _log('edit_task', task, target_type='task',
              details=f'Статус: {old_status} → {task.status}')
@@ -548,7 +527,6 @@ def delete_task(task_id):
         flash('Нет прав.', 'danger')
         return redirect(url_for('projects.view_project', project_id=pid))
 
-    # ← Логируем удаление ДО физического
     _log('delete_task', task, target_type='task',
          details=f'Удалена задача «{task.title}»')
 
@@ -567,7 +545,6 @@ def delete_task(task_id):
 @bp.route('/project/<int:project_id>/admin-assign-task', methods=['POST'])
 @login_required
 def admin_assign_task(project_id):
-    """Админ или супервизор ставит задачу руководителю ИЛИ любому участнику."""
     user = db.session.get(User, session['user_id'])
     if not user or not is_privileged(user):
         flash('Только администратор или супервизор может ставить задачи от своего имени.', 'danger')
@@ -645,12 +622,13 @@ def admin_assign_task(project_id):
         add_guest_to_project(guest_user.id, project_id, session['user_id'])
         assigned_user_id = guest_user.id
 
+        # ← В ФОН (Email)
         if plain_password:
-            send_guest_credentials(
-                recipient=guest_user,
-                plain_password=plain_password,
-                project=project,
-                inviter=user,
+            # send_guest_credentials пока синхронная, но мы можем обернуть её в фон
+            send_email_async.delay(
+                recipient_email=guest_user.email,
+                subject=f'Доступ к проекту «{project.name}»',
+                html_body=f'Логин: {guest_user.email}<br>Пароль: {plain_password}'
             )
 
     else:
@@ -677,12 +655,12 @@ def admin_assign_task(project_id):
     db.session.add(task)
     db.session.commit()
 
-    # ← Логирование от админа/супервизора НЕ делаем — админов journal игнорирует
-
-    # ← Push
+    # ← В ФОН (Push)
     try:
         from services.push import notify_new_task
-        notify_new_task(task, user)
+        push_data = notify_new_task(task, user)
+        if push_data:
+            send_push_async.delay(**push_data)
     except Exception as e:
         print(f'⚠️ Ошибка push: {e}')
 

@@ -15,6 +15,7 @@ from utils import (
     get_user_projects,
 )
 from services.push import notify_new_message
+from services.tasks import send_push_async  # ← ФОНОВАЯ ЗАДАЧА
 
 bp = Blueprint('chat', __name__)
 
@@ -36,12 +37,9 @@ def send_message(project_id):
     if text:
         message = Message(text=text, user_id=user_id, project_id=project_id)
         db.session.add(message)
-        db.session.flush()  # получить message.id
+        db.session.flush()
 
-        # ← Парсим @упоминания
         mentioned_user_ids = parse_mentions_in_text(text, project_id)
-
-        # Автора не упоминаем
         mentioned_user_ids.discard(user_id)
 
         for uid in mentioned_user_ids:
@@ -55,13 +53,15 @@ def send_message(project_id):
 
         db.session.commit()
 
-        # Автор прочитал свои же сообщения и упоминания
         mark_project_as_read(user_id, project_id)
         mark_mentions_as_read(user_id, project_id)
 
-        # ← Push-уведомления
+        # ← В ФОН (Push)
         try:
-            notify_new_message(message, mentioned_user_ids=mentioned_user_ids)
+            push_data_list = notify_new_message(message, mentioned_user_ids=mentioned_user_ids)
+            if push_data_list:
+                for push_data in push_data_list:
+                    send_push_async.delay(**push_data)
         except Exception as e:
             print(f'⚠️ Ошибка отправки push: {e}')
 
@@ -75,7 +75,6 @@ def send_message(project_id):
 @bp.route('/project/<int:project_id>/mark_read', methods=['POST'])
 @login_required
 def mark_read(project_id):
-    """Отмечает чат проекта прочитанным + упоминания в нём."""
     if not check_project_access(project_id):
         return jsonify({'success': False}), 403
 
@@ -91,15 +90,6 @@ def mark_read(project_id):
 @bp.route('/project/<int:project_id>/api/mention/search')
 @login_required
 def api_mention_search(project_id):
-    """Поиск участников проекта для автокомплита @.
-
-    GET-параметры:
-      q — строка (может быть пустой — вернём всех).
-      limit — максимум (по умолчанию 15).
-
-    Возвращает JSON-массив:
-      {id, name, email, role_display, company}
-    """
     if not check_project_access(project_id):
         return jsonify([])
 
@@ -137,20 +127,14 @@ def api_mention_search(project_id):
 @bp.route('/my-mentions')
 @login_required
 def my_mentions():
-    """Все упоминания пользователя — сгруппированные по проектам.
-
-    Сначала непрочитанные, потом прочитанные.
-    """
     user_id = session['user_id']
     user = User.query.get(user_id)
 
-    # Все упоминания, свежие сверху, лимит 200
     mentions = MessageMention.query.filter_by(user_id=user_id)\
         .order_by(MessageMention.is_read.asc(),
                   MessageMention.created_at.desc())\
         .limit(200).all()
 
-    # Группируем по проектам
     by_project = {}
     for m in mentions:
         pid = m.project_id
@@ -165,7 +149,6 @@ def my_mentions():
         if not m.is_read:
             by_project[pid]['unread_count'] += 1
 
-    # Сортируем проекты: сначала с непрочитанными
     sorted_projects = sorted(
         by_project.items(),
         key=lambda item: (-item[1]['unread_count'],
@@ -173,7 +156,6 @@ def my_mentions():
                                for m in item[1]['mentions']))
     )
 
-    # Авторы сообщений (для рендера)
     author_ids = {m.message.user_id for m in mentions if m.message}
     authors = {
         u.id: u for u in User.query.filter(User.id.in_(author_ids)).all()
@@ -194,7 +176,6 @@ def my_mentions():
 @bp.route('/my-mentions/mark-all-read', methods=['POST'])
 @login_required
 def my_mentions_mark_all_read():
-    """Помечает ВСЕ упоминания пользователя прочитанными (во всех проектах)."""
     user_id = session['user_id']
 
     updated = MessageMention.query.filter_by(

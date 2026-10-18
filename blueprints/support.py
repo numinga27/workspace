@@ -7,8 +7,9 @@ from flask import (
 from extensions import db
 from models import User, SupportTicket, SupportMessage
 from decorators import login_required
-from utils import utcnow, get_user_projects  # ← ДОБАВЛЕН ИМПОРТ
+from utils import utcnow, get_user_projects
 from services.push import notify_new_support_message
+from services.tasks import send_push_async  # ← ДОБАВЛЕН ИМПОРТ
 
 bp = Blueprint('support', __name__, url_prefix='/support')
 
@@ -49,7 +50,6 @@ def my_tickets():
     """Список тикетов текущего пользователя."""
     user = User.query.get(session['user_id'])
 
-    # Админ/супервизор попадает на страницу всех тикетов
     if _is_privileged(user):
         return redirect(url_for('support.admin_tickets'))
 
@@ -59,7 +59,7 @@ def my_tickets():
     return render_template('support/my_tickets.html',
                            user=user,
                            tickets=tickets,
-                           projects=get_user_projects(user))  # ← ДОБАВЛЕНО
+                           projects=get_user_projects(user))
 
 
 @bp.route('/new', methods=['POST'])
@@ -94,9 +94,12 @@ def create_ticket():
 
     db.session.commit()
 
-    # ← Push-уведомление всем админам
+    # ← Push-уведомление всем админам (АСИНХРОННО)
     try:
-        notify_new_support_message(ticket, msg, for_admin=True)
+        push_data_list = notify_new_support_message(ticket, msg, for_admin=True)
+        if push_data_list:
+            for push_data in push_data_list:
+                send_push_async.delay(**push_data)
     except Exception as e:
         print(f'⚠️ Ошибка push support (new): {e}')
 
@@ -111,7 +114,6 @@ def ticket_detail(ticket_id):
     user = User.query.get(session['user_id'])
     ticket = SupportTicket.query.get_or_404(ticket_id)
 
-    # Доступ: свой тикет или админ
     is_admin = _is_privileged(user)
     if not is_admin and ticket.user_id != user.id:
         flash('Нет доступа к этому обращению.', 'danger')
@@ -161,11 +163,12 @@ def ticket_detail(ticket_id):
 
         db.session.commit()
 
-        # ← Push-уведомление
-        # Если ответил админ → шлём автору тикета
-        # Если написал юзер → шлём админам
+        # ← Push-уведомление (АСИНХРОННО)
         try:
-            notify_new_support_message(ticket, msg, for_admin=not is_admin)
+            push_data_list = notify_new_support_message(ticket, msg, for_admin=not is_admin)
+            if push_data_list:
+                for push_data in push_data_list:
+                    send_push_async.delay(**push_data)
         except Exception as e:
             print(f'⚠️ Ошибка push support (reply): {e}')
 
@@ -178,7 +181,7 @@ def ticket_detail(ticket_id):
                            ticket=ticket,
                            messages=messages,
                            is_admin=is_admin,
-                           projects=get_user_projects(user))  # ← ДОБАВЛЕНО
+                           projects=get_user_projects(user))
 
 
 @bp.route('/ticket/<int:ticket_id>/close', methods=['POST'])
@@ -234,7 +237,7 @@ def admin_tickets():
                            tickets=tickets,
                            status_filter=status_filter,
                            total_unread=total_unread,
-                           projects=get_user_projects(user))  # ← ДОБАВЛЕНО
+                           projects=get_user_projects(user))
 
 
 @bp.route('/admin/unread-count')
