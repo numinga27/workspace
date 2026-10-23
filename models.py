@@ -1112,3 +1112,35 @@ class ActivityLog(db.Model):
         if self.action == 'logout':
             return 'secondary'
         return 'primary'    
+
+
+class EventRecipient(db.Model):
+    """Получатель уведомления о событии (и участник события в личном календаре)."""
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(
+        db.Integer,
+        db.ForeignKey('event.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    is_read = db.Column(db.Boolean, default=False, index=True)
+    created_at = db.Column(db.DateTime, default=_utcnow)
+
+    event = db.relationship(
+        'Event',
+        backref=db.backref('recipients', lazy=True, cascade='all, delete-orphan')
+    )
+    user = db.relationship('User', backref='event_recipients')
+
+    __table_args__ = (
+        db.UniqueConstraint('event_id', 'user_id', name='unique_event_recipient'),
+    )
+
+    def __repr__(self):
+        return f'<EventRecipient event={self.event_id} user={self.user_id}>'    

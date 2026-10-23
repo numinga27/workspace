@@ -72,3 +72,5 @@ class Config:
     APP_VERSION = '1.0.1'
     APP_VERSION_CODE = 2
     APP_RELEASE_NOTES = 'Добавлена техподдержка, улучшен интерфейс'
+    APP_VERSION_DATE = '2026-10-23'  # дата релиза (для отображения)
+    APP_UPDATE_URL = 'https://workspace-kvk.duckdns.org'  # куда вести при обновлении

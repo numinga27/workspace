@@ -491,7 +491,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         dayCellDidMount: function(arg) {
             arg.el.style.cursor = 'pointer';
-
             const date = arg.date;
             if (date.getDay() === 1) {
                 const weekNum = getISOWeek(date);
@@ -499,9 +498,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 badge.className = 'fc-week-number-badge';
                 badge.textContent = `Н${weekNum}`;
                 badge.title = `ISO-неделя ${weekNum}`;
-
-                const dayTop = arg.el.querySelector('.fc-daygrid-day-top');
-                if (dayTop) dayTop.appendChild(badge);
+                arg.el.appendChild(badge);  // ← в саму ячейку, а не в dayTop
             }
         },
 

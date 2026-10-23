@@ -120,11 +120,20 @@ def is_project_guest(user_id, project_id):
 
 def get_user_projects(user):
     """Возвращает список проектов пользователя (без гостевых).
-    Для админа и супервизора — все активные проекты."""
-    from models import Project
+    Для админа и супервизора — все активные проекты.
+    
+    Оптимизировано: использует joinedload, чтобы не делать N+1 запросов.
+    """
+    from models import Project, ProjectMember
+    from sqlalchemy.orm import joinedload
+    
     if is_privileged(user):
         return Project.query.filter_by(is_active=True).all()
-    return [m.project for m in user.projects if not m.is_guest]
+    
+    members = ProjectMember.query.filter_by(user_id=user.id, is_guest=False)\
+        .options(joinedload(ProjectMember.project))\
+        .all()
+    return [m.project for m in members if m.project]
 
 
 # ============================================================
@@ -518,15 +527,23 @@ def mark_project_as_read(user_id, project_id):
 # ============================================================
 
 def get_project_mentionable_users(project_id):
-    """Возвращает список участников проекта, которых можно упомянуть через @.
+    """Возвращает список пользователей, которых можно упомянуть через @ в чате проекта.
 
-    Только команда проекта: своя + АМ Станко. Гости — исключены.
-    Возвращает список кортежей (user, member).
+    Включает:
+    - участников проекта (команда + АМ Станко, без гостей);
+    - всех админов и супервизоров (даже если они не в проекте).
+
+    Возвращает список кортежей (user, member_or_None).
+    Для админов/супервизоров, не являющихся участниками проекта,
+    member будет None.
     """
-    from models import ProjectMember
-    members = ProjectMember.query.filter_by(project_id=project_id).all()
+    from models import ProjectMember, User
+
     result = []
     seen = set()
+
+    # 1. Участники проекта (без гостей)
+    members = ProjectMember.query.filter_by(project_id=project_id).all()
     for m in members:
         if not m.user or m.is_guest:
             continue
@@ -536,6 +553,19 @@ def get_project_mentionable_users(project_id):
             continue
         seen.add(m.user.id)
         result.append((m.user, m))
+
+    # 2. Все админы и супервизоры (даже если не в проекте)
+    privileged_users = User.query.filter(
+        User.role.in_(['admin', 'supervisor']),
+        User.is_active.is_(True),
+    ).all()
+    for u in privileged_users:
+        if u.id in seen:
+            continue
+        seen.add(u.id)
+        result.append((u, None))  # member=None, т.к. не участник проекта
+
+    # Сортировка: по фамилии, потом по имени
     result.sort(key=lambda t: (t[0].last_name.lower(), t[0].first_name.lower()))
     return result
 

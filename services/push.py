@@ -181,7 +181,9 @@ def notify_new_subtask(subtask, poster):
 def notify_new_message(message, mentioned_user_ids=None):
     """Возвращает СПИСОК dict для отправки push о новом сообщении в чате.
     
-    Возвращает список, потому что сообщение может уйти нескольким получателям.
+    Получатели:
+    - все участники проекта (кроме гостей и автора);
+    - упомянутые пользователи (даже если они не в проекте — например, админы).
     
     Использование в blueprint:
         push_data_list = notify_new_message(message, mentioned_user_ids=...)
@@ -192,7 +194,7 @@ def notify_new_message(message, mentioned_user_ids=None):
     if not message.project:
         return []
 
-    from models import ProjectMember
+    from models import ProjectMember, User
 
     members = ProjectMember.query.filter_by(project_id=message.project_id).all()
 
@@ -201,13 +203,18 @@ def notify_new_message(message, mentioned_user_ids=None):
     text_preview = message.text[:120].replace('\n', ' ')
 
     result = []
+    seen = set()  # чтобы не дублировать получателей
     mentioned_user_ids = mentioned_user_ids or set()
 
+    # 1. Участники проекта (без гостей, без автора)
     for m in members:
         if m.user_id == message.user_id:
             continue
         if m.is_guest:
             continue
+        if m.user_id in seen:
+            continue
+        seen.add(m.user_id)
 
         if m.user_id in mentioned_user_ids:
             title = f'💬 {author_name} упомянул(а) вас'
@@ -224,6 +231,27 @@ def notify_new_message(message, mentioned_user_ids=None):
             'body': body,
             'url': f'/project/{message.project_id}?mark_read=1#chat',
             'tag': tag,
+        })
+
+    # 2. Упомянутые, которых нет в проекте (админы/супервизоры)
+    for uid in mentioned_user_ids:
+        if uid == message.user_id:
+            continue
+        if uid in seen:
+            continue
+        seen.add(uid)
+
+        # Проверяем, что пользователь существует и активен
+        user = User.query.get(uid)
+        if not user or not user.is_active:
+            continue
+
+        result.append({
+            'user_id': uid,
+            'title': f'💬 {author_name} упомянул(а) вас',
+            'body': text_preview,
+            'url': f'/project/{message.project_id}?mark_read=1#chat',
+            'tag': f'mention-{message.id}',
         })
 
     return result
@@ -271,6 +299,47 @@ def notify_new_support_message(ticket, message, for_admin=True):
             'body': body,
             'url': url,
             'tag': tag,
+        })
+
+    return result
+
+
+def notify_new_event(event, recipient_ids, author):
+    """Возвращает СПИСОК dict для отправки Push о новом событии.
+    
+    Параметры:
+        event: Event (только что созданное)
+        recipient_ids: set() ID пользователей-получателей
+        author: User (кто создал событие)
+    """
+    from models import User
+
+    if not event or not recipient_ids:
+        return []
+
+    author_name = f'{author.first_name} {author.last_name}' if author else '—'
+    project_name = event.project.name if event.project else '—'
+
+    # Форматируем дату
+    if event.all_day:
+        time_str = event.start_time.strftime('%d.%m.%Y') + ' (весь день)'
+    else:
+        time_str = event.start_time.strftime('%d.%m.%Y %H:%M')
+        if event.end_time:
+            time_str += f'–{event.end_time.strftime("%H:%M")}'
+
+    result = []
+    for uid in recipient_ids:
+        user = User.query.get(uid)
+        if not user or not user.is_active:
+            continue
+
+        result.append({
+            'user_id': uid,
+            'title': f'📅 {event.title}',
+            'body': f'{time_str}\nПроект: {project_name}\nОт: {author_name}',
+            'url': f'/project/{event.project_id}?_tab=calendar',
+            'tag': f'event-{event.id}',
         })
 
     return result

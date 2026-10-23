@@ -1050,4 +1050,233 @@
                 overflow-x: hidden;
             }
         }
+
+        /* ============================================================ */
+/*  ТАБЛИЦЫ НА МОБИЛЬНЫХ — фикс переноса и скролла              */
+/* ============================================================ */
+
+.table-responsive {
+    -webkit-overflow-scrolling: touch;  /* плавный скролл на iOS */
+}
+
+/* В таблицах команды — ячейки не вылезают */
+.table td,
+.table th {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+/* На мобильных — уменьшаем шрифт в таблицах, чтобы влезало больше */
+@media (max-width: 768px) {
+    .table {
+        font-size: 12.5px;
+    }
+    .table td,
+    .table th {
+        padding: 6px 4px;
+        vertical-align: middle;
+    }
+    /* Аватарки — меньше */
+    .avatar-small {
+        width: 28px;
+        height: 28px;
+        font-size: 10px;
+    }
+    /* Селект роли — компактнее */
+    .table .form-select-sm {
+        font-size: 11px;
+        padding: 2px 4px;
+    }
+}
+
+/* ============================================================ */
+/*  НОМЕР НЕДЕЛИ В КАЛЕНДАРЕ — выносим из ячейки               */
+/* ============================================================ */
+
+/* Ячейка понедельника — относительное позиционирование */
+.fc-daygrid-day.fc-day-mon {
+    position: relative;
+}
+
+/* Бейдж номера недели — в левом верхнем углу, поверх, но не мешает числу */
+.fc-week-number-badge {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    background: var(--accent);
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 4px;
+    line-height: 1.2;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0.85;
+}
+
+/* На мобильных — чуть меньше */
+@media (max-width: 768px) {
+    .fc-week-number-badge {
+        font-size: 8px;
+        padding: 0 3px;
+        top: 1px;
+        left: 1px;
+    }
+}
+/* ============================================================ */
+/*  ТАБЛИЦА ЗАДАЧ — фикс вертикального текста на мобильных      */
+/* ============================================================ */
+@media (max-width: 768px) {
+    /* Таблица задач: текст переносится нормально */
+    .tasks-table td,
+    .tasks-table th {
+        overflow-wrap: break-word;
+        word-break: normal;
+        white-space: normal;
+        font-size: 12.5px;
+        padding: 6px 4px;
+        vertical-align: top;
+        min-width: 80px;
+    }
     
+    /* Первая колонка (название задачи) — шире */
+    .tasks-table td:first-child {
+        min-width: 180px;
+    }
+    
+    /* d-flex внутри ячеек — разрешаем перенос */
+    .tasks-table .d-flex {
+        flex-wrap: wrap;
+        gap: 2px;
+    }
+    
+    /* Бейджи не растягиваются */
+    .tasks-table .badge {
+        white-space: normal;
+        max-width: 100%;
+        font-size: 9px;
+        padding: 2px 4px;
+    }
+    
+    /* Кнопки действий — компактнее */
+    .tasks-table .action-btn {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+    }
+    
+    /* Статус-селект — компактнее */
+    .tasks-table .status-select {
+        font-size: 11px;
+        padding: 2px 4px;
+    }
+    
+    /* Прогресс-бар — компактнее */
+    .tasks-table .progress {
+        height: 4px;
+    }
+}
+/* ============================================================ */
+/*  ЖЁСТКИЙ ФИКС ДЛЯ ТАБЛИЦЫ ЗАДАЧ НА МОБИЛЬНЫХ                 */
+/* ============================================================ */
+@media (max-width: 768px) {
+    .tasks-table {
+        table-layout: auto !important;
+        width: 100% !important;
+    }
+    
+    .tasks-table td,
+    .tasks-table th {
+        white-space: normal !important;
+        word-break: normal !important;
+        overflow-wrap: break-word !important;
+        font-size: 12px !important;
+        padding: 4px 3px !important;
+        vertical-align: top !important;
+        min-width: 60px !important;
+    }
+    
+    .tasks-table td:first-child {
+        min-width: 140px !important;
+    }
+    
+    .tasks-table .d-flex {
+        flex-wrap: wrap !important;
+        gap: 2px !important;
+    }
+    
+    .tasks-table .badge {
+        white-space: normal !important;
+        font-size: 9px !important;
+        padding: 2px 4px !important;
+        max-width: 100% !important;
+    }
+    
+    .tasks-table .btn {
+        white-space: nowrap !important;
+        font-size: 11px !important;
+        padding: 2px 4px !important;
+    }
+    
+    .tasks-table .form-select-sm {
+        font-size: 11px !important;
+        padding: 2px 4px !important;
+    }
+    
+    .tasks-table .progress {
+        height: 4px !important;
+    }
+}
+
+/* ============================================================ */
+/*  ЖУРНАЛ ДЕЙСТВИЙ — фикс переноса на мобильных                */
+/* ============================================================ */
+@media (max-width: 768px) {
+    /* Таблица журнала: текст переносится */
+    .table-responsive .table td,
+    .table-responsive .table th {
+        white-space: normal !important;
+        word-break: normal !important;
+        overflow-wrap: break-word !important;
+        font-size: 12px !important;
+        padding: 6px 4px !important;
+        vertical-align: top !important;
+    }
+    
+    /* d-flex внутри ячеек — разрешаем перенос */
+    .table-responsive .table .d-flex {
+        flex-wrap: wrap !important;
+        gap: 2px !important;
+        align-items: flex-start !important;
+    }
+    
+    /* Иконки в d-flex — не сжимаются */
+    .table-responsive .table .d-flex > i,
+    .table-responsive .table .d-flex > .bi {
+        flex-shrink: 0 !important;
+    }
+    
+    /* Текст в d-flex — переносится */
+    .table-responsive .table .d-flex > div,
+    .table-responsive .table .d-flex > span {
+        min-width: 0 !important;
+        overflow-wrap: break-word !important;
+        word-break: normal !important;
+    }
+    
+    /* Бейджи — компактнее */
+    .table-responsive .table .badge {
+        white-space: normal !important;
+        font-size: 10px !important;
+        padding: 2px 6px !important;
+        max-width: 100% !important;
+    }
+    
+    /* Длинные описания (details) — переносятся */
+    .table-responsive .table td small,
+    .table-responsive .table td .text-muted {
+        overflow-wrap: break-word !important;
+        word-break: normal !important;
+    }
+}

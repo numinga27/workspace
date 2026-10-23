@@ -1,10 +1,13 @@
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v5';
 const CACHE_NAME = `workspace-${CACHE_VERSION}`;
 
+// ← Кэшируем ТОЛЬКО статику, НЕ HTML-страницы
 const PRECACHE_URLS = [
-  '/',
-  '/login',
-  '/dashboard',
+  '/static/css/style.css',
+  '/static/icons/icon-192.png',
+  '/static/icons/icon-512.png',
+  '/static/icons/icon-maskable-512.png',
+  '/static/manifest.json',
 ];
 
 // ============================================================
@@ -43,19 +46,41 @@ self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
 
+  // Пропускаем не-GET, чужие домены и API
   if (request.method !== 'GET') return;
   if (url.origin !== location.origin) return;
   if (url.pathname.startsWith('/api/')) return;
 
-  // Статика — cache-first
+  // ============================================================
+  //  HTML-страницы — network-first (всегда свежие данные)
+  // ============================================================
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          // Не кэшируем HTML — всегда свежие данные
+          return response;
+        })
+        .catch(() => {
+          // Если сети нет — показываем кэш (если есть)
+          return caches.match(request);
+        })
+    );
+    return;
+  }
+
+  // ============================================================
+  //  Статика — cache-first
+  // ============================================================
   if (url.pathname.startsWith('/static/')) {
     event.respondWith(
       caches.match(request).then(cached => {
         if (cached) return cached;
         return fetch(request).then(response => {
-          if (response.status === 200) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+          // Кэшируем только успешные ответы
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
           }
           return response;
         });
@@ -64,23 +89,10 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // HTML — network-first, fallback в кэш
-  event.respondWith(
-    fetch(request)
-      .then(response => {
-        if (response.status === 200) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-        }
-        return response;
-      })
-      .catch(() => {
-        return caches.match(request).then(cached => {
-          if (cached) return cached;
-          return caches.match('/login');
-        });
-      })
-  );
+  // ============================================================
+  //  Всё остальное — network-only
+  // ============================================================
+  event.respondWith(fetch(request));
 });
 
 
@@ -88,55 +100,50 @@ self.addEventListener('fetch', event => {
 //  PUSH-УВЕДОМЛЕНИЯ
 // ============================================================
 self.addEventListener('push', event => {
-  console.log('[SW] Push received');
+  if (!event.data) return;
 
-  let data = {
-    title: 'Workspace',
-    body: 'Новое уведомление',
-    url: '/',
-    icon: '/static/icons/icon-192.png',
-    badge: '/static/icons/icon-192.png',
-  };
-
-  if (event.data) {
-    try {
-      const parsed = event.data.json();
-      data = { ...data, ...parsed };
-    } catch (e) {
-      data.body = event.data.text();
-    }
+  let data = {};
+  try {
+    data = event.data.json();
+  } catch (e) {
+    data = { title: 'Workspace', body: event.data.text() };
   }
 
+  const title = data.title || 'Workspace';
   const options = {
-    body: data.body,
-    icon: data.icon,
-    badge: data.badge,
-    tag: data.tag || undefined,
-    data: {
-      url: data.url || '/',
-      ts: data.data?.ts || Date.now(),
-    },
+    body: data.body || '',
+    icon: data.icon || '/static/icons/icon-192.png',
+    badge: data.badge || '/static/icons/icon-192.png',
+    tag: data.tag || 'default',
+    data: data.data || { url: data.url || '/' },
     vibrate: [200, 100, 200],
     requireInteraction: false,
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title, options)
+    self.registration.showNotification(title, options)
   );
 });
 
+
+// ============================================================
+//  КЛИК ПО УВЕДОМЛЕНИЮ
+// ============================================================
 self.addEventListener('notificationclick', event => {
   event.notification.close();
 
   const url = event.notification.data?.url || '/';
 
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
-      for (const client of windowClients) {
-        if (client.url.includes(url) && 'focus' in client) {
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      // Если PWA уже открыт — фокусируемся на нём
+      for (const client of clientList) {
+        if (client.url.includes(location.origin) && 'focus' in client) {
+          client.navigate(url);
           return client.focus();
         }
       }
+      // Иначе — открываем новое окно
       if (clients.openWindow) {
         return clients.openWindow(url);
       }

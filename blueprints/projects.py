@@ -355,8 +355,20 @@ def view_project(project_id):
         except ValueError:
             pass
 
+    # ============================================================
+    #  ПАГИНАЦИЯ ЧАТА (последние 50 сообщений + кнопка «Загрузить ещё»)
+    # ============================================================
+    CHAT_PER_PAGE = 50
+    chat_page = request.args.get('chat_page', 1, type=int)
+    total_messages = Message.query.filter_by(project_id=project.id).count()
+    offset = max(0, total_messages - chat_page * CHAT_PER_PAGE)
+    limit = CHAT_PER_PAGE
     messages = Message.query.filter_by(project_id=project.id)\
-        .order_by(Message.created_at.asc()).all()
+        .order_by(Message.created_at.asc())\
+        .offset(offset).limit(limit).all()
+
+    has_more_messages = offset > 0
+
     folders = Folder.query.filter_by(project_id=project.id, parent_folder_id=None).all()
     files = File.query.filter_by(project_id=project.id, folder_id=None, task_id=None).all()
 
@@ -378,6 +390,12 @@ def view_project(project_id):
     for sub in project.subcontractors:
         contact_persons.extend(sub.contacts)
 
+    # ← Админы и супервизоры для подсветки упоминаний в чате
+    mentionable_admins = User.query.filter(
+        User.role.in_(['admin', 'supervisor']),
+        User.is_active.is_(True),
+    ).all()
+
     return render_template('project.html',
                            project=project,
                            members=own_team,
@@ -389,6 +407,9 @@ def view_project(project_id):
                            tasks=tasks,
                            tasks_all=tasks_all,
                            messages=messages,
+                           total_messages=total_messages,
+                           chat_page=chat_page,
+                           has_more_messages=has_more_messages,
                            folders=folders,
                            files=files,
                            all_users=User.query.filter(User.role != 'admin').all(),
@@ -406,6 +427,7 @@ def view_project(project_id):
                            project_overdue=project.is_overdue,
                            project_days_overdue=project.days_overdue,
                            todo_stats=get_todo_stats(project.id),
+                           mentionable_admins=mentionable_admins,
                            filter_assignee=filter_assignee,
                            filter_status=filter_status,
                            filter_due_from=filter_due_from,
@@ -666,13 +688,19 @@ def create_task(project_id):
     _log('create_task', task, target_type='task',
          details=f'Проект: {task.project.name}' if task.project else None)
 
-    # ← Push-уведомления
+    # ← Push-уведомления (асинхронно)
     try:
+        from services.push import notify_new_task, notify_new_subtask
+        from services.tasks import send_push_async
+        
         poster = User.query.get(session['user_id'])
         if parent_id_int:
-            notify_new_subtask(task, poster)
+            push_data = notify_new_subtask(task, poster)
         else:
-            notify_new_task(task, poster)
+            push_data = notify_new_task(task, poster)
+        
+        if push_data:
+            send_push_async.delay(**push_data)
     except Exception as e:
         print(f'⚠️ Ошибка отправки push: {e}')
 

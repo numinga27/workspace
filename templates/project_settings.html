@@ -169,100 +169,102 @@
                 </span>
             </div>
             <div class="card-body p-0">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Имя</th>
-                            <th style="width: 180px;">Email</th>
-                            <th style="width: 220px;">Роль</th>
-                            <th style="width: 100px;" class="text-end">Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for m in members %}
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="avatar-small">
-                                        {{ m.user.first_name[0]|upper }}{{ m.user.last_name[0]|upper }}
-                                    </div>
-                                    <div>
-                                        <div class="fw-bold">
-                                            {{ m.user.first_name }} {{ m.user.last_name }}
-                                            {% if m.user.id == project.created_by %}
-                                            <span class="badge bg-primary" style="font-size: 9px;">Создатель</span>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Имя</th>
+                                <th style="width: 180px;">Email</th>
+                                <th style="width: 220px;">Роль</th>
+                                <th style="width: 100px;" class="text-end">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in members %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="avatar-small">
+                                            {{ m.user.first_name[0]|upper }}{{ m.user.last_name[0]|upper }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">
+                                                {{ m.user.first_name }} {{ m.user.last_name }}
+                                                {% if m.user.id == project.created_by %}
+                                                <span class="badge bg-primary" style="font-size: 9px;">Создатель</span>
+                                                {% endif %}
+                                            </div>
+                                            {% if m.user.company %}
+                                            <div class="small text-muted">{{ m.user.company }}</div>
                                             {% endif %}
                                         </div>
-                                        {% if m.user.company %}
-                                        <div class="small text-muted">{{ m.user.company }}</div>
-                                        {% endif %}
                                     </div>
-                                </div>
-                            </td>
-                            <td>
-                                <small class="text-muted">{{ m.user.email }}</small>
-                            </td>
-                            <td>
-                                {% if m.user.id == project.created_by %}
-                                    <span class="badge
-                                        {% if m.role_in_project == 'admin' %}bg-danger
-                                        {% elif m.role_in_project == 'manager' %}bg-warning text-dark
-                                        {% elif m.role_in_project == 'chief_engineer' %}bg-info
-                                        {% elif m.role_in_project == 'logistic' %}bg-success
-                                        {% else %}bg-secondary{% endif %}">
-                                        {{ m.role_display }}
-                                    </span>
-                                {% else %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ m.user.email }}</small>
+                                </td>
+                                <td>
+                                    {% if m.user.id == project.created_by %}
+                                        <span class="badge
+                                            {% if m.role_in_project == 'admin' %}bg-danger
+                                            {% elif m.role_in_project == 'manager' %}bg-warning text-dark
+                                            {% elif m.role_in_project == 'chief_engineer' %}bg-info
+                                            {% elif m.role_in_project == 'logistic' %}bg-success
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ m.role_display }}
+                                        </span>
+                                    {% else %}
+                                        <form method="POST"
+                                              action="{{ url_for('team.change_member_role', project_id=project.id, member_id=m.id) }}">
+                                            <select name="role" class="form-select form-select-sm"
+                                                    onchange="this.form.submit()">
+                                                <optgroup label="Команда проекта">
+                                                    <option value="admin" {% if m.role_in_project == 'admin' %}selected{% endif %}>Руководитель проекта</option>
+                                                    <option value="manager" {% if m.role_in_project == 'manager' %}selected{% endif %}>Менеджер</option>
+                                                    <option value="chief_engineer" {% if m.role_in_project == 'chief_engineer' %}selected{% endif %}>Главный инженер</option>
+                                                    <option value="logistic" {% if m.role_in_project == 'logistic' %}selected{% endif %}>Логистик</option>
+                                                    <option value="member" {% if m.role_in_project == 'member' %}selected{% endif %}>Участник</option>
+                                                </optgroup>
+                                                <optgroup label="Перевести в АМ Станко">
+                                                    <option value="am_stanko_admin" {% if m.role_in_project == 'am_stanko_admin' %}selected{% endif %}>АМ Станко · Руководитель</option>
+                                                    <option value="am_stanko_manager" {% if m.role_in_project == 'am_stanko_manager' %}selected{% endif %}>АМ Станко · Менеджер</option>
+                                                    <option value="am_stanko_engineer" {% if m.role_in_project == 'am_stanko_engineer' %}selected{% endif %}>АМ Станко · Гл. инженер</option>
+                                                    <option value="am_stanko_logistic" {% if m.role_in_project == 'am_stanko_logistic' %}selected{% endif %}>АМ Станко · Логистик</option>
+                                                    <option value="am_stanko_member" {% if m.role_in_project == 'am_stanko_member' %}selected{% endif %}>АМ Станко · Участник</option>
+                                                </optgroup>
+                                            </select>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if m.user.id != project.created_by %}
                                     <form method="POST"
-                                          action="{{ url_for('team.change_member_role', project_id=project.id, member_id=m.id) }}">
-                                        <select name="role" class="form-select form-select-sm"
-                                                onchange="this.form.submit()">
-                                            <optgroup label="Команда проекта">
-                                                <option value="admin" {% if m.role_in_project == 'admin' %}selected{% endif %}>Руководитель проекта</option>
-                                                <option value="manager" {% if m.role_in_project == 'manager' %}selected{% endif %}>Менеджер</option>
-                                                <option value="chief_engineer" {% if m.role_in_project == 'chief_engineer' %}selected{% endif %}>Главный инженер</option>
-                                                <option value="logistic" {% if m.role_in_project == 'logistic' %}selected{% endif %}>Логистик</option>
-                                                <option value="member" {% if m.role_in_project == 'member' %}selected{% endif %}>Участник</option>
-                                            </optgroup>
-                                            <optgroup label="Перевести в АМ Станко">
-                                                <option value="am_stanko_admin" {% if m.role_in_project == 'am_stanko_admin' %}selected{% endif %}>АМ Станко · Руководитель</option>
-                                                <option value="am_stanko_manager" {% if m.role_in_project == 'am_stanko_manager' %}selected{% endif %}>АМ Станко · Менеджер</option>
-                                                <option value="am_stanko_engineer" {% if m.role_in_project == 'am_stanko_engineer' %}selected{% endif %}>АМ Станко · Гл. инженер</option>
-                                                <option value="am_stanko_logistic" {% if m.role_in_project == 'am_stanko_logistic' %}selected{% endif %}>АМ Станко · Логистик</option>
-                                                <option value="am_stanko_member" {% if m.role_in_project == 'am_stanko_member' %}selected{% endif %}>АМ Станко · Участник</option>
-                                            </optgroup>
-                                        </select>
+                                          action="{{ url_for('team.remove_member', project_id=project.id, member_id=m.id) }}"
+                                          onsubmit="return confirm('Удалить {{ m.user.first_name }} {{ m.user.last_name }} из проекта?');"
+                                          class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                                style="width: 32px; height: 32px; padding: 0;"
+                                                title="Удалить из проекта">
+                                            <i class="bi bi-trash-fill text-danger"></i>
+                                        </button>
                                     </form>
-                                {% endif %}
-                            </td>
-                            <td class="text-end">
-                                {% if m.user.id != project.created_by %}
-                                <form method="POST"
-                                      action="{{ url_for('team.remove_member', project_id=project.id, member_id=m.id) }}"
-                                      onsubmit="return confirm('Удалить {{ m.user.first_name }} {{ m.user.last_name }} из проекта?');"
-                                      class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-outline-secondary"
-                                            style="width: 32px; height: 32px; padding: 0;"
-                                            title="Удалить из проекта">
-                                        <i class="bi bi-trash-fill text-danger"></i>
-                                    </button>
-                                </form>
-                                {% else %}
-                                <span class="text-muted small fst-italic">—</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
+                                    {% else %}
+                                    <span class="text-muted small fst-italic">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
 
-                        {% if not members %}
-                        <tr>
-                            <td colspan="4" class="text-center text-muted py-4 fst-italic">
-                                Пока в команде только создатель проекта
-                            </td>
-                        </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
+                            {% if not members %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4 fst-italic">
+                                    Пока в команде только создатель проекта
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -281,86 +283,88 @@
                 </small>
             </div>
             <div class="card-body p-0">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Имя</th>
-                            <th style="width: 180px;">Email</th>
-                            <th style="width: 240px;">Роль</th>
-                            <th style="width: 100px;" class="text-end">Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for m in am_stanko_members %}
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="avatar-small"
-                                         style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
-                                        {{ m.user.first_name[0]|upper }}{{ m.user.last_name[0]|upper }}
-                                    </div>
-                                    <div>
-                                        <div class="fw-bold">
-                                            {{ m.user.first_name }} {{ m.user.last_name }}
-                                            {% if m.user.id == project.created_by %}
-                                            <span class="badge bg-primary" style="font-size: 9px;">Создатель</span>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Имя</th>
+                                <th style="width: 180px;">Email</th>
+                                <th style="width: 240px;">Роль</th>
+                                <th style="width: 100px;" class="text-end">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in am_stanko_members %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="avatar-small"
+                                             style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
+                                            {{ m.user.first_name[0]|upper }}{{ m.user.last_name[0]|upper }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">
+                                                {{ m.user.first_name }} {{ m.user.last_name }}
+                                                {% if m.user.id == project.created_by %}
+                                                <span class="badge bg-primary" style="font-size: 9px;">Создатель</span>
+                                                {% endif %}
+                                            </div>
+                                            {% if m.user.company %}
+                                            <div class="small text-muted">{{ m.user.company }}</div>
                                             {% endif %}
                                         </div>
-                                        {% if m.user.company %}
-                                        <div class="small text-muted">{{ m.user.company }}</div>
-                                        {% endif %}
                                     </div>
-                                </div>
-                            </td>
-                            <td>
-                                <small class="text-muted">{{ m.user.email }}</small>
-                            </td>
-                            <td>
-                                {% if m.user.id == project.created_by %}
-                                    <span class="badge bg-primary">{{ m.role_display }}</span>
-                                {% else %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ m.user.email }}</small>
+                                </td>
+                                <td>
+                                    {% if m.user.id == project.created_by %}
+                                        <span class="badge bg-primary">{{ m.role_display }}</span>
+                                    {% else %}
+                                        <form method="POST"
+                                              action="{{ url_for('team.change_member_role', project_id=project.id, member_id=m.id) }}">
+                                            <select name="role" class="form-select form-select-sm"
+                                                    onchange="this.form.submit()">
+                                                <optgroup label="АМ Станко">
+                                                    <option value="am_stanko_admin" {% if m.role_in_project == 'am_stanko_admin' %}selected{% endif %}>АМ Станко · Руководитель</option>
+                                                    <option value="am_stanko_manager" {% if m.role_in_project == 'am_stanko_manager' %}selected{% endif %}>АМ Станко · Менеджер</option>
+                                                    <option value="am_stanko_engineer" {% if m.role_in_project == 'am_stanko_engineer' %}selected{% endif %}>АМ Станко · Гл. инженер</option>
+                                                    <option value="am_stanko_logistic" {% if m.role_in_project == 'am_stanko_logistic' %}selected{% endif %}>АМ Станко · Логистик</option>
+                                                    <option value="am_stanko_member" {% if m.role_in_project == 'am_stanko_member' %}selected{% endif %}>АМ Станко · Участник</option>
+                                                </optgroup>
+                                                <optgroup label="Перевести в команду проекта">
+                                                    <option value="admin" {% if m.role_in_project == 'admin' %}selected{% endif %}>Руководитель проекта</option>
+                                                    <option value="manager" {% if m.role_in_project == 'manager' %}selected{% endif %}>Менеджер</option>
+                                                    <option value="chief_engineer" {% if m.role_in_project == 'chief_engineer' %}selected{% endif %}>Главный инженер</option>
+                                                    <option value="logistic" {% if m.role_in_project == 'logistic' %}selected{% endif %}>Логистик</option>
+                                                    <option value="member" {% if m.role_in_project == 'member' %}selected{% endif %}>Участник</option>
+                                                </optgroup>
+                                            </select>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if m.user.id != project.created_by %}
                                     <form method="POST"
-                                          action="{{ url_for('team.change_member_role', project_id=project.id, member_id=m.id) }}">
-                                        <select name="role" class="form-select form-select-sm"
-                                                onchange="this.form.submit()">
-                                            <optgroup label="АМ Станко">
-                                                <option value="am_stanko_admin" {% if m.role_in_project == 'am_stanko_admin' %}selected{% endif %}>АМ Станко · Руководитель</option>
-                                                <option value="am_stanko_manager" {% if m.role_in_project == 'am_stanko_manager' %}selected{% endif %}>АМ Станко · Менеджер</option>
-                                                <option value="am_stanko_engineer" {% if m.role_in_project == 'am_stanko_engineer' %}selected{% endif %}>АМ Станко · Гл. инженер</option>
-                                                <option value="am_stanko_logistic" {% if m.role_in_project == 'am_stanko_logistic' %}selected{% endif %}>АМ Станко · Логистик</option>
-                                                <option value="am_stanko_member" {% if m.role_in_project == 'am_stanko_member' %}selected{% endif %}>АМ Станко · Участник</option>
-                                            </optgroup>
-                                            <optgroup label="Перевести в команду проекта">
-                                                <option value="admin" {% if m.role_in_project == 'admin' %}selected{% endif %}>Руководитель проекта</option>
-                                                <option value="manager" {% if m.role_in_project == 'manager' %}selected{% endif %}>Менеджер</option>
-                                                <option value="chief_engineer" {% if m.role_in_project == 'chief_engineer' %}selected{% endif %}>Главный инженер</option>
-                                                <option value="logistic" {% if m.role_in_project == 'logistic' %}selected{% endif %}>Логистик</option>
-                                                <option value="member" {% if m.role_in_project == 'member' %}selected{% endif %}>Участник</option>
-                                            </optgroup>
-                                        </select>
+                                          action="{{ url_for('team.remove_member', project_id=project.id, member_id=m.id) }}"
+                                          onsubmit="return confirm('Удалить {{ m.user.first_name }} {{ m.user.last_name }} из проекта?');"
+                                          class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                                style="width: 32px; height: 32px; padding: 0;"
+                                                title="Удалить из проекта">
+                                            <i class="bi bi-trash-fill text-danger"></i>
+                                        </button>
                                     </form>
-                                {% endif %}
-                            </td>
-                            <td class="text-end">
-                                {% if m.user.id != project.created_by %}
-                                <form method="POST"
-                                      action="{{ url_for('team.remove_member', project_id=project.id, member_id=m.id) }}"
-                                      onsubmit="return confirm('Удалить {{ m.user.first_name }} {{ m.user.last_name }} из проекта?');"
-                                      class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-outline-secondary"
-                                            style="width: 32px; height: 32px; padding: 0;"
-                                            title="Удалить из проекта">
-                                        <i class="bi bi-trash-fill text-danger"></i>
-                                    </button>
-                                </form>
-                                {% else %}
-                                <span class="text-muted small fst-italic">—</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                    {% else %}
+                                    <span class="text-muted small fst-italic">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
         {% endif %}
@@ -380,58 +384,60 @@
                 </small>
             </div>
             <div class="card-body p-0">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Имя</th>
-                            <th style="width: 220px;">Email</th>
-                            <th style="width: 200px;">Компания</th>
-                            <th style="width: 100px;" class="text-end">Действия</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for m in guests %}
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="avatar-small"
-                                         style="background: linear-gradient(135deg, #f59e0b, #d97706);">
-                                        {{ m.user.first_name[0]|upper }}{{ m.user.last_name[0]|upper }}
-                                    </div>
-                                    <div>
-                                        <div class="fw-bold">
-                                            {{ m.user.first_name }} {{ m.user.last_name }}
-                                            <span class="badge bg-guest" style="font-size: 9px;">Гость</span>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Имя</th>
+                                <th style="width: 220px;">Email</th>
+                                <th style="width: 200px;">Компания</th>
+                                <th style="width: 100px;" class="text-end">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in guests %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="avatar-small"
+                                             style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                            {{ m.user.first_name[0]|upper }}{{ m.user.last_name[0]|upper }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">
+                                                {{ m.user.first_name }} {{ m.user.last_name }}
+                                                <span class="badge bg-guest" style="font-size: 9px;">Гость</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </td>
-                            <td>
-                                <small class="text-muted">{{ m.user.email }}</small>
-                            </td>
-                            <td>
-                                {% if m.user.company %}
-                                    <small>{{ m.user.company }}</small>
-                                {% else %}
-                                    <span class="text-muted small fst-italic">—</span>
-                                {% endif %}
-                            </td>
-                            <td class="text-end">
-                                <form method="POST"
-                                      action="{{ url_for('team.remove_member', project_id=project.id, member_id=m.id) }}"
-                                      onsubmit="return confirm('Удалить {{ m.user.first_name }} {{ m.user.last_name }} из проекта?');"
-                                      class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-outline-secondary"
-                                            style="width: 32px; height: 32px; padding: 0;"
-                                            title="Удалить из проекта">
-                                        <i class="bi bi-trash-fill text-danger"></i>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ m.user.email }}</small>
+                                </td>
+                                <td>
+                                    {% if m.user.company %}
+                                        <small>{{ m.user.company }}</small>
+                                    {% else %}
+                                        <span class="text-muted small fst-italic">—</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <form method="POST"
+                                          action="{{ url_for('team.remove_member', project_id=project.id, member_id=m.id) }}"
+                                          onsubmit="return confirm('Удалить {{ m.user.first_name }} {{ m.user.last_name }} из проекта?');"
+                                          class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                                style="width: 32px; height: 32px; padding: 0;"
+                                                title="Удалить из проекта">
+                                            <i class="bi bi-trash-fill text-danger"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
         {% endif %}

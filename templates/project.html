@@ -66,49 +66,6 @@
             <i class="bi bi-trash-fill text-danger"></i>
         </button>
     </div>
-
-    <!-- Модальное окно удаления -->
-    <div class="modal fade" id="deleteProjectModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header" style="background: var(--danger-light); border-bottom-color: #fecaca;">
-                    <h5 class="modal-title" style="color: var(--danger);">
-                        <i class="bi bi-exclamation-triangle-fill"></i> Удаление проекта
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form method="POST" action="{{ url_for('projects.delete_project', project_id=project.id) }}">
-                    <div class="modal-body">
-                        <p class="fw-bold" style="color: var(--danger);">
-                            Внимание! Это действие нельзя отменить.
-                        </p>
-                        <p>Будут удалены <strong>все</strong> данные проекта:</p>
-                        <ul>
-                            <li>Задачи ({{ tasks|length }}) и подзадачи</li>
-                            <li>Вехи ({{ milestones|length }})</li>
-                            <li>Отчёты ({{ reports|length }})</li>
-                            <li>To-Do ({{ todos|length }})</li>
-                            <li>Календарь событий ({{ events|length }})</li>
-                            <li>Файлы и папки</li>
-                            <li>Сообщения в чате ({{ messages|length }})</li>
-                            <li>Участники ({{ members|length + (am_stanko_members|length if am_stanko_members else 0) + (guests|length if guests else 0) }})</li>
-                        </ul>
-                        <p>Для подтверждения введите слово <strong>УДАЛИТЬ</strong> заглавными буквами:</p>
-                        <input type="text" name="confirm_text" class="form-control"
-                               placeholder="УДАЛИТЬ" required autocomplete="off">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
-                            Отмена
-                        </button>
-                        <button type="submit" class="btn btn-danger btn-sm">
-                            <i class="bi bi-trash-fill"></i> Удалить проект
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
     {% endif %}
 </div>
 
@@ -438,7 +395,7 @@
     </li>
     <li class="nav-item">
         <a class="nav-link" id="chat-tab" data-bs-toggle="tab" href="#chat" role="tab">
-            <i class="bi bi-chat-dots"></i> Чат <span class="badge bg-secondary">{{ messages|length }}</span>
+            <i class="bi bi-chat-dots"></i> Чат <span class="badge bg-secondary">{{ total_messages }}</span>
         </a>
     </li>
 </ul>
@@ -1408,29 +1365,42 @@
                     <div class="card-header py-2 d-flex justify-content-between align-items-center">
                         <span><i class="bi bi-chat-dots"></i> Чат проекта</span>
                         <small class="text-muted">
-                            <i class="bi bi-at"></i> Введите <code>@</code> — упомянуть участника
+                            <i class="bi bi-at"></i> Введите <code>@</code> — упомянуть участника или админа
                         </small>
                     </div>
                     <div class="card-body">
+
+                        {% if has_more_messages %}
+                        <div class="text-center mb-2">
+                            <a href="{{ url_for('projects.view_project', project_id=project.id) }}?chat_page={{ chat_page + 1 }}#chat"
+                               class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-arrow-up-circle"></i> Загрузить ещё {{ 50 }} сообщений
+                            </a>
+                            <div class="small text-muted mt-1">
+                                Показаны последние {{ messages|length }} из {{ total_messages }}
+                            </div>
+                        </div>
+                        {% endif %}
+
                         <div id="chatBox" class="chat-box mb-3" style="height: 400px;">
-    {% for msg in messages %}
-    {% set is_own = (msg.user_id == user.id) %}
-    <div class="message {% if is_own %}own{% else %}other{% endif %}">
-        <span class="author">
-            {% if is_own %}
-                Вы
-            {% else %}
-                {{ msg.author.first_name }} {{ msg.author.last_name }}
-            {% endif %}
-        </span>
-        <span class="time">{{ msg.created_at.strftime('%H:%M %d.%m.%Y') }}</span>
-        <br>
-        <span class="message-text" data-raw="{{ msg.text }}">{{ msg.text }}</span>
-    </div>
-    {% else %}
-    <div class="text-muted text-center py-5">Сообщений пока нет</div>
-    {% endfor %}
-</div>
+                            {% for msg in messages %}
+                            {% set is_own = (msg.user_id == user.id) %}
+                            <div class="message {% if is_own %}own{% else %}other{% endif %}">
+                                <span class="author">
+                                    {% if is_own %}
+                                        Вы
+                                    {% else %}
+                                        {{ msg.author.first_name }} {{ msg.author.last_name }}
+                                    {% endif %}
+                                </span>
+                                <span class="time">{{ msg.created_at.strftime('%H:%M %d.%m.%Y') }}</span>
+                                <br>
+                                <span class="message-text" data-raw="{{ msg.text }}">{{ msg.text }}</span>
+                            </div>
+                            {% else %}
+                            <div class="text-muted text-center py-5">Сообщений пока нет</div>
+                            {% endfor %}
+                        </div>
 
                         <form method="POST" action="{{ url_for('chat.send_message', project_id=project.id) }}"
                               id="chatForm" autocomplete="off">
@@ -1444,7 +1414,6 @@
                                     </button>
                                 </div>
 
-                                {# ← Выпадающий список для @упоминаний #}
                                 <div id="mentionResults"
                                      class="list-group position-absolute w-100 shadow-sm"
                                      style="z-index: 1000; max-height: 300px; overflow-y: auto; display: none; bottom: 100%; margin-bottom: 6px; left: 0;">
@@ -1595,9 +1564,57 @@
     </div>
 </div>
 
+
 <!-- ============================================================ -->
+<!-- МОДАЛЬНЫЕ ОКНА (в конце файла, вне контейнеров) -->
+<!-- ============================================================ -->
+
+<!-- МОДАЛЬНОЕ ОКНО: УДАЛЕНИЕ ПРОЕКТА -->
+{% if can_manage %}
+<div class="modal fade" id="deleteProjectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background: var(--danger-light); border-bottom-color: #fecaca;">
+                <h5 class="modal-title" style="color: var(--danger);">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Удаление проекта
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('projects.delete_project', project_id=project.id) }}">
+                <div class="modal-body">
+                    <p class="fw-bold" style="color: var(--danger);">
+                        Внимание! Это действие нельзя отменить.
+                    </p>
+                    <p>Будут удалены <strong>все</strong> данные проекта:</p>
+                    <ul>
+                        <li>Задачи ({{ tasks|length }}) и подзадачи</li>
+                        <li>Вехи ({{ milestones|length }})</li>
+                        <li>Отчёты ({{ reports|length }})</li>
+                        <li>To-Do ({{ todos|length }})</li>
+                        <li>Календарь событий ({{ events|length }})</li>
+                        <li>Файлы и папки</li>
+                        <li>Сообщения в чате ({{ total_messages }})</li>
+                        <li>Участники ({{ members|length + (am_stanko_members|length if am_stanko_members else 0) + (guests|length if guests else 0) }})</li>
+                    </ul>
+                    <p>Для подтверждения введите слово <strong>УДАЛИТЬ</strong> заглавными буквами:</p>
+                    <input type="text" name="confirm_text" class="form-control"
+                           placeholder="УДАЛИТЬ" required autocomplete="off">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                        Отмена
+                    </button>
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        <i class="bi bi-trash-fill"></i> Удалить проект
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- МОДАЛЬНОЕ ОКНО: РАСПИСАНИЕ ДНЯ -->
-<!-- ============================================================ -->
 <div class="modal fade" id="dayModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
@@ -1622,12 +1639,10 @@
     </div>
 </div>
 
-<!-- ============================================================ -->
-<!-- МОДАЛЬНОЕ ОКНО: СОЗДАНИЕ СОБЫТИЯ -->
-<!-- ============================================================ -->
+<!-- МОДАЛЬНОЕ ОКНО: СОЗДАНИЕ СОБЫТИЯ (с рассылкой) -->
 {% if can_manage %}
 <div class="modal fade" id="createEventModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title"><i class="bi bi-calendar-plus"></i> Новое событие проекта</h5>
@@ -1641,7 +1656,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Описание</label>
-                        <textarea name="description" class="form-control" rows="2"></textarea>
+                        <textarea name="description" class="form-control" rows="2" placeholder="Детали события..."></textarea>
                     </div>
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" name="all_day" id="allDayCheck" onchange="toggleTimeFields()">
@@ -1669,10 +1684,56 @@
                             {% endfor %}
                         </div>
                     </div>
+
+                    <!-- ← ВЫБОР ПОЛУЧАТЕЛЕЙ -->
+                    <div class="mb-3 p-3 rounded" style="background: var(--bg-tertiary);">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-send"></i> Кому отправить уведомление?
+                        </label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="notify_all" id="notifyAll" checked>
+                            <label class="form-check-label" for="notifyAll">
+                                <strong>Всем участникам проекта</strong>
+                                <span class="small text-muted">(команда + АМ Станко)</span>
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="notify_guests" id="notifyGuests">
+                            <label class="form-check-label" for="notifyGuests">
+                                Гостям проекта
+                                <span class="small text-muted">(контакты субподрядчиков/заказчиков)</span>
+                            </label>
+                        </div>
+                        <details class="mt-2">
+                            <summary class="small text-muted" style="cursor: pointer;">
+                                <i class="bi bi-person-check"></i> Или выбрать вручную...
+                            </summary>
+                            <div class="mt-2" style="max-height: 200px; overflow-y: auto;">
+                                {% for m in members_for_filters %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="recipient_ids" value="{{ m.user.id }}" id="recipient{{ m.user.id }}">
+                                    <label class="form-check-label small" for="recipient{{ m.user.id }}">
+                                        {{ m.user.full_name }} · {{ m.role_display }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                                {% for m in guests %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="recipient_ids" value="{{ m.user.id }}" id="recipient{{ m.user.id }}">
+                                    <label class="form-check-label small" for="recipient{{ m.user.id }}">
+                                        {{ m.user.full_name }} · Гость
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </details>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Создать</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send"></i> Создать и разослать
+                    </button>
                 </div>
             </form>
         </div>
@@ -1680,9 +1741,7 @@
 </div>
 {% endif %}
 
-<!-- ============================================================ -->
 <!-- МОДАЛКИ РЕДАКТИРОВАНИЯ TO-DO -->
-<!-- ============================================================ -->
 {% for todo in todos %}
 <div class="modal fade" id="editTodoModal{{ todo.id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
@@ -1914,8 +1973,7 @@ function initCalendar() {
                 badge.className = 'fc-week-number-badge';
                 badge.textContent = `Н${weekNum}`;
                 badge.title = `ISO-неделя ${weekNum}`;
-                const dayTop = arg.el.querySelector('.fc-daygrid-day-top');
-                if (dayTop) dayTop.appendChild(badge);
+                arg.el.appendChild(badge);
             }
         },
         eventsSet: function() {
@@ -2123,14 +2181,13 @@ function updateColorSelection(radio) {
 }
 
 // ============================================================
-//  УПОМИНАНИЯ В ЧАТЕ (@Иван Иванов)
+//  УПОМИНАНИЯ В ЧАТЕ (@Иван Иванов) — включая админов
 // ============================================================
 (function() {
     const projectId = {{ project.id }};
     const input = document.getElementById('chatMessageInput');
     const resultsBox = document.getElementById('mentionResults');
 
-    // ===== 1. АВТОКОМПЛИТ ПРИ ВВОДЕ @ =====
     if (input && resultsBox) {
         let activeIndex = -1;
         let currentResults = [];
@@ -2266,10 +2323,12 @@ function updateColorSelection(radio) {
         }
     }
 
-    // ===== 2. ПОДСВЕТКА @УПОМИНАНИЙ В ОТПРАВЛЕННЫХ СООБЩЕНИЯХ =====
     const mentionUsers = [
         {% for m in members_for_filters %}
         { id: {{ m.user.id }}, name: "{{ (m.user.first_name ~ ' ' ~ m.user.last_name)|e }}" },
+        {% endfor %}
+        {% for u in mentionable_admins %}
+        { id: {{ u.id }}, name: "{{ (u.first_name ~ ' ' ~ u.last_name)|e }}" },
         {% endfor %}
     ];
 

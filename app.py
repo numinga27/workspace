@@ -167,9 +167,50 @@ def create_app(config_class=Config):
 
     @app.errorhandler(500)
     def handle_500(e):
+        """Внутренняя ошибка сервера — показываем заглушку,
+        создаём тикет в поддержке и отправляем Push админам."""
         import traceback
-        print('❌ Ошибка 500:')
-        traceback.print_exception(type(e), e, e.__traceback__)
+        from flask import request, session
+
+        app.logger.error('❌ Ошибка 500:', exc_info=True)
+
+        try:
+            error_traceback = traceback.format_exc()
+            user_info = "Аноним"
+            if 'user_id' in session:
+                user = User.query.get(session['user_id'])
+                if user:
+                    user_info = f"{user.full_name} ({user.email})"
+
+            from services.support_errors import create_error_ticket
+            ticket_id = create_error_ticket(
+                url=request.url,
+                method=request.method,
+                user_info=user_info,
+                traceback_text=error_traceback,
+            )
+
+            if ticket_id:
+                from models import SupportTicket, SupportMessage
+                from services.push import notify_new_support_message
+                from services.tasks import send_push_async
+
+                ticket = SupportTicket.query.get(ticket_id)
+                if ticket:
+                    msg = ticket.messages.order_by(
+                        SupportMessage.created_at.desc()
+                    ).first()
+                    if msg:
+                        push_data_list = notify_new_support_message(
+                            ticket, msg, for_admin=True
+                        )
+                        if push_data_list:
+                            for push_data in push_data_list:
+                                send_push_async.delay(**push_data)
+
+        except Exception as notify_error:
+            app.logger.error(f'⚠️ Не удалось создать тикет об ошибке: {notify_error}')
+
         try:
             from flask import render_template
             return render_template('errors/500.html'), 500

@@ -90,6 +90,19 @@ def mark_read(project_id):
 @bp.route('/project/<int:project_id>/api/mention/search')
 @login_required
 def api_mention_search(project_id):
+    """Поиск участников проекта для автокомплита @.
+
+    GET-параметры:
+      q — строка (может быть пустой — вернём всех).
+      limit — максимум (по умолчанию 15).
+
+    Возвращает JSON-массив:
+      {id, name, email, role_display, company}
+
+    Включает:
+      - участников проекта (команда + АМ Станко);
+      - всех админов и супервизоров (даже если не в проекте).
+    """
     if not check_project_access(project_id):
         return jsonify([])
 
@@ -106,12 +119,22 @@ def api_mention_search(project_id):
             if q not in haystack:
                 continue
 
+        # Для админов/супервизоров member=None — показываем их системную роль
+        if member:
+            role_display = member.role_display
+        elif user.is_admin:
+            role_display = 'Администратор'
+        elif user.is_supervisor:
+            role_display = 'Супервизор'
+        else:
+            role_display = 'Участник'
+
         results.append({
             'id': user.id,
             'name': full_name,
             'email': user.email,
             'company': user.company or '',
-            'role_display': member.role_display,
+            'role_display': role_display,
         })
 
         if len(results) >= limit:

@@ -25,7 +25,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
 
-    <!-- ← ВАШ СОБСТВЕННЫЙ CSS (вынесен из <style>) -->
+    <!-- ← ВАШ СОБСТВЕННЫЙ CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
@@ -171,7 +171,6 @@
             </a>
             {% endif %}
 
-            {# ← ЖУРНАЛ ДЕЙСТВИЙ — ТОЛЬКО ДЛЯ АДМИНА #}
             {% if session.user_role == 'admin' %}
             <a href="{{ url_for('admin_logs.logs_view') }}"
                class="nav-item {% if request.endpoint and request.endpoint.startswith('admin_logs.') %}active{% endif %}">
@@ -298,16 +297,16 @@
 
                                 <div class="tree-children" id="children-{{ project.id }}"
                                      style="display: {% if is_current %}block{% else %}none{% endif %};">
-                                    <a href="{{ url_for('projects.view_project', project_id=project.id) }}"
+                                    <a href="{{ url_for('projects.view_project', project_id=project.id) }}?_tab=dashboard"
                                        class="tree-item project-tab-link" data-tab="dashboard" data-project-id="{{ project.id }}">
                                         <i class="bi bi-grid"></i><span>Дашборд</span>
                                     </a>
-                                    <a href="{{ url_for('projects.view_project', project_id=project.id) }}#tasks"
+                                    <a href="{{ url_for('projects.view_project', project_id=project.id) }}?_tab=tasks"
                                        class="tree-item project-tab-link" data-tab="tasks" data-project-id="{{ project.id }}">
                                         <i class="bi bi-list-task"></i><span>Задачи</span>
                                         <span class="badge">{{ project.tasks|length }}</span>
                                     </a>
-                                    <a href="{{ url_for('projects.view_project', project_id=project.id) }}#chat"
+                                    <a href="{{ url_for('projects.view_project', project_id=project.id) }}?_tab=chat&mark_read=1#chat"
                                        class="tree-item project-tab-link" data-tab="chat" data-project-id="{{ project.id }}">
                                         <i class="bi bi-chat-dots"></i><span>Чат</span>
                                     </a>
@@ -340,6 +339,9 @@
         {% block content %}{% endblock %}
     </main>
 
+    <!-- ============================================================ -->
+    <!-- МОДАЛКА: УСТАНОВКА НА IPHONE -->
+    <!-- ============================================================ -->
     <div class="modal fade" id="iosInstallModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -393,6 +395,79 @@
                        target="_blank">
                         <i class="bi bi-box-arrow-up-right"></i> Открыть сайт
                     </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- МОДАЛКА: КАК ОБНОВИТЬ ПРИЛОЖЕНИЕ -->
+    <!-- ============================================================ -->
+    <div class="modal fade" id="updateHelpModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #5b5bd6, #8b5cf6); color: white;">
+                    <h5 class="modal-title">
+                        <i class="bi bi-question-circle"></i> Как обновить приложение
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Android PWA -->
+                    <div id="updateHelpAndroid" style="display: none;">
+                        <h6 class="mb-3">📱 Android (PWA)</h6>
+                        <ol class="ps-3">
+                            <li class="mb-2">Нажмите кнопку <strong>«Скачать APK»</strong> в баннере.</li>
+                            <li class="mb-2">Откройте скачанный файл <code>workspace.apk</code>.</li>
+                            <li class="mb-2">Разрешите установку из неизвестных источников (если попросит).</li>
+                            <li class="mb-2">Нажмите <strong>«Установить»</strong>.</li>
+                            <li>Готово! Откройте приложение — оно уже обновлено.</li>
+                        </ol>
+                        <div class="alert alert-info small mb-0">
+                            <i class="bi bi-info-circle"></i>
+                            Все ваши данные (проекты, задачи, чаты) сохранятся.
+                        </div>
+                    </div>
+
+                    <!-- iOS PWA -->
+                    <div id="updateHelpIOS" style="display: none;">
+                        <h6 class="mb-3">🍎 iPhone / iPad (PWA)</h6>
+                        <ol class="ps-3">
+                            <li class="mb-2">Нажмите кнопку <strong>«Обновить»</strong> в баннере.</li>
+                            <li class="mb-2">Приложение перезагрузится с новой версией.</li>
+                            <li>Готово! Все данные сохранятся.</li>
+                        </ol>
+                        <div class="alert alert-warning small mb-0">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Если кнопка «Обновить» не сработала — удалите иконку Workspace с домашнего экрана, откройте сайт в Safari и снова добавьте на экран «Домой».
+                        </div>
+                    </div>
+
+                    <!-- Web -->
+                    <div id="updateHelpWeb" style="display: none;">
+                        <h6 class="mb-3">💻 Компьютер (браузер)</h6>
+                        <ol class="ps-3">
+                            <li class="mb-2">Нажмите <strong>«Обновить»</strong> в модалке (или закройте её).</li>
+                            <li class="mb-2">Обновите страницу: <kbd>Ctrl+Shift+R</kbd> (Windows) или <kbd>Cmd+Shift+R</kbd> (Mac).</li>
+                            <li>Готово! Вы увидите новую версию.</li>
+                        </ol>
+                        <div class="alert alert-info small mb-0">
+                            <i class="bi bi-info-circle"></i>
+                            Обычно обновление подхватывается автоматически при следующем заходе.
+                        </div>
+                    </div>
+
+                    <!-- Что нового -->
+                    <div class="mt-3 pt-3" style="border-top: 1px solid var(--border-light);">
+                        <h6 class="mb-2">🎉 Что нового в версии <span id="updateHelpVersion">1.0.1</span></h6>
+                        <p class="small text-muted mb-0" id="updateHelpNotes">Добавлена техподдержка, улучшен интерфейс</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" onclick="doUpdate()">
+                        <i class="bi bi-arrow-clockwise"></i> Обновить
+                    </button>
                 </div>
             </div>
         </div>
@@ -579,75 +654,205 @@
     })();
     </script>
 
+    <!-- ============================================================ -->
+    <!-- БАННЕР ОБ ОБНОВЛЕНИИ (для всех платформ) -->
+    <!-- ============================================================ -->
     <script>
     (function() {
-      const CURRENT_VERSION_CODE = {{ config.APP_VERSION_CODE|default(1) }};
-      const VERSION_URL = '/static/apk/version.json';
+        const CURRENT_VERSION = '{{ config.APP_VERSION|default("1.0.0") }}';
+        const CURRENT_VERSION_CODE = {{ config.APP_VERSION_CODE|default(1) }};
+        const RELEASE_NOTES = '{{ config.APP_RELEASE_NOTES|default("")|e }}';
+        const VERSION_DATE = '{{ config.APP_VERSION_DATE|default("") }}';
+        const UPDATE_URL = '{{ config.APP_UPDATE_URL|default("/") }}';
 
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-                           || window.navigator.standalone === true;
-      const isAndroid = /Android/i.test(navigator.userAgent);
+        const DISMISSED_KEY = 'update_dismissed_' + CURRENT_VERSION_CODE;
 
-      if (!isStandalone || !isAndroid) return;
+        // Проверяем Cookie
+        if (document.cookie.indexOf(DISMISSED_KEY + '=') !== -1) return;
 
-      fetch(VERSION_URL + '?t=' + Date.now())
-        .then(r => r.json())
-        .then(data => {
-          const latestCode = data.latest_version_code || 0;
-          if (latestCode <= CURRENT_VERSION_CODE) return;
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                             || window.navigator.standalone === true;
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-          const dismissedKey = 'update_dismissed_' + latestCode;
-          if (localStorage.getItem(dismissedKey) && !data.force_update) return;
+        setTimeout(() => {
+            showUpdateBanner();
+        }, 2000);
 
-          showUpdateBanner(data);
-        })
-        .catch(err => console.warn('[Update] Ошибка:', err));
+        function showUpdateBanner() {
+            const old = document.getElementById('appUpdateBanner');
+            if (old) old.remove();
 
-      function showUpdateBanner(data) {
-        const old = document.getElementById('apkUpdateBanner');
-        if (old) old.remove();
+            const banner = document.createElement('div');
+            banner.id = 'appUpdateBanner';
+            banner.style.cssText = `
+                position: fixed;
+                bottom: 16px;
+                left: 16px;
+                right: 16px;
+                background: linear-gradient(135deg, #5b5bd6, #8b5cf6);
+                color: white;
+                padding: 16px 20px;
+                border-radius: 14px;
+                z-index: 99999;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+                font-family: 'Inter', sans-serif;
+                animation: apkUpdateSlideUp 0.4s ease-out;
+                max-width: 500px;
+                margin: 0 auto;
+            `;
 
-        const banner = document.createElement('div');
-        banner.id = 'apkUpdateBanner';
-        banner.style.cssText = `
-          position: fixed; bottom: 0; left: 0; right: 0;
-          background: linear-gradient(135deg, #5b5bd6, #8b5cf6);
-          color: white; padding: 16px 20px; z-index: 99999;
-          display: flex; align-items: center; gap: 12px;
-          box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
-          animation: apkUpdateSlideUp 0.35s ease-out;
-        `;
+            let actionButton = '';
+            if (isAndroid && isStandalone) {
+                actionButton = `
+                    <a href="/static/apk/workspace.apk" download
+                       onclick="
+                           document.getElementById('appUpdateBanner').remove();
+                           const expires = new Date();
+                           expires.setFullYear(expires.getFullYear() + 1);
+                           document.cookie = '${DISMISSED_KEY}=1; expires=' + expires.toUTCString() + '; path=/';
+                       "
+                       style="background: white; color: #5b5bd6;
+                              padding: 9px 16px; border-radius: 8px;
+                              text-decoration: none; font-weight: 700;
+                              font-size: 13px; white-space: nowrap;">
+                        Скачать APK
+                    </a>
+                `;
+            } else if (isIOS || isStandalone) {
+                actionButton = `
+                    <button onclick="
+                                const expires = new Date();
+                                expires.setFullYear(expires.getFullYear() + 1);
+                                document.cookie = '${DISMISSED_KEY}=1; expires=' + expires.toUTCString() + '; path=/';
+                                
+                                if ('serviceWorker' in navigator) {
+                                    navigator.serviceWorker.getRegistrations().then(regs => {
+                                        regs.forEach(r => r.unregister());
+                                    });
+                                }
+                                setTimeout(() => window.location.reload(true), 500);
+                            "
+                            style="background: white; color: #5b5bd6;
+                                   padding: 9px 16px; border-radius: 8px;
+                                   border: none; font-weight: 700;
+                                   font-size: 13px; cursor: pointer;
+                                   white-space: nowrap;">
+                        Обновить
+                    </button>
+                `;
+            } else {
+                actionButton = `
+                    <button onclick="
+                                document.getElementById('appUpdateBanner').remove();
+                                const expires = new Date();
+                                expires.setFullYear(expires.getFullYear() + 1);
+                                document.cookie = '${DISMISSED_KEY}=1; expires=' + expires.toUTCString() + '; path=/';
+                            "
+                            style="background: white; color: #5b5bd6;
+                                   padding: 9px 16px; border-radius: 8px;
+                                   border: none; font-weight: 700;
+                                   font-size: 13px; cursor: pointer;
+                                   white-space: nowrap;">
+                        Понятно
+                    </button>
+                `;
+            }
 
-        banner.innerHTML = `
-          <div style="flex: 1; min-width: 0;">
-            <div style="font-weight: 700; font-size: 15px; margin-bottom: 4px;">
-              🎉 Доступна новая версия ${data.latest_version || ''}
-            </div>
-            <div style="font-size: 13px; opacity: 0.9;">
-              ${data.release_notes || 'Обновление готово к установке'}
-            </div>
-          </div>
-          <a href="${data.apk_url || '/static/apk/workspace.apk'}"
-             download
-             style="background: white; color: #5b5bd6;
-                    padding: 10px 18px; border-radius: 8px;
-                    text-decoration: none; font-weight: 700;
-                    font-size: 13px; white-space: nowrap;">
-            Скачать
-          </a>
-          <button onclick="
-                     document.getElementById('apkUpdateBanner').remove();
-                     localStorage.setItem('update_dismissed_${data.latest_version_code}', '1');
-                   "
-                  style="background: transparent; border: none;
-                         color: white; font-size: 26px;
-                         cursor: pointer; padding: 0 8px; line-height: 1;">
-            ×
-          </button>
-        `;
+            // ← Кнопка "Как?" для всех платформ
+            actionButton += `
+                <button onclick="showUpdateHelp()"
+                        style="background: transparent; color: white;
+                               padding: 9px 12px; border-radius: 8px;
+                               border: 1px solid rgba(255,255,255,0.4);
+                               font-weight: 600; font-size: 12px;
+                               cursor: pointer; white-space: nowrap;
+                               margin-left: 4px;">
+                    <i class="bi bi-question-circle"></i> Как?
+                </button>
+            `;
 
-        document.body.appendChild(banner);
-      }
+            banner.innerHTML = `
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-weight: 700; font-size: 15px; margin-bottom: 4px;">
+                        🎉 Доступна новая версия ${CURRENT_VERSION}
+                    </div>
+                    <div style="font-size: 13px; opacity: 0.9;">
+                        ${RELEASE_NOTES || 'Обновление готово к установке'}
+                    </div>
+                    ${VERSION_DATE ? `<div style="font-size: 11px; opacity: 0.7; margin-top: 2px;">${VERSION_DATE}</div>` : ''}
+                </div>
+                ${actionButton}
+                <button onclick="
+                           document.getElementById('appUpdateBanner').remove();
+                           const expires = new Date();
+                           expires.setFullYear(expires.getFullYear() + 1);
+                           document.cookie = '${DISMISSED_KEY}=1; expires=' + expires.toUTCString() + '; path=/';
+                         "
+                        style="background: transparent; border: none;
+                               color: white; font-size: 22px;
+                               cursor: pointer; padding: 0 4px;
+                               line-height: 1;">
+                    ×
+                </button>
+            `;
+
+            document.body.appendChild(banner);
+        }
+
+        // ← Показ модалки "Как обновить?"
+        window.showUpdateHelp = function() {
+            document.getElementById('updateHelpVersion').textContent = CURRENT_VERSION;
+            document.getElementById('updateHelpNotes').textContent = RELEASE_NOTES || 'Обновление готово к установке';
+
+            document.getElementById('updateHelpAndroid').style.display = 'none';
+            document.getElementById('updateHelpIOS').style.display = 'none';
+            document.getElementById('updateHelpWeb').style.display = 'none';
+
+            if (isAndroid && isStandalone) {
+                document.getElementById('updateHelpAndroid').style.display = 'block';
+            } else if (isIOS || isStandalone) {
+                document.getElementById('updateHelpIOS').style.display = 'block';
+            } else {
+                document.getElementById('updateHelpWeb').style.display = 'block';
+            }
+
+            if (typeof bootstrap !== 'undefined') {
+                new bootstrap.Modal(document.getElementById('updateHelpModal')).show();
+            }
+        };
+
+        // ← Функция "Обновить" из модалки
+        window.doUpdate = function() {
+            const expires = new Date();
+            expires.setFullYear(expires.getFullYear() + 1);
+            document.cookie = DISMISSED_KEY + '=1; expires=' + expires.toUTCString() + '; path=/';
+
+            // Закрываем модалку
+            const modal = bootstrap.Modal.getInstance(document.getElementById('updateHelpModal'));
+            if (modal) modal.hide();
+
+            // Удаляем баннер
+            const banner = document.getElementById('appUpdateBanner');
+            if (banner) banner.remove();
+
+            // Android PWA — скачиваем APK
+            if (isAndroid && isStandalone) {
+                window.location.href = '/static/apk/workspace.apk';
+                return;
+            }
+
+            // iOS PWA / веб — перезагружаем с очисткой SW
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(regs => {
+                    regs.forEach(r => r.unregister());
+                });
+            }
+            setTimeout(() => window.location.reload(true), 500);
+        };
     })();
     </script>
 
@@ -685,10 +890,7 @@
                 if (expandIcon) expandIcon.classList.remove('expanded');
             }
         }
-                // ============================================================
-        //  При загрузке — разворачиваем все группы проектов на мобильном,
-        //  чтобы пользователь сразу видел проекты
-        // ============================================================
+
         document.addEventListener('DOMContentLoaded', function() {
             if (window.innerWidth <= 768) {
                 document.querySelectorAll('.customer-children').forEach(el => {
@@ -701,6 +903,7 @@
                 });
             }
         });
+
         function filterProjects(query) {
             const q = query.toLowerCase().trim();
             document.querySelectorAll('#projectTree .tree-item').forEach(el => {

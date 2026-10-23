@@ -22,6 +22,7 @@
 │   ├── team.py
 │   ├── todos.py
 │   └── users_admin.py
+├── celery_app.py
 ├── check_mentions.py
 ├── config.py
 ├── cron_cleanup_logs.py
@@ -40,10 +41,14 @@
 │   ├── email.py
 │   ├── pdf.py
 │   ├── push.py
-│   └── stats.py
+│   ├── stats.py
+│   ├── support_errors.py
+│   └── tasks.py
 ├── static
 │   ├── apk
 │   │   └── version.json
+│   ├── css
+│   │   └── style.css
 │   ├── icons
 │   │   ├── icon-192.png
 │   │   ├── icon-512.png
@@ -68,6 +73,7 @@
 │   ├── customer_detail.html
 │   ├── customers.html
 │   ├── dashboard.html
+│   ├── edit_customer.html
 │   ├── edit_project.html
 │   ├── edit_supplier.html
 │   ├── employee_report.html
@@ -103,4 +109,4 @@
 ├── workspace.tar.gz
 └── wsgi.py
 
-13 directories, 91 files
+14 directories, 96 files
