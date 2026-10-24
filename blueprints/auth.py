@@ -103,6 +103,15 @@ def logout():
     return redirect(url_for('auth.login'))
 
 
+@bp.route('/set-language/<lang>')
+def set_language(lang):
+    """Переключение языка интерфейса (ru / en / zh)."""
+    from flask import session, request, redirect, url_for
+    if lang in ('ru', 'en', 'zh'):
+        session['language'] = lang
+    return redirect(request.referrer or url_for('dashboard.dashboard'))
+
+
 @bp.route('/profile')
 @login_required
 def profile():

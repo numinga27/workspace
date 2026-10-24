@@ -35,7 +35,8 @@ def utcnow():
 def is_privileged(user):
     """Админ ИЛИ супервизор — видят всё, могут всё.
 
-    Используется ВМЕСТО `user.role == 'admin'` во всём коде.
+    Используется ВМЕСТО `user.role == 'admin'` во всём коде,
+    КРОМЕ техподдержки: там только admin — главный.
     """
     return user is not None and user.role in ('admin', 'supervisor')
 
@@ -457,12 +458,16 @@ def remove_supplier_contacts_from_project(supplier, project_id,
 
 
 # ============================================================
-#  НЕПРОЧИТАННЫЕ СООБЩЕНИЯ (КЭШИРУЕМЫЕ)
+#  НЕПРОЧИТАННЫЕ СООБЩЕНИЯ (БЕЗ КЭША — всегда актуальные)
 # ============================================================
 
-@memoize(timeout=60)
 def get_unread_counts(user_id):
-    """Возвращает словарь {project_id: count_unread}."""
+    """Возвращает словарь {project_id: count_unread}.
+
+    ВАЖНО: без @memoize — иначе при multi-worker gunicorn
+    инвалидация кэша не работает глобально, и счётчик "залипает"
+    после прочтения чата. Запрос не тяжёлый — можно без кэша.
+    """
     from models import MessageRead, Message, Project, User
 
     if not user_id:
@@ -519,11 +524,11 @@ def mark_project_as_read(user_id, project_id):
         db.session.add(record)
 
     db.session.commit()
-    invalidate_unread_cache(user_id)  # ← СБРОС КЭША
+    invalidate_unread_cache(user_id)  # ← СБРОС КЭША (для других счётчиков)
 
 
 # ============================================================
-#  УПОМИНАНИЯ В ЧАТЕ (@Иван Иванов) (КЭШИРУЕМЫЕ)
+#  УПОМИНАНИЯ В ЧАТЕ (@Иван Иванов)
 # ============================================================
 
 def get_project_mentionable_users(project_id):
@@ -604,9 +609,11 @@ def get_unread_mentions_count(user_id):
     ).count()
 
 
-@memoize(timeout=60)
 def get_unread_mentions_by_project(user_id):
-    """Словарь {project_id: count} непрочитанных упоминаний."""
+    """Словарь {project_id: count} непрочитанных упоминаний.
+
+    ВАЖНО: без @memoize — та же причина, что и у get_unread_counts.
+    """
     from models import MessageMention
     from extensions import db
     from sqlalchemy import func
@@ -728,13 +735,17 @@ def get_overdue_tasks_count(user_id):
 
 @memoize(timeout=60)
 def get_support_unread_count(user_id):
-    """Количество непрочитанных тикетов поддержки для админов."""
+    """Количество непрочитанных тикетов поддержки — ТОЛЬКО для главного админа.
+
+    Супервизор в поддержке — обычный пользователь: у него нет доступа
+    к админскому списку тикетов, и счётчик ему не нужен.
+    """
     from models import User, SupportTicket
     from extensions import db
     if not user_id:
         return 0
     user = User.query.get(user_id)
-    if not user or user.role not in ('admin', 'supervisor'):
+    if not user or user.role != 'admin':
         return 0
     count = db.session.query(
         db.func.sum(SupportTicket.unread_for_admin)
@@ -747,13 +758,16 @@ def get_support_unread_count(user_id):
 # ============================================================
 
 def invalidate_unread_cache(user_id):
-    """Сбрасывает кэш всех счетчиков для пользователя."""
+    """Сбрасывает кэш всех счетчиков для пользователя.
+
+    ВНИМАНИЕ: get_unread_counts и get_unread_mentions_by_project
+    больше не кэшируются (у них убран @memoize), поэтому их
+    здесь нет. Остальные — кэшируются, и их кэш чистится.
+    """
     if not cache:
         return
     cache.delete_memoized(get_overdue_tasks_count, user_id)
     cache.delete_memoized(get_support_unread_count, user_id)
     cache.delete_memoized(get_unread_mentions_count, user_id)
-    cache.delete_memoized(get_unread_mentions_by_project, user_id)
     cache.delete_memoized(get_unread_task_ids, user_id)
     cache.delete_memoized(get_unread_todo_ids, user_id)
-    cache.delete_memoized(get_unread_counts, user_id)

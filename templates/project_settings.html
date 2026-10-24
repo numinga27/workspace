@@ -3,7 +3,7 @@
 
 <div class="mb-3">
     <a href="{{ url_for('projects.view_project', project_id=project.id) }}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left"></i> К проекту
+        <i class="bi bi-arrow-left"></i> {{ _('К проекту') }}
     </a>
 </div>
 
@@ -16,12 +16,12 @@
         <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
             <div>
                 <h2 class="mb-1">
-                    <i class="bi bi-people-fill"></i> Команда проекта
+                    <i class="bi bi-people-fill"></i> {{ _('Команда проекта') }}
                 </h2>
                 <p class="text-muted mb-0">{{ project.name }}</p>
             </div>
             <a href="{{ url_for('projects.view_project', project_id=project.id) }}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> К проекту
+                <i class="bi bi-arrow-left"></i> {{ _('К проекту') }}
             </a>
         </div>
 
@@ -31,20 +31,20 @@
         <div class="card mb-4">
             <div class="card-header py-2 d-flex justify-content-between align-items-center">
                 <span>
-                    <i class="bi bi-person-plus-fill text-primary"></i> Пригласить в проект
+                    <i class="bi bi-person-plus-fill text-primary"></i> {{ _('Пригласить в проект') }}
                 </span>
                 <small class="text-muted">
-                    Кликните на поле — увидите всех зарегистрированных
+                    {{ _('Кликните на поле — увидите всех зарегистрированных') }}
                 </small>
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('team.invite_user', project_id=project.id) }}" id="inviteForm">
                     <div class="row g-2">
                         <div class="col-md-6 position-relative">
-                            <label class="form-label small">Пользователь / Email *</label>
+                            <label class="form-label small">{{ _('Пользователь / Email') }} *</label>
                             <input type="text" name="email" id="inviteUserInput"
                                    class="form-control"
-                                   placeholder="Кликните или начните вводить имя / email / компанию..."
+                                   placeholder="{{ _('Кликните или начните вводить имя / email / компанию...') }}"
                                    autocomplete="off" required>
 
                             {# Выпадающий список #}
@@ -55,32 +55,32 @@
 
                             <small class="text-muted">
                                 <i class="bi bi-info-circle"></i>
-                                <strong>Из списка</strong> — если аккаунт уже есть, добавится сразу.
-                                <strong>Вручную</strong> — если нет, будет создана ссылка-приглашение.
+                                <strong>{{ _('Из списка') }}</strong> — {{ _('если аккаунт уже есть, добавится сразу.') }}
+                                <strong>{{ _('Вручную') }}</strong> — {{ _('если нет, будет создана ссылка-приглашение.') }}
                             </small>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label small">Роль в проекте</label>
+                            <label class="form-label small">{{ _('Роль в проекте') }}</label>
                             <select name="role" class="form-select">
-                                <optgroup label="Команда проекта">
-                                    <option value="admin">Руководитель проекта</option>
-                                    <option value="manager">Менеджер</option>
-                                    <option value="chief_engineer">Главный инженер</option>
-                                    <option value="logistic">Логистик</option>
-                                    <option value="member" selected>Участник</option>
+                                <optgroup label="{{ _('Команда проекта') }}">
+                                    <option value="admin">{{ _('Руководитель проекта') }}</option>
+                                    <option value="manager">{{ _('Менеджер') }}</option>
+                                    <option value="chief_engineer">{{ _('Главный инженер') }}</option>
+                                    <option value="logistic">{{ _('Логистик') }}</option>
+                                    <option value="member" selected>{{ _('Участник') }}</option>
                                 </optgroup>
-                                <optgroup label="Группа компаний АМ Станко">
-                                    <option value="am_stanko_admin">АМ Станко · Руководитель</option>
-                                    <option value="am_stanko_manager">АМ Станко · Менеджер</option>
-                                    <option value="am_stanko_engineer">АМ Станко · Гл. инженер</option>
-                                    <option value="am_stanko_logistic">АМ Станко · Логистик</option>
-                                    <option value="am_stanko_member">АМ Станко · Участник</option>
+                                <optgroup label="{{ _('Группа компаний АМ Станко') }}">
+                                    <option value="am_stanko_admin">{{ _('АМ Станко · Руководитель') }}</option>
+                                    <option value="am_stanko_manager">{{ _('АМ Станко · Менеджер') }}</option>
+                                    <option value="am_stanko_engineer">{{ _('АМ Станко · Гл. инженер') }}</option>
+                                    <option value="am_stanko_logistic">{{ _('АМ Станко · Логистик') }}</option>
+                                    <option value="am_stanko_member">{{ _('АМ Станко · Участник') }}</option>
                                 </optgroup>
                             </select>
                         </div>
                         <div class="col-md-3 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary w-100">
-                                <i class="bi bi-send"></i> Пригласить
+                                <i class="bi bi-send"></i> {{ _('Пригласить') }}
                             </button>
                         </div>
                     </div>
@@ -96,10 +96,10 @@
             <div class="card-header py-2 d-flex justify-content-between align-items-center">
                 <span>
                     <i class="bi bi-hourglass-split text-warning"></i>
-                    Ожидают регистрации ({{ invitations|length }})
+                    {{ _('Ожидают регистрации') }} ({{ invitations|length }})
                 </span>
                 <small class="text-muted">
-                    Ссылка действует 7 дней
+                    {{ _('Ссылка действует 7 дней') }}
                 </small>
             </div>
             <div class="card-body p-0">
@@ -112,19 +112,19 @@
                                 <div class="small text-muted mb-2">
                                     <i class="bi bi-shield"></i>
                                     {{ {
-                                        'admin': 'Руководитель',
-                                        'manager': 'Менеджер',
-                                        'chief_engineer': 'Главный инженер',
-                                        'logistic': 'Логистик',
-                                        'member': 'Участник',
-                                        'am_stanko_admin': 'АМ Станко · Руководитель',
-                                        'am_stanko_manager': 'АМ Станко · Менеджер',
-                                        'am_stanko_engineer': 'АМ Станко · Гл. инженер',
-                                        'am_stanko_logistic': 'АМ Станко · Логистик',
-                                        'am_stanko_member': 'АМ Станко · Участник',
+                                        'admin': _('Руководитель'),
+                                        'manager': _('Менеджер'),
+                                        'chief_engineer': _('Главный инженер'),
+                                        'logistic': _('Логистик'),
+                                        'member': _('Участник'),
+                                        'am_stanko_admin': _('АМ Станко · Руководитель'),
+                                        'am_stanko_manager': _('АМ Станко · Менеджер'),
+                                        'am_stanko_engineer': _('АМ Станко · Гл. инженер'),
+                                        'am_stanko_logistic': _('АМ Станко · Логистик'),
+                                        'am_stanko_member': _('АМ Станко · Участник'),
                                     }.get(inv.role, inv.role) }}
-                                    · до {{ inv.expires_at.strftime('%d.%m.%Y %H:%M') }}
-                                    · создано {{ inv.created_at.strftime('%d.%m.%Y %H:%M') }}
+                                    · {{ _('до') }} {{ inv.expires_at.strftime('%d.%m.%Y %H:%M') }}
+                                    · {{ _('создано') }} {{ inv.created_at.strftime('%d.%m.%Y %H:%M') }}
                                 </div>
 
                                 {% set link = url_for('auth.register', token=inv.token, _external=True) %}
@@ -136,17 +136,17 @@
                                     <button type="button"
                                             class="btn btn-sm btn-outline-primary"
                                             onclick="copyToClipboard('{{ link }}', this)"
-                                            title="Скопировать ссылку">
+                                            title="{{ _('Скопировать ссылку') }}">
                                         <i class="bi bi-clipboard"></i>
                                     </button>
                                 </div>
                             </div>
                             <form method="POST"
                                   action="{{ url_for('team.cancel_invitation', project_id=project.id, invitation_id=inv.id) }}"
-                                  onsubmit="return confirm('Отменить приглашение для {{ inv.email }}?');">
+                                  onsubmit="return confirm('{{ _('Отменить приглашение для') }} {{ inv.email }}?');">
                                 <button type="submit" class="btn btn-sm btn-outline-secondary"
                                         style="width: 32px; height: 32px; padding: 0;"
-                                        title="Отменить приглашение">
+                                        title="{{ _('Отменить приглашение') }}">
                                     <i class="bi bi-x-lg text-danger" style="font-size: 12px;"></i>
                                 </button>
                             </form>
@@ -165,7 +165,7 @@
             <div class="card-header py-2 d-flex justify-content-between align-items-center">
                 <span>
                     <i class="bi bi-people"></i>
-                    Команда проекта ({{ members|length }})
+                    {{ _('Команда проекта') }} ({{ members|length }})
                 </span>
             </div>
             <div class="card-body p-0">
@@ -173,10 +173,10 @@
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Имя</th>
+                                <th>{{ _('Имя') }}</th>
                                 <th style="width: 180px;">Email</th>
-                                <th style="width: 220px;">Роль</th>
-                                <th style="width: 100px;" class="text-end">Действия</th>
+                                <th style="width: 220px;">{{ _('Роль') }}</th>
+                                <th style="width: 100px;" class="text-end">{{ _('Действия') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -191,7 +191,7 @@
                                             <div class="fw-bold">
                                                 {{ m.user.first_name }} {{ m.user.last_name }}
                                                 {% if m.user.id == project.created_by %}
-                                                <span class="badge bg-primary" style="font-size: 9px;">Создатель</span>
+                                                <span class="badge bg-primary" style="font-size: 9px;">{{ _('Создатель') }}</span>
                                                 {% endif %}
                                             </div>
                                             {% if m.user.company %}
@@ -218,19 +218,19 @@
                                               action="{{ url_for('team.change_member_role', project_id=project.id, member_id=m.id) }}">
                                             <select name="role" class="form-select form-select-sm"
                                                     onchange="this.form.submit()">
-                                                <optgroup label="Команда проекта">
-                                                    <option value="admin" {% if m.role_in_project == 'admin' %}selected{% endif %}>Руководитель проекта</option>
-                                                    <option value="manager" {% if m.role_in_project == 'manager' %}selected{% endif %}>Менеджер</option>
-                                                    <option value="chief_engineer" {% if m.role_in_project == 'chief_engineer' %}selected{% endif %}>Главный инженер</option>
-                                                    <option value="logistic" {% if m.role_in_project == 'logistic' %}selected{% endif %}>Логистик</option>
-                                                    <option value="member" {% if m.role_in_project == 'member' %}selected{% endif %}>Участник</option>
+                                                <optgroup label="{{ _('Команда проекта') }}">
+                                                    <option value="admin" {% if m.role_in_project == 'admin' %}selected{% endif %}>{{ _('Руководитель проекта') }}</option>
+                                                    <option value="manager" {% if m.role_in_project == 'manager' %}selected{% endif %}>{{ _('Менеджер') }}</option>
+                                                    <option value="chief_engineer" {% if m.role_in_project == 'chief_engineer' %}selected{% endif %}>{{ _('Главный инженер') }}</option>
+                                                    <option value="logistic" {% if m.role_in_project == 'logistic' %}selected{% endif %}>{{ _('Логистик') }}</option>
+                                                    <option value="member" {% if m.role_in_project == 'member' %}selected{% endif %}>{{ _('Участник') }}</option>
                                                 </optgroup>
-                                                <optgroup label="Перевести в АМ Станко">
-                                                    <option value="am_stanko_admin" {% if m.role_in_project == 'am_stanko_admin' %}selected{% endif %}>АМ Станко · Руководитель</option>
-                                                    <option value="am_stanko_manager" {% if m.role_in_project == 'am_stanko_manager' %}selected{% endif %}>АМ Станко · Менеджер</option>
-                                                    <option value="am_stanko_engineer" {% if m.role_in_project == 'am_stanko_engineer' %}selected{% endif %}>АМ Станко · Гл. инженер</option>
-                                                    <option value="am_stanko_logistic" {% if m.role_in_project == 'am_stanko_logistic' %}selected{% endif %}>АМ Станко · Логистик</option>
-                                                    <option value="am_stanko_member" {% if m.role_in_project == 'am_stanko_member' %}selected{% endif %}>АМ Станко · Участник</option>
+                                                <optgroup label="{{ _('Перевести в АМ Станко') }}">
+                                                    <option value="am_stanko_admin" {% if m.role_in_project == 'am_stanko_admin' %}selected{% endif %}>{{ _('АМ Станко · Руководитель') }}</option>
+                                                    <option value="am_stanko_manager" {% if m.role_in_project == 'am_stanko_manager' %}selected{% endif %}>{{ _('АМ Станко · Менеджер') }}</option>
+                                                    <option value="am_stanko_engineer" {% if m.role_in_project == 'am_stanko_engineer' %}selected{% endif %}>{{ _('АМ Станко · Гл. инженер') }}</option>
+                                                    <option value="am_stanko_logistic" {% if m.role_in_project == 'am_stanko_logistic' %}selected{% endif %}>{{ _('АМ Станко · Логистик') }}</option>
+                                                    <option value="am_stanko_member" {% if m.role_in_project == 'am_stanko_member' %}selected{% endif %}>{{ _('АМ Станко · Участник') }}</option>
                                                 </optgroup>
                                             </select>
                                         </form>
@@ -240,11 +240,11 @@
                                     {% if m.user.id != project.created_by %}
                                     <form method="POST"
                                           action="{{ url_for('team.remove_member', project_id=project.id, member_id=m.id) }}"
-                                          onsubmit="return confirm('Удалить {{ m.user.first_name }} {{ m.user.last_name }} из проекта?');"
+                                          onsubmit="return confirm('{{ _('Удалить') }} {{ m.user.first_name }} {{ m.user.last_name }} {{ _('из проекта?') }}');"
                                           class="d-inline">
                                         <button type="submit" class="btn btn-sm btn-outline-secondary"
                                                 style="width: 32px; height: 32px; padding: 0;"
-                                                title="Удалить из проекта">
+                                                title="{{ _('Удалить из проекта') }}">
                                             <i class="bi bi-trash-fill text-danger"></i>
                                         </button>
                                     </form>
@@ -258,7 +258,7 @@
                             {% if not members %}
                             <tr>
                                 <td colspan="4" class="text-center text-muted py-4 fst-italic">
-                                    Пока в команде только создатель проекта
+                                    {{ _('Пока в команде только создатель проекта') }}
                                 </td>
                             </tr>
                             {% endif %}
@@ -276,10 +276,10 @@
             <div class="card-header py-2 d-flex justify-content-between align-items-center">
                 <span style="color: var(--am-stanko);">
                     <i class="bi bi-people-fill"></i>
-                    Группа компаний АМ Станко ({{ am_stanko_members|length }})
+                    {{ _('Группа компаний АМ Станко') }} ({{ am_stanko_members|length }})
                 </span>
                 <small class="text-muted">
-                    Добавляются автоматически из контактов поставщика
+                    {{ _('Добавляются автоматически из контактов поставщика') }}
                 </small>
             </div>
             <div class="card-body p-0">
@@ -287,10 +287,10 @@
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Имя</th>
+                                <th>{{ _('Имя') }}</th>
                                 <th style="width: 180px;">Email</th>
-                                <th style="width: 240px;">Роль</th>
-                                <th style="width: 100px;" class="text-end">Действия</th>
+                                <th style="width: 240px;">{{ _('Роль') }}</th>
+                                <th style="width: 100px;" class="text-end">{{ _('Действия') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -306,7 +306,7 @@
                                             <div class="fw-bold">
                                                 {{ m.user.first_name }} {{ m.user.last_name }}
                                                 {% if m.user.id == project.created_by %}
-                                                <span class="badge bg-primary" style="font-size: 9px;">Создатель</span>
+                                                <span class="badge bg-primary" style="font-size: 9px;">{{ _('Создатель') }}</span>
                                                 {% endif %}
                                             </div>
                                             {% if m.user.company %}
@@ -326,19 +326,19 @@
                                               action="{{ url_for('team.change_member_role', project_id=project.id, member_id=m.id) }}">
                                             <select name="role" class="form-select form-select-sm"
                                                     onchange="this.form.submit()">
-                                                <optgroup label="АМ Станко">
-                                                    <option value="am_stanko_admin" {% if m.role_in_project == 'am_stanko_admin' %}selected{% endif %}>АМ Станко · Руководитель</option>
-                                                    <option value="am_stanko_manager" {% if m.role_in_project == 'am_stanko_manager' %}selected{% endif %}>АМ Станко · Менеджер</option>
-                                                    <option value="am_stanko_engineer" {% if m.role_in_project == 'am_stanko_engineer' %}selected{% endif %}>АМ Станко · Гл. инженер</option>
-                                                    <option value="am_stanko_logistic" {% if m.role_in_project == 'am_stanko_logistic' %}selected{% endif %}>АМ Станко · Логистик</option>
-                                                    <option value="am_stanko_member" {% if m.role_in_project == 'am_stanko_member' %}selected{% endif %}>АМ Станко · Участник</option>
+                                                <optgroup label="{{ _('АМ Станко') }}">
+                                                    <option value="am_stanko_admin" {% if m.role_in_project == 'am_stanko_admin' %}selected{% endif %}>{{ _('АМ Станко · Руководитель') }}</option>
+                                                    <option value="am_stanko_manager" {% if m.role_in_project == 'am_stanko_manager' %}selected{% endif %}>{{ _('АМ Станко · Менеджер') }}</option>
+                                                    <option value="am_stanko_engineer" {% if m.role_in_project == 'am_stanko_engineer' %}selected{% endif %}>{{ _('АМ Станко · Гл. инженер') }}</option>
+                                                    <option value="am_stanko_logistic" {% if m.role_in_project == 'am_stanko_logistic' %}selected{% endif %}>{{ _('АМ Станко · Логистик') }}</option>
+                                                    <option value="am_stanko_member" {% if m.role_in_project == 'am_stanko_member' %}selected{% endif %}>{{ _('АМ Станко · Участник') }}</option>
                                                 </optgroup>
-                                                <optgroup label="Перевести в команду проекта">
-                                                    <option value="admin" {% if m.role_in_project == 'admin' %}selected{% endif %}>Руководитель проекта</option>
-                                                    <option value="manager" {% if m.role_in_project == 'manager' %}selected{% endif %}>Менеджер</option>
-                                                    <option value="chief_engineer" {% if m.role_in_project == 'chief_engineer' %}selected{% endif %}>Главный инженер</option>
-                                                    <option value="logistic" {% if m.role_in_project == 'logistic' %}selected{% endif %}>Логистик</option>
-                                                    <option value="member" {% if m.role_in_project == 'member' %}selected{% endif %}>Участник</option>
+                                                <optgroup label="{{ _('Перевести в команду проекта') }}">
+                                                    <option value="admin" {% if m.role_in_project == 'admin' %}selected{% endif %}>{{ _('Руководитель проекта') }}</option>
+                                                    <option value="manager" {% if m.role_in_project == 'manager' %}selected{% endif %}>{{ _('Менеджер') }}</option>
+                                                    <option value="chief_engineer" {% if m.role_in_project == 'chief_engineer' %}selected{% endif %}>{{ _('Главный инженер') }}</option>
+                                                    <option value="logistic" {% if m.role_in_project == 'logistic' %}selected{% endif %}>{{ _('Логистик') }}</option>
+                                                    <option value="member" {% if m.role_in_project == 'member' %}selected{% endif %}>{{ _('Участник') }}</option>
                                                 </optgroup>
                                             </select>
                                         </form>
@@ -348,11 +348,11 @@
                                     {% if m.user.id != project.created_by %}
                                     <form method="POST"
                                           action="{{ url_for('team.remove_member', project_id=project.id, member_id=m.id) }}"
-                                          onsubmit="return confirm('Удалить {{ m.user.first_name }} {{ m.user.last_name }} из проекта?');"
+                                          onsubmit="return confirm('{{ _('Удалить') }} {{ m.user.first_name }} {{ m.user.last_name }} {{ _('из проекта?') }}');"
                                           class="d-inline">
                                         <button type="submit" class="btn btn-sm btn-outline-secondary"
                                                 style="width: 32px; height: 32px; padding: 0;"
-                                                title="Удалить из проекта">
+                                                title="{{ _('Удалить из проекта') }}">
                                             <i class="bi bi-trash-fill text-danger"></i>
                                         </button>
                                     </form>
@@ -377,10 +377,10 @@
             <div class="card-header py-2 d-flex justify-content-between align-items-center">
                 <span style="color: #0e7490;">
                     <i class="bi bi-person-badge"></i>
-                    Гости проекта ({{ guests|length }})
+                    {{ _('Гости проекта') }} ({{ guests|length }})
                 </span>
                 <small class="text-muted">
-                    Контакты субподрядчиков и заказчиков
+                    {{ _('Контакты субподрядчиков и заказчиков') }}
                 </small>
             </div>
             <div class="card-body p-0">
@@ -388,10 +388,10 @@
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Имя</th>
+                                <th>{{ _('Имя') }}</th>
                                 <th style="width: 220px;">Email</th>
-                                <th style="width: 200px;">Компания</th>
-                                <th style="width: 100px;" class="text-end">Действия</th>
+                                <th style="width: 200px;">{{ _('Компания') }}</th>
+                                <th style="width: 100px;" class="text-end">{{ _('Действия') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -406,7 +406,7 @@
                                         <div>
                                             <div class="fw-bold">
                                                 {{ m.user.first_name }} {{ m.user.last_name }}
-                                                <span class="badge bg-guest" style="font-size: 9px;">Гость</span>
+                                                <span class="badge bg-guest" style="font-size: 9px;">{{ _('Гость') }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -424,11 +424,11 @@
                                 <td class="text-end">
                                     <form method="POST"
                                           action="{{ url_for('team.remove_member', project_id=project.id, member_id=m.id) }}"
-                                          onsubmit="return confirm('Удалить {{ m.user.first_name }} {{ m.user.last_name }} из проекта?');"
+                                          onsubmit="return confirm('{{ _('Удалить') }} {{ m.user.first_name }} {{ m.user.last_name }} {{ _('из проекта?') }}');"
                                           class="d-inline">
                                         <button type="submit" class="btn btn-sm btn-outline-secondary"
                                                 style="width: 32px; height: 32px; padding: 0;"
-                                                title="Удалить из проекта">
+                                                title="{{ _('Удалить из проекта') }}">
                                             <i class="bi bi-trash-fill text-danger"></i>
                                         </button>
                                     </form>
@@ -447,14 +447,14 @@
         <!-- ============================================================ -->
         <div class="alert alert-info mt-3 small">
             <i class="bi bi-info-circle"></i>
-            <strong>Как это работает:</strong>
+            <strong>{{ _('Как это работает:') }}</strong>
             <ul class="mb-0 mt-1 ps-3">
-                <li>Если у человека <strong>уже есть аккаунт</strong> — он добавляется в проект сразу.</li>
-                <li>Если аккаунта нет — создаётся <strong>ссылка-приглашение</strong>. Скопируйте её и передайте любым способом.</li>
-                <li><strong>Команда проекта</strong> — сотрудники вашей компании. Роли: руководитель, менеджер, главный инженер, логистик, участник.</li>
-                <li><strong>Группа компаний АМ Станко</strong> — сотрудники одноимённого поставщика. Добавляются автоматически из контактов.</li>
-                <li>Руководитель и менеджер (в том числе АМ Станко) могут управлять проектом, создавать задачи и вехи.</li>
-                <li><strong>Гости проекта</strong> — контакты субподрядчиков и заказчиков, назначенные на конкретные задачи. Видят только свои задачи.</li>
+                <li>{{ _('Если у человека уже есть аккаунт — он добавляется в проект сразу.') }}</li>
+                <li>{{ _('Если аккаунта нет — создаётся ссылка-приглашение. Скопируйте её и передайте любым способом.') }}</li>
+                <li><strong>{{ _('Команда проекта') }}</strong> — {{ _('сотрудники вашей компании. Роли: руководитель, менеджер, главный инженер, логистик, участник.') }}</li>
+                <li><strong>{{ _('Группа компаний АМ Станко') }}</strong> — {{ _('сотрудники одноимённого поставщика. Добавляются автоматически из контактов.') }}</li>
+                <li>{{ _('Руководитель и менеджер (в том числе АМ Станко) могут управлять проектом, создавать задачи и вехи.') }}</li>
+                <li><strong>{{ _('Гости проекта') }}</strong> — {{ _('контакты субподрядчиков и заказчиков, назначенные на конкретные задачи. Видят только свои задачи.') }}</li>
             </ul>
         </div>
 
@@ -517,7 +517,7 @@ function copyToClipboard(text, btn) {
             btn.classList.add('btn-outline-primary');
         }, 1500);
     }).catch(err => {
-        alert('Не удалось скопировать. Выделите текст вручную.');
+        alert('{{ _("Не удалось скопировать. Выделите текст вручную.") }}');
     });
 }
 
@@ -529,7 +529,6 @@ function copyToClipboard(text, btn) {
     const resultsBox = document.getElementById('inviteUserResults');
     if (!input || !resultsBox) return;
 
-    // ← Уже добавленные в проект — их не показываем
     const existingEmails = new Set([
         {% for m in members %}'{{ m.user.email|lower }}',{% endfor %}
         {% for m in am_stanko_members %}'{{ m.user.email|lower }}',{% endfor %}
@@ -540,14 +539,12 @@ function copyToClipboard(text, btn) {
     let activeIndex = -1;
     let currentResults = [];
 
-    // ← Показ списка при фокусе (без ввода)
     input.addEventListener('focus', function() {
         if (!this.value.trim()) {
-            doSearch('');  // пустой запрос → первые 20
+            doSearch('');
         }
     });
 
-    // ← Поиск при вводе
     input.addEventListener('input', function() {
         const q = this.value.trim();
         clearTimeout(timer);
@@ -581,12 +578,10 @@ function copyToClipboard(text, btn) {
     });
 
     function doSearch(q) {
-        // Если запрос короткий — всё равно шлём, потому что нужно показать "первые 20"
         const url = '/admin/api/users/search?limit=20' + (q ? '&q=' + encodeURIComponent(q) : '');
         fetch(url)
             .then(r => r.json())
             .then(data => {
-                // ← Отфильтровываем тех, кто уже в проекте
                 const filtered = data.filter(u => !existingEmails.has(u.email.toLowerCase()));
                 currentResults = filtered;
                 activeIndex = -1;
@@ -602,8 +597,8 @@ function copyToClipboard(text, btn) {
         if (!results.length) {
             resultsBox.innerHTML = `
                 <div class="list-group-item text-muted small py-3 text-center">
-                    <i class="bi bi-search"></i> ${query ? 'Ничего не найдено' : 'Нет доступных пользователей'}.
-                    <br>${query ? 'Можно ввести email вручную и пригласить по ссылке.' : ''}
+                    <i class="bi bi-search"></i> ${query ? '{{ _("Ничего не найдено") }}' : '{{ _("Нет доступных пользователей") }}'}.
+                    <br>${query ? '{{ _("Можно ввести email вручную и пригласить по ссылке.") }}' : ''}
                 </div>`;
             resultsBox.style.display = 'block';
             return;
@@ -612,7 +607,7 @@ function copyToClipboard(text, btn) {
         let html = '';
         if (!query) {
             html += `<div class="list-group-item bg-light small text-muted py-1 px-3" style="cursor: default;">
-                <i class="bi bi-people"></i> Первые ${results.length} зарегистрированных (без участников проекта)
+                <i class="bi bi-people"></i> {{ _('Первые') }} ${results.length} {{ _('зарегистрированных (без участников проекта)') }}
             </div>`;
         }
 

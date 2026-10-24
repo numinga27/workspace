@@ -1,0 +1,3402 @@
+# Translations template for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-10-24 14:35+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: templates/base.html:42
+msgid "Меню"
+msgstr ""
+
+#: templates/base.html:55
+msgid "Поиск..."
+msgstr ""
+
+#: templates/base.html:57
+msgid "Глобальный поиск"
+msgstr ""
+
+#: templates/base.html:70
+msgid "Язык"
+msgstr ""
+
+#: templates/base.html:79
+msgid "Русский"
+msgstr ""
+
+#: templates/base.html:85
+msgid "English"
+msgstr ""
+
+#: templates/base.html:100
+msgid "Скачать приложение для Android"
+msgstr ""
+
+#: templates/base.html:107
+msgid "Установить на iPhone"
+msgstr ""
+
+#: templates/base.html:113
+msgid "Профиль и смена пароля"
+msgstr ""
+
+#: templates/base.html:122 templates/my_mentions.html:100
+#: templates/task_detail.html:84 templates/task_detail.html:539
+msgid "Администратор"
+msgstr ""
+
+#: templates/base.html:123 templates/my_mentions.html:102
+#: templates/task_detail.html:86 templates/task_detail.html:541
+msgid "Супервизор"
+msgstr ""
+
+#: templates/base.html:128
+msgid "Выйти"
+msgstr ""
+
+#: templates/base.html:138
+msgid "Основное"
+msgstr ""
+
+#: templates/base.html:141 templates/base.html:334
+msgid "Дашборд"
+msgstr ""
+
+#: templates/base.html:145 templates/dashboard.html:10
+#: templates/my_tasks.html:5
+msgid "Мои задачи"
+msgstr ""
+
+#: templates/base.html:156 templates/my_mentions.html:7
+msgid "Мои упоминания"
+msgstr ""
+
+#: templates/base.html:164 templates/my_calendar.html:5
+msgid "Мой календарь"
+msgstr ""
+
+#: templates/base.html:170 templates/base.html:678
+msgid "Уведомления включены!"
+msgstr ""
+
+#: templates/base.html:173 templates/base.html:646
+msgid "Включить уведомления"
+msgstr ""
+
+#: templates/base.html:181
+msgid "Обращения"
+msgstr ""
+
+#: templates/base.html:190
+msgid "Поддержка"
+msgstr ""
+
+#: templates/base.html:196 templates/project.html:1610
+#: templates/project.html:1656
+msgid "Управление"
+msgstr ""
+
+#: templates/base.html:202
+msgid "Пользователи"
+msgstr ""
+
+#: templates/base.html:210
+msgid "Журнал действий"
+msgstr ""
+
+#: templates/base.html:217
+msgid "Филиалы"
+msgstr ""
+
+#: templates/base.html:222 templates/customers.html:4
+#: templates/dashboard.html:16
+msgid "Заказчики"
+msgstr ""
+
+#: templates/base.html:228 templates/create_project.html:109
+#: templates/edit_project.html:116 templates/edit_project.html:243
+msgid "Субподрядчики"
+msgstr ""
+
+#: templates/base.html:233 templates/create_project.html:167
+#: templates/dashboard.html:19
+msgid "Создать проект"
+msgstr ""
+
+#: templates/base.html:239
+msgid "Проекты"
+msgstr ""
+
+#: templates/base.html:247
+msgid "Поиск проектов..."
+msgstr ""
+
+#: templates/base.html:298 templates/project.html:102
+msgid "Без заказчика"
+msgstr ""
+
+#: templates/base.html:338 templates/my_calendar.html:603
+#: templates/project.html:440 templates/project.html:1710
+#: templates/project.html:2190
+msgid "Задачи"
+msgstr ""
+
+#: templates/base.html:343 templates/project.html:465
+msgid "Чат"
+msgstr ""
+
+#: templates/base.html:351
+msgid "Нет проектов"
+msgstr ""
+
+#: templates/base.html:381
+msgid "Установка на iPhone"
+msgstr ""
+
+#: templates/base.html:386
+msgid ""
+"Приложение Workspace устанавливается как PWA — без App Store. Занимает 30"
+" секунд."
+msgstr ""
+
+#: templates/base.html:391
+msgid "Откройте сайт в Safari"
+msgstr ""
+
+#: templates/base.html:392
+msgid "Именно в Safari! Chrome и Яндекс.Браузер не подходят."
+msgstr ""
+
+#: templates/base.html:398
+msgid "Нажмите «Поделиться»"
+msgstr ""
+
+#: templates/base.html:399
+msgid "Квадрат со стрелкой вверх внизу экрана."
+msgstr ""
+
+#: templates/base.html:405
+msgid "Выберите «На экран \"Домой\"»"
+msgstr ""
+
+#: templates/base.html:406
+msgid "В самом низу списка."
+msgstr ""
+
+#: templates/base.html:412
+msgid "Нажмите «Добавить»"
+msgstr ""
+
+#: templates/base.html:413
+msgid "Иконка появится на домашнем экране."
+msgstr ""
+
+#: templates/base.html:418
+msgid ""
+"После установки откройте приложение с домашнего экрана и разрешите "
+"уведомления."
+msgstr ""
+
+#: templates/base.html:422 templates/base.html:790
+msgid "Понятно"
+msgstr ""
+
+#: templates/base.html:426
+msgid "Открыть сайт"
+msgstr ""
+
+#: templates/base.html:441
+msgid "Как обновить приложение"
+msgstr ""
+
+#: templates/base.html:448
+msgid "Android (PWA)"
+msgstr ""
+
+#: templates/base.html:450
+msgid "Нажмите кнопку «Скачать APK» в баннере."
+msgstr ""
+
+#: templates/base.html:451
+msgid "Откройте скачанный файл"
+msgstr ""
+
+#: templates/base.html:452
+msgid "Разрешите установку из неизвестных источников (если попросит)."
+msgstr ""
+
+#: templates/base.html:453
+msgid "Нажмите «Установить»."
+msgstr ""
+
+#: templates/base.html:454
+msgid "Готово! Откройте приложение — оно уже обновлено."
+msgstr ""
+
+#: templates/base.html:458
+msgid "Все ваши данные (проекты, задачи, чаты) сохранятся."
+msgstr ""
+
+#: templates/base.html:464
+msgid "iPhone / iPad (PWA)"
+msgstr ""
+
+#: templates/base.html:466
+msgid "Нажмите кнопку «Обновить» в баннере."
+msgstr ""
+
+#: templates/base.html:467
+msgid "Приложение перезагрузится с новой версией."
+msgstr ""
+
+#: templates/base.html:468
+msgid "Готово! Все данные сохранятся."
+msgstr ""
+
+#: templates/base.html:472
+msgid ""
+"Если кнопка «Обновить» не сработала — удалите иконку Workspace с "
+"домашнего экрана, откройте сайт в Safari и снова добавьте на экран "
+"«Домой»."
+msgstr ""
+
+#: templates/base.html:478
+msgid "Компьютер (браузер)"
+msgstr ""
+
+#: templates/base.html:480
+msgid "Нажмите «Обновить» в модалке (или закройте её)."
+msgstr ""
+
+#: templates/base.html:481
+msgid "Обновите страницу:"
+msgstr ""
+
+#: templates/base.html:481
+msgid "или"
+msgstr ""
+
+#: templates/base.html:482
+msgid "Готово! Вы увидите новую версию."
+msgstr ""
+
+#: templates/base.html:486
+msgid "Обычно обновление подхватывается автоматически при следующем заходе."
+msgstr ""
+
+#: templates/base.html:492
+msgid "Что нового в версии"
+msgstr ""
+
+#: templates/base.html:493
+msgid "Добавлена техподдержка, улучшен интерфейс"
+msgstr ""
+
+#: templates/base.html:497 templates/companies/form.html:105
+#: templates/create_project.html:164 templates/create_supplier.html:80
+#: templates/customer_detail.html:285 templates/edit_customer.html:78
+#: templates/edit_project.html:192 templates/my_calendar.html:283
+#: templates/project.html:1725 templates/project.html:1850
+#: templates/project.html:1908 templates/task_detail.html:657
+msgid "Отмена"
+msgstr ""
+
+#: templates/base.html:499 templates/base.html:774
+#: templates/task_detail.html:175
+msgid "Обновить"
+msgstr ""
+
+#: templates/base.html:544
+msgid "Ваш браузер не поддерживает push-уведомления."
+msgstr ""
+
+#: templates/base.html:555
+msgid "Уведомления не разрешены."
+msgstr ""
+
+#: templates/base.html:555
+msgid "Настройки → Уведомления → Workspace → Разрешить"
+msgstr ""
+
+#: templates/base.html:562
+msgid "Ошибка: сервер не отдаёт VAPID-ключ"
+msgstr ""
+
+#: templates/base.html:586
+msgid "Не удалось:"
+msgstr ""
+
+#: templates/base.html:649
+msgid "Получайте оповещения о задачах и сообщениях"
+msgstr ""
+
+#: templates/base.html:658
+msgid "Включить"
+msgstr ""
+
+#: templates/base.html:752
+msgid "Скачать APK"
+msgstr ""
+
+#: templates/base.html:803
+msgid "Как?"
+msgstr ""
+
+#: templates/base.html:810
+msgid "Доступна новая версия"
+msgstr ""
+
+#: templates/base.html:813 templates/base.html:837
+msgid "Обновление готово к установке"
+msgstr ""
+
+#: templates/create_project.html:7 templates/my_mentions.html:139
+msgid "К дашборду"
+msgstr ""
+
+#: templates/create_project.html:13
+msgid "Новый проект"
+msgstr ""
+
+#: templates/create_project.html:20
+msgid "Название проекта"
+msgstr ""
+
+#: templates/create_project.html:22
+msgid "Например: Строительство склада"
+msgstr ""
+
+#: templates/create_project.html:27 templates/edit_project.html:30
+#: templates/my_calendar.html:239 templates/pdf/task_report.html:188
+#: templates/project.html:607 templates/project.html:684
+#: templates/project.html:1776 templates/task_detail.html:583
+msgid "Описание"
+msgstr ""
+
+#: templates/create_project.html:29
+msgid "Краткое описание проекта..."
+msgstr ""
+
+#: templates/create_project.html:35 templates/edit_project.html:38
+#: templates/project.html:37 templates/project.html:43
+msgid "Филиал компании"
+msgstr ""
+
+#: templates/create_project.html:39 templates/dashboard.html:131
+#: templates/edit_project.html:42
+msgid "— Без филиала —"
+msgstr ""
+
+#: templates/create_project.html:42 templates/create_project.html:71
+#: templates/create_project.html:92 templates/create_project.html:116
+#: templates/customer_detail.html:14 templates/customer_detail.html:267
+#: templates/edit_project.html:46 templates/edit_project.html:76
+#: templates/edit_project.html:98 templates/edit_project.html:124
+#: templates/pdf/project_report.html:313 templates/project.html:97
+#: templates/project.html:109 templates/project.html:118
+msgid "ИНН:"
+msgstr ""
+
+#: templates/create_project.html:48 templates/edit_project.html:52
+msgid "Добавить новый филиал"
+msgstr ""
+
+#: templates/create_project.html:54 templates/edit_project.html:58
+msgid ""
+"Какой филиал ведёт проект. Влияет на фильтр дашборда и группировку в "
+"сайдбаре."
+msgstr ""
+
+#: templates/create_project.html:57 templates/edit_project.html:61
+msgid "Список пуст — сначала добавьте филиал."
+msgstr ""
+
+#: templates/create_project.html:65 templates/dashboard.html:156
+#: templates/edit_project.html:69 templates/edit_project.html:223
+msgid "Заказчик"
+msgstr ""
+
+#: templates/create_project.html:68 templates/edit_project.html:72
+msgid "— Без заказчика —"
+msgstr ""
+
+#: templates/create_project.html:77 templates/edit_project.html:82
+msgid "Добавить нового заказчика"
+msgstr ""
+
+#: templates/create_project.html:86 templates/edit_project.html:91
+#: templates/edit_project.html:233
+msgid "Поставщик"
+msgstr ""
+
+#: templates/create_project.html:89 templates/edit_project.html:94
+msgid "— Без поставщика —"
+msgstr ""
+
+#: templates/create_project.html:98
+msgid "Добавить нового поставщика"
+msgstr ""
+
+#: templates/create_project.html:103 templates/edit_project.html:109
+msgid "Основной поставщик"
+msgstr ""
+
+#: templates/create_project.html:110 templates/edit_project.html:117
+msgid "можно несколько"
+msgstr ""
+
+#: templates/create_project.html:122 templates/edit_project.html:130
+msgid "Добавить нового субподрядчика"
+msgstr ""
+
+#: templates/create_project.html:128 templates/edit_project.html:136
+msgid "Ctrl+клик (⌘ на Mac) — выбрать несколько."
+msgstr ""
+
+#: templates/create_project.html:136 templates/edit_project.html:164
+msgid "Дата старта"
+msgstr ""
+
+#: templates/create_project.html:138
+msgid "По умолчанию — сегодня"
+msgstr ""
+
+#: templates/create_project.html:141
+msgid "Плановая дата окончания"
+msgstr ""
+
+#: templates/create_project.html:143
+msgid "Можно изменить позже"
+msgstr ""
+
+#: templates/create_project.html:150
+msgid "После создания"
+msgstr ""
+
+#: templates/create_project.html:150
+msgid "вы автоматически становитесь"
+msgstr ""
+
+#: templates/create_project.html:151
+msgid "руководителем проекта"
+msgstr ""
+
+#: templates/create_project.html:151
+msgid "и сможете:"
+msgstr ""
+
+#: templates/create_project.html:153
+msgid "Приглашать участников и назначать им роли"
+msgstr ""
+
+#: templates/create_project.html:154
+msgid "Создавать задачи, вехи и To-Do"
+msgstr ""
+
+#: templates/create_project.html:155
+msgid "Назначать задачи на контактных лиц заказчика / поставщика / субподрядчиков"
+msgstr ""
+
+#: templates/create_project.html:156
+msgid "Загружать файлы и писать отчёты"
+msgstr ""
+
+#: templates/create_project.html:157
+msgid "Удалять проект (с подтверждением)"
+msgstr ""
+
+#: templates/create_project.html:178
+msgid "Совет по субподрядчикам:"
+msgstr ""
+
+#: templates/create_project.html:179
+msgid ""
+"если проект ведут несколько субподрядных организаций (например, ООО "
+"«ЭлектроМонтаж» и ООО «СантехМонтаж»), выберите обоих в списке. В "
+"сайдбаре проект появится под каждым из них, а в фильтре дашборда можно "
+"будет найти по любому."
+msgstr ""
+
+#: templates/create_supplier.html:7
+msgid "К списку"
+msgstr ""
+
+#: templates/create_supplier.html:23 templates/edit_customer.html:18
+msgid "Наименование организации"
+msgstr ""
+
+#: templates/create_supplier.html:26
+msgid "ООО «Субподрядчик»"
+msgstr ""
+
+#: templates/create_supplier.html:26
+msgid "ООО «Компания группы»"
+msgstr ""
+
+#: templates/companies/form.html:42 templates/companies/list.html:97
+#: templates/create_supplier.html:32 templates/customer_detail.html:188
+#: templates/customers.html:17 templates/edit_customer.html:26
+#: templates/suppliers.html:21
+msgid "ИНН"
+msgstr ""
+
+#: templates/create_supplier.html:34 templates/edit_customer.html:29
+msgid "10 или 12 цифр"
+msgstr ""
+
+#: templates/companies/form.html:46 templates/create_supplier.html:36
+#: templates/edit_customer.html:31
+msgid "ИНН должен содержать 10 или 12 цифр"
+msgstr ""
+
+#: templates/create_supplier.html:37 templates/edit_customer.html:32
+msgid "10 цифр — юрлицо, 12 — ИП"
+msgstr ""
+
+#: templates/create_supplier.html:40 templates/customer_detail.html:194
+msgid "Контактное лицо (основное)"
+msgstr ""
+
+#: templates/create_supplier.html:42 templates/customer_detail.html:62
+#: templates/edit_customer.html:38
+msgid "Иванов Иван Иванович"
+msgstr ""
+
+#: templates/companies/form.html:49 templates/create_supplier.html:48
+#: templates/customer_detail.html:70 templates/customer_detail.html:200
+#: templates/customers.html:19 templates/edit_customer.html:44
+msgid "Телефон"
+msgstr ""
+
+#: templates/companies/form.html:65 templates/create_supplier.html:60
+#: templates/customer_detail.html:218 templates/edit_customer.html:58
+msgid "Адрес"
+msgstr ""
+
+#: templates/companies/form.html:68 templates/create_supplier.html:62
+#: templates/edit_customer.html:61
+msgid "г. Москва, ул. Примерная, д. 1"
+msgstr ""
+
+#: templates/create_supplier.html:69
+msgid "Кто видит субподрядчика:"
+msgstr ""
+
+#: templates/create_supplier.html:69
+msgid "Кто видит поставщика:"
+msgstr ""
+
+#: templates/create_supplier.html:72 templates/edit_customer.html:69
+msgid "Вы и все участники ваших проектов"
+msgstr ""
+
+#: templates/create_supplier.html:73
+msgid "Если он ещё не привязан ни к одному проекту — его видят все пользователи"
+msgstr ""
+
+#: templates/create_supplier.html:74
+msgid "Глобальный администратор видит всех"
+msgstr ""
+
+#: templates/companies/form.html:109 templates/create_supplier.html:83
+#: templates/edit_project.html:195 templates/project.html:1909
+#: templates/task_detail.html:200 templates/task_detail.html:659
+msgid "Сохранить"
+msgstr ""
+
+#: templates/customer_detail.html:7 templates/edit_customer.html:7
+msgid "К списку заказчиков"
+msgstr ""
+
+#: templates/customer_detail.html:16
+msgid "ИНН не указан"
+msgstr ""
+
+#: templates/companies/list.html:155 templates/customer_detail.html:22
+#: templates/project.html:57 templates/project.html:1132
+#: templates/suppliers.html:56 templates/task_detail.html:56
+msgid "Редактировать"
+msgstr ""
+
+#: templates/companies/list.html:177 templates/customer_detail.html:26
+#: templates/project.html:65 templates/project.html:391
+#: templates/project.html:950 templates/project_settings.html:243
+#: templates/project_settings.html:351 templates/project_settings.html:427
+msgid "Удалить"
+msgstr ""
+
+#: templates/customer_detail.html:40
+msgid "Контактные лица"
+msgstr ""
+
+#: templates/customer_detail.html:44 templates/project.html:425
+#: templates/project.html:1087 templates/suppliers.html:86
+#: templates/task_detail.html:224
+msgid "Добавить"
+msgstr ""
+
+#: templates/customer_detail.html:53
+msgid "Новое контактное лицо"
+msgstr ""
+
+#: templates/customer_detail.html:60
+msgid "ФИО"
+msgstr ""
+
+#: templates/customer_detail.html:65
+msgid "Должность"
+msgstr ""
+
+#: templates/customer_detail.html:67
+msgid "Директор по закупкам"
+msgstr ""
+
+#: templates/customer_detail.html:83
+msgid "Добавить контакт"
+msgstr ""
+
+#: templates/customer_detail.html:113
+msgid "контакты не указаны"
+msgstr ""
+
+#: templates/customer_detail.html:119
+msgid "Гость в системе"
+msgstr ""
+
+#: templates/customer_detail.html:125
+msgid "Удалить контактное лицо"
+msgstr ""
+
+#: templates/customer_detail.html:128
+msgid "Удалить контакт"
+msgstr ""
+
+#: templates/customer_detail.html:139
+msgid "Контактных лиц пока нет."
+msgstr ""
+
+#: templates/customer_detail.html:140
+msgid "Нажмите «Добавить», чтобы создать первое контактное лицо."
+msgstr ""
+
+#: templates/customer_detail.html:150
+msgid "Проекты заказчика"
+msgstr ""
+
+#: templates/customer_detail.html:167
+msgid "Заказчик ещё не привязан ни к одному проекту."
+msgstr ""
+
+#: templates/customer_detail.html:168
+msgid "Укажите заказчика при создании или редактировании проекта."
+msgstr ""
+
+#: templates/customer_detail.html:179
+msgid "Реквизиты"
+msgstr ""
+
+#: templates/customer_detail.html:183 templates/customers.html:16
+#: templates/suppliers.html:20
+msgid "Наименование"
+msgstr ""
+
+#: templates/customer_detail.html:225
+msgid "Добавлен:"
+msgstr ""
+
+#: templates/customer_detail.html:235
+msgid "Как это работает"
+msgstr ""
+
+#: templates/customer_detail.html:238
+msgid "Добавьте контактных лиц заказчика"
+msgstr ""
+
+#: templates/customer_detail.html:239
+msgid "Привяжите заказчика к проекту"
+msgstr ""
+
+#: templates/customer_detail.html:240
+msgid ""
+"В проекте при создании задачи выберите контактное лицо из выпадающего "
+"списка"
+msgstr ""
+
+#: templates/customer_detail.html:241
+msgid "Контакт автоматически станет гостем в проекте — увидит только свою задачу"
+msgstr ""
+
+#: templates/customer_detail.html:256
+msgid "Удаление заказчика"
+msgstr ""
+
+#: templates/customer_detail.html:263 templates/project.html:1706
+msgid "Внимание! Это действие нельзя отменить."
+msgstr ""
+
+#: templates/customer_detail.html:266
+msgid "Будет удалён заказчик"
+msgstr ""
+
+#: templates/customer_detail.html:270
+msgid "Вместе с ним удалятся все контактные лица"
+msgstr ""
+
+#: templates/customer_detail.html:270
+msgid "шт."
+msgstr ""
+
+#: templates/customer_detail.html:278
+msgid "Удаление заблокировано."
+msgstr ""
+
+#: templates/customer_detail.html:279
+msgid "Заказчик привязан к"
+msgstr ""
+
+#: templates/customer_detail.html:279
+msgid "проект(ам)."
+msgstr ""
+
+#: templates/customer_detail.html:280
+msgid "Сначала отвяжите его в разделе «Редактировать проект»."
+msgstr ""
+
+#: templates/customer_detail.html:288
+msgid "Удалить заказчика"
+msgstr ""
+
+#: templates/customer_detail.html:292
+msgid "Сначала отвяжите заказчика от всех проектов"
+msgstr ""
+
+#: templates/customer_detail.html:293
+msgid "Удалить (заблокировано)"
+msgstr ""
+
+#: templates/customers.html:6
+msgid "Добавить заказчика"
+msgstr ""
+
+#: templates/customers.html:18
+msgid "Контакт"
+msgstr ""
+
+#: templates/companies/list.html:99 templates/customers.html:21
+#: templates/suppliers.html:23
+msgid "Проектов"
+msgstr ""
+
+#: templates/customers.html:44
+msgid "Заказчиков пока нет"
+msgstr ""
+
+#: templates/dashboard.html:5
+msgid "Привет,"
+msgstr ""
+
+#: templates/dashboard.html:6
+msgid "Ваши проекты"
+msgstr ""
+
+#: templates/dashboard.html:24
+msgid "Запустить рассылку уведомлений о дедлайнах?"
+msgstr ""
+
+#: templates/dashboard.html:25
+msgid "Отправить email всем, у кого приближается дедлайн"
+msgstr ""
+
+#: templates/dashboard.html:26
+msgid "Разослать"
+msgstr ""
+
+#: templates/dashboard.html:41
+msgid "Требует внимания"
+msgstr ""
+
+#: templates/dashboard.html:44
+msgid "Все задачи"
+msgstr ""
+
+#: templates/dashboard.html:62 templates/dashboard.html:254
+#: templates/employee_report.html:273 templates/my_tasks.html:73
+#: templates/my_tasks.html:196 templates/my_tasks.html:200
+#: templates/my_tasks.html:322 templates/pdf/project_report.html:355
+#: templates/pdf/project_report.html:435 templates/pdf/project_report.html:520
+#: templates/pdf/project_report.html:555 templates/pdf/project_report.html:638
+#: templates/pdf/task_report.html:170 templates/pdf/task_report.html:244
+#: templates/project.html:30 templates/project.html:155
+#: templates/project.html:177 templates/project.html:229
+#: templates/project.html:310 templates/project.html:350
+#: templates/project.html:352 templates/project.html:894
+#: templates/project.html:898 templates/project.html:1117
+#: templates/project.html:1230 templates/task_detail.html:48
+#: templates/task_detail.html:128 templates/task_detail.html:191
+#: templates/task_detail.html:309 templates/task_detail.html:486
+msgid "дн."
+msgstr ""
+
+#: templates/dashboard.html:67 templates/my_tasks.html:78
+#: templates/project.html:182
+msgid "…и ещё"
+msgstr ""
+
+#: templates/companies/form.html:127 templates/dashboard.html:79
+msgid "Проектов:"
+msgstr ""
+
+#: templates/dashboard.html:82 templates/my_calendar.html:54
+#: templates/my_calendar.html:421 templates/my_calendar.html:428
+#: templates/project.html:1326 templates/project.html:2039
+msgid "Показано:"
+msgstr ""
+
+#: templates/dashboard.html:86
+msgid "Филиалов:"
+msgstr ""
+
+#: templates/dashboard.html:91
+msgid "Субподрядчиков:"
+msgstr ""
+
+#: templates/dashboard.html:96
+msgid "Моих активных задач:"
+msgstr ""
+
+#: templates/dashboard.html:101 templates/project.html:87
+msgid "Просрочено:"
+msgstr ""
+
+#: templates/dashboard.html:106
+msgid "Новых задач:"
+msgstr ""
+
+#: templates/dashboard.html:121 templates/edit_project.html:208
+msgid "Филиал"
+msgstr ""
+
+#: templates/dashboard.html:124
+msgid "Все филиалы"
+msgstr ""
+
+#: templates/dashboard.html:139
+msgid "Субподрядчик"
+msgstr ""
+
+#: templates/dashboard.html:142
+msgid "Все субподрядчики"
+msgstr ""
+
+#: templates/dashboard.html:149
+msgid "— Без субподрядчика —"
+msgstr ""
+
+#: templates/dashboard.html:158
+msgid "Все заказчики"
+msgstr ""
+
+#: templates/dashboard.html:169
+msgid "Старт с"
+msgstr ""
+
+#: templates/dashboard.html:176
+msgid "Старт по"
+msgstr ""
+
+#: templates/companies/list.html:60 templates/companies/list.html:100
+#: templates/dashboard.html:183 templates/employee_report.html:258
+#: templates/employee_report.html:299 templates/my_tasks.html:115
+#: templates/pdf/project_report.html:416 templates/pdf/project_report.html:580
+#: templates/pdf/project_report.html:615 templates/pdf/task_report.html:233
+#: templates/project.html:330 templates/project.html:495
+#: templates/project.html:814 templates/project.html:1011
+#: templates/task_detail.html:634
+msgid "Статус"
+msgstr ""
+
+#: templates/companies/list.html:62 templates/dashboard.html:185
+#: templates/project.html:484 templates/project.html:497
+#: templates/project.html:1000 templates/project.html:1013
+#: templates/support/admin_tickets.html:26
+msgid "Все"
+msgstr ""
+
+#: templates/companies/list.html:76 templates/dashboard.html:195
+#: templates/my_tasks.html:125 templates/project.html:514
+#: templates/project.html:1029
+msgid "Применить"
+msgstr ""
+
+#: templates/dashboard.html:205 templates/dashboard.html:317
+#: templates/project.html:978
+msgid "Сбросить фильтры"
+msgstr ""
+
+#: templates/dashboard.html:208
+msgid "Найдено:"
+msgstr ""
+
+#: templates/dashboard.html:208 templates/employee_report.html:11
+#: templates/employee_report.html:239 templates/my_tasks.html:136
+#: templates/my_tasks.html:282 templates/my_tasks.html:283
+#: templates/pdf/project_report.html:11 templates/project.html:1504
+msgid "из"
+msgstr ""
+
+#: templates/dashboard.html:254 templates/pdf/project_report.html:355
+msgid "Просрочен на"
+msgstr ""
+
+#: templates/dashboard.html:259
+msgid "Нет описания"
+msgstr ""
+
+#: templates/dashboard.html:280 templates/edit_project.html:153
+#: templates/pdf/project_report.html:332 templates/project.html:12
+msgid "Завершён"
+msgstr ""
+
+#: templates/dashboard.html:286 templates/edit_project.html:150
+#: templates/pdf/project_report.html:334 templates/project.html:14
+msgid "Приостановлен"
+msgstr ""
+
+#: templates/dashboard.html:292 templates/edit_project.html:156
+#: templates/pdf/project_report.html:336 templates/project.html:16
+msgid "Отменён"
+msgstr ""
+
+#: templates/companies/list.html:198 templates/dashboard.html:308
+#: templates/project.html:970
+msgid "По фильтрам ничего не найдено"
+msgstr ""
+
+#: templates/dashboard.html:310
+msgid "У вас пока нет проектов"
+msgstr ""
+
+#: templates/dashboard.html:315
+msgid "Попробуйте изменить условия фильтрации"
+msgstr ""
+
+#: templates/dashboard.html:320
+msgid "Создайте свой первый проект — вы станете его руководителем"
+msgstr ""
+
+#: templates/dashboard.html:322
+msgid "Создать первый проект"
+msgstr ""
+
+#: templates/edit_customer.html:13
+msgid "Редактировать заказчика"
+msgstr ""
+
+#: templates/edit_customer.html:21
+msgid "ООО «Ромашка»"
+msgstr ""
+
+#: templates/edit_customer.html:35
+msgid "Контактное лицо"
+msgstr ""
+
+#: templates/edit_customer.html:67
+msgid "Кто видит заказчика:"
+msgstr ""
+
+#: templates/edit_customer.html:70
+msgid ""
+"Если заказчик ещё не привязан ни к одному проекту — его видят все "
+"пользователи"
+msgstr ""
+
+#: templates/edit_customer.html:71
+msgid "Глобальный администратор видит всех заказчиков"
+msgstr ""
+
+#: templates/edit_customer.html:81
+msgid "Сохранить изменения"
+msgstr ""
+
+#: templates/edit_customer.html:92
+msgid "Привязанные проекты"
+msgstr ""
+
+#: templates/edit_project.html:7 templates/project_settings.html:6
+#: templates/project_settings.html:24 templates/task_detail.html:14
+msgid "К проекту"
+msgstr ""
+
+#: templates/edit_project.html:13
+msgid "Редактирование проекта"
+msgstr ""
+
+#: templates/companies/form.html:28 templates/companies/list.html:96
+#: templates/edit_project.html:23 templates/my_calendar.html:234
+#: templates/pdf/project_report.html:414 templates/project.html:328
+#: templates/project.html:1772 templates/project.html:1872
+#: templates/task_detail.html:577
+msgid "Название"
+msgstr ""
+
+#: templates/edit_project.html:104 templates/suppliers.html:10
+msgid "Добавить поставщика"
+msgstr ""
+
+#: templates/edit_project.html:137
+msgid "Выбрано:"
+msgstr ""
+
+#: templates/edit_project.html:144
+msgid "Статус проекта"
+msgstr ""
+
+#: templates/edit_project.html:147 templates/employee_report.html:205
+#: templates/employee_report.html:280 templates/my_calendar.html:665
+#: templates/my_tasks.html:119 templates/pdf/project_report.html:338
+#: templates/pdf/project_report.html:437 templates/pdf/project_report.html:461
+#: templates/pdf/project_report.html:589 templates/pdf/task_report.html:159
+#: templates/pdf/task_report.html:251 templates/project.html:18
+#: templates/project.html:499 templates/project.html:910
+#: templates/project.html:1300 templates/project.html:2250
+#: templates/task_detail.html:43 templates/task_detail.html:169
+#: templates/task_detail.html:637
+msgid "В работе"
+msgstr ""
+
+#: templates/edit_project.html:169
+msgid "Дата окончания (план)"
+msgstr ""
+
+#: templates/edit_project.html:174
+msgid "Создан"
+msgstr ""
+
+#: templates/edit_project.html:177
+msgid "Дата создания не меняется"
+msgstr ""
+
+#: templates/edit_project.html:184
+msgid ""
+"Изменения вступят в силу сразу. Список участников и роли редактируются "
+"отдельно на странице"
+msgstr ""
+
+#: templates/edit_project.html:185 templates/project.html:61
+#: templates/project.html:1558 templates/task_detail.html:594
+msgid "Команда"
+msgstr ""
+
+#: templates/edit_project.html:205
+msgid "Текущие привязки"
+msgstr ""
+
+#: templates/edit_project.html:219 templates/edit_project.html:229
+#: templates/edit_project.html:239 templates/task_detail.html:132
+msgid "не указан"
+msgstr ""
+
+#: templates/edit_project.html:253
+msgid "не указаны"
+msgstr ""
+
+#: templates/employee_report.html:5
+msgid "Отчёт по сотруднику"
+msgstr ""
+
+#: templates/employee_report.html:11 templates/pdf/project_report.html:11
+msgid "Стр."
+msgstr ""
+
+#: templates/employee_report.html:153
+msgid "Отчёт по сотруднику:"
+msgstr ""
+
+#: templates/employee_report.html:158
+msgid "Сотрудник:"
+msgstr ""
+
+#: templates/employee_report.html:166
+msgid "Компания:"
+msgstr ""
+
+#: templates/employee_report.html:170
+msgid "Роль в проекте:"
+msgstr ""
+
+#: templates/employee_report.html:174 templates/my_calendar.html:482
+#: templates/my_calendar.html:491 templates/pdf/task_report.html:146
+#: templates/task_detail.html:513
+msgid "Проект:"
+msgstr ""
+
+#: templates/employee_report.html:178 templates/pdf/project_report.html:311
+#: templates/project.html:97 templates/project.html:755
+#: templates/task_detail.html:252 templates/task_detail.html:604
+msgid "Заказчик:"
+msgstr ""
+
+#: templates/employee_report.html:182 templates/pdf/project_report.html:364
+#: templates/pdf/task_report.html:181
+msgid "Дата отчёта:"
+msgstr ""
+
+#: templates/employee_report.html:188
+msgid "Общая оценка активности"
+msgstr ""
+
+#: templates/employee_report.html:191
+msgid "Баллов активности"
+msgstr ""
+
+#: templates/employee_report.html:197
+msgid "Всего задач"
+msgstr ""
+
+#: templates/employee_report.html:201 templates/employee_report.html:308
+#: templates/my_calendar.html:697 templates/pdf/project_report.html:456
+#: templates/pdf/project_report.html:487 templates/pdf/task_report.html:202
+#: templates/project.html:1015 templates/project.html:2282
+msgid "Выполнено"
+msgstr ""
+
+#: templates/employee_report.html:209 templates/my_calendar.html:35
+#: templates/my_tasks.html:51 templates/pdf/project_report.html:466
+#: templates/pdf/project_report.html:492 templates/pdf/project_report.html:511
+#: templates/pdf/project_report.html:546 templates/pdf/task_report.html:207
+#: templates/project.html:1016 templates/project.html:1304
+msgid "Просрочено"
+msgstr ""
+
+#: templates/employee_report.html:213
+msgid "Процент выполнения задач"
+msgstr ""
+
+#: templates/employee_report.html:220
+msgid "Процент просроченных задач"
+msgstr ""
+
+#: templates/employee_report.html:227
+msgid "Детальная статистика"
+msgstr ""
+
+#: templates/employee_report.html:230
+msgid "Всего задач:"
+msgstr ""
+
+#: templates/employee_report.html:234
+msgid "Подзадач:"
+msgstr ""
+
+#: templates/employee_report.html:238
+msgid "To-Do выполнено:"
+msgstr ""
+
+#: templates/employee_report.html:242
+msgid "Сообщений в чате:"
+msgstr ""
+
+#: templates/employee_report.html:246
+msgid "Отчётов создано:"
+msgstr ""
+
+#: templates/employee_report.html:251
+msgid "Список задач сотрудника"
+msgstr ""
+
+#: templates/employee_report.html:256 templates/employee_report.html:298
+#: templates/pdf/project_report.html:508 templates/pdf/project_report.html:543
+#: templates/pdf/project_report.html:577 templates/pdf/project_report.html:612
+#: templates/pdf/task_report.html:230 templates/project.html:811
+msgid "Задача"
+msgstr ""
+
+#: templates/employee_report.html:257 templates/pdf/project_report.html:415
+#: templates/pdf/project_report.html:510 templates/pdf/project_report.html:545
+#: templates/pdf/project_report.html:579 templates/pdf/project_report.html:614
+#: templates/pdf/task_report.html:232 templates/project.html:329
+#: templates/project.html:603 templates/project.html:680
+#: templates/project.html:813 templates/project.html:1897
+#: templates/task_detail.html:121 templates/task_detail.html:628
+msgid "Дедлайн"
+msgstr ""
+
+#: templates/employee_report.html:267
+msgid "Подзадача:"
+msgstr ""
+
+#: templates/employee_report.html:278 templates/my_calendar.html:664
+#: templates/my_tasks.html:120 templates/pdf/project_report.html:433
+#: templates/pdf/project_report.html:624 templates/pdf/task_report.html:157
+#: templates/pdf/task_report.html:249 templates/project.html:292
+#: templates/project.html:360 templates/project.html:500
+#: templates/project.html:911 templates/project.html:2249
+#: templates/task_detail.html:42 templates/task_detail.html:170
+#: templates/task_detail.html:638
+msgid "Завершена"
+msgstr ""
+
+#: templates/employee_report.html:282 templates/my_calendar.html:666
+#: templates/my_tasks.html:118 templates/pdf/project_report.html:597
+#: templates/pdf/task_report.html:161 templates/pdf/task_report.html:253
+#: templates/project.html:498 templates/project.html:909
+#: templates/project.html:2251 templates/task_detail.html:44
+#: templates/task_detail.html:168 templates/task_detail.html:636
+msgid "Новая"
+msgstr ""
+
+#: templates/employee_report.html:290
+msgid "Задач, назначенных сотруднику, нет."
+msgstr ""
+
+#: templates/employee_report.html:294
+msgid "To-Do сотрудника"
+msgstr ""
+
+#: templates/employee_report.html:310 templates/pdf/project_report.html:439
+#: templates/project.html:295
+msgid "В плане"
+msgstr ""
+
+#: templates/employee_report.html:319
+msgid "Выводы"
+msgstr ""
+
+#: templates/employee_report.html:322
+msgid "Отличная работа!"
+msgstr ""
+
+#: templates/employee_report.html:322
+msgid "Большинство задач выполнено. Сотрудник укладывается в сроки."
+msgstr ""
+
+#: templates/employee_report.html:324
+msgid "Хорошая работа."
+msgstr ""
+
+#: templates/employee_report.html:324
+msgid "Задачи выполняются, но есть что улучшить."
+msgstr ""
+
+#: templates/employee_report.html:326
+msgid "Средний результат."
+msgstr ""
+
+#: templates/employee_report.html:326
+msgid "Много задач в работе. Возможно, требуется помощь."
+msgstr ""
+
+#: templates/employee_report.html:328
+msgid "Низкая активность."
+msgstr ""
+
+#: templates/employee_report.html:328
+msgid "Большинство задач не выполнено. Требуется внимание руководителя."
+msgstr ""
+
+#: templates/employee_report.html:332
+msgid "Высокий процент просроченных задач"
+msgstr ""
+
+#: templates/employee_report.html:332
+msgid "Необходимо пересмотреть сроки или нагрузку."
+msgstr ""
+
+#: templates/employee_report.html:336
+msgid ""
+"Мало сообщений в чате. Возможно, сотрудник недостаточно вовлечён в "
+"обсуждения."
+msgstr ""
+
+#: templates/employee_report.html:341 templates/pdf/project_report.html:656
+#: templates/pdf/task_report.html:281
+msgid "Отчёт сформирован автоматически"
+msgstr ""
+
+#: templates/employee_report.html:341 templates/pdf/project_report.html:656
+#: templates/pdf/task_report.html:281
+msgid "в"
+msgstr ""
+
+#: templates/employee_report.html:342 templates/pdf/project_report.html:657
+#: templates/pdf/task_report.html:282
+msgid "Система управления проектами Workspace"
+msgstr ""
+
+#: templates/login.html:250
+msgid "С возвращением 👋"
+msgstr ""
+
+#: templates/login.html:251
+msgid "Войдите, чтобы продолжить работу"
+msgstr ""
+
+#: templates/login.html:261
+msgid "Пароль"
+msgstr ""
+
+#: templates/login.html:267
+msgid "Войти"
+msgstr ""
+
+#: templates/login.html:272
+msgid "Нет аккаунта?"
+msgstr ""
+
+#: templates/login.html:272
+msgid "Зарегистрироваться"
+msgstr ""
+
+#: templates/login.html:280
+msgid "Управляйте проектами"
+msgstr ""
+
+#: templates/login.html:280
+msgid "эффективно"
+msgstr ""
+
+#: templates/login.html:281
+msgid ""
+"Всё необходимое для команды в одном месте: задачи, вехи, отчёты, файлы и "
+"общение."
+msgstr ""
+
+#: templates/login.html:287
+msgid "Задачи и подзадачи"
+msgstr ""
+
+#: templates/login.html:288
+msgid "Назначайте исполнителей и следите за прогрессом"
+msgstr ""
+
+#: templates/login.html:294
+msgid "Вехи проекта"
+msgstr ""
+
+#: templates/login.html:295
+msgid "Контрольные точки с уведомлениями о просрочке"
+msgstr ""
+
+#: templates/login.html:301
+msgid "Команда с ролями"
+msgstr ""
+
+#: templates/login.html:302
+msgid "Руководитель, менеджер, инженер, логистик"
+msgstr ""
+
+#: templates/login.html:308
+msgid "PDF-отчёты"
+msgstr ""
+
+#: templates/login.html:309
+msgid "По проекту и по каждому сотруднику"
+msgstr ""
+
+#: templates/login.html:315
+msgid "Email-уведомления"
+msgstr ""
+
+#: templates/login.html:316
+msgid "Автоматические напоминания о дедлайнах"
+msgstr ""
+
+#: templates/my_calendar.html:6
+msgid "Все ваши события, задачи, вехи и To-Do в одном месте"
+msgstr ""
+
+#: templates/my_calendar.html:9 templates/my_calendar.html:207
+#: templates/my_calendar.html:222
+msgid "Личное событие"
+msgstr ""
+
+#: templates/my_calendar.html:17 templates/my_calendar.html:21
+#: templates/my_calendar.html:25 templates/my_calendar.html:29
+#: templates/my_calendar.html:33 templates/my_calendar.html:37
+#: templates/my_calendar.html:41
+msgid "Кликните, чтобы скрыть/показать"
+msgstr ""
+
+#: templates/my_calendar.html:19
+msgid "Личные события"
+msgstr ""
+
+#: templates/my_calendar.html:23 templates/my_calendar.html:595
+msgid "События проектов"
+msgstr ""
+
+#: templates/my_calendar.html:27
+msgid "Мои задачи (новые)"
+msgstr ""
+
+#: templates/my_calendar.html:31
+msgid "Мои задачи (в работе)"
+msgstr ""
+
+#: templates/my_calendar.html:39 templates/my_tasks.html:60
+#: templates/project.html:1308
+msgid "Завершено"
+msgstr ""
+
+#: templates/my_calendar.html:43 templates/my_tasks.html:292
+msgid "Мои To-Do"
+msgstr ""
+
+#: templates/my_calendar.html:50
+msgid "Клик по дню — просмотр расписания. Клик по цвету —"
+msgstr ""
+
+#: templates/my_calendar.html:50
+msgid "скрыть/показать"
+msgstr ""
+
+#: templates/my_calendar.html:50
+msgid "тип."
+msgstr ""
+
+#: templates/my_calendar.html:54 templates/my_calendar.html:421
+#: templates/my_calendar.html:428
+msgid "событий"
+msgstr ""
+
+#: templates/my_calendar.html:57 templates/project.html:1329
+msgid "Показать все типы"
+msgstr ""
+
+#: templates/companies/list.html:80 templates/companies/list.html:205
+#: templates/my_calendar.html:58 templates/project.html:518
+#: templates/project.html:1033
+msgid "Сбросить"
+msgstr ""
+
+#: templates/my_calendar.html:78
+msgid "Личных событий"
+msgstr ""
+
+#: templates/my_calendar.html:87
+msgid "Событий проектов"
+msgstr ""
+
+#: templates/my_calendar.html:96
+msgid "Моих задач"
+msgstr ""
+
+#: templates/my_calendar.html:105
+msgid "Моих To-Do"
+msgstr ""
+
+#: templates/my_calendar.html:112
+msgid "Мои личные события"
+msgstr ""
+
+#: templates/my_calendar.html:124 templates/my_calendar.html:170
+#: templates/project.html:1357
+msgid "весь день"
+msgstr ""
+
+#: templates/my_calendar.html:138 templates/project.html:1371
+msgid "Удалить событие?"
+msgstr ""
+
+#: templates/my_calendar.html:151
+msgid "События моих проектов"
+msgstr ""
+
+#: templates/my_calendar.html:195 templates/project.html:1742
+msgid "Дата"
+msgstr ""
+
+#: templates/my_calendar.html:204 templates/project.html:1750
+#: templates/support/ticket.html:33
+msgid "Закрыть"
+msgstr ""
+
+#: templates/my_calendar.html:230
+msgid "Это событие видите только вы. Его нельзя привязать к проекту."
+msgstr ""
+
+#: templates/my_calendar.html:236
+msgid "Например: Встреча с врачом"
+msgstr ""
+
+#: templates/my_calendar.html:241
+msgid "Заметки..."
+msgstr ""
+
+#: templates/my_calendar.html:248 templates/my_calendar.html:629
+#: templates/project.html:1781 templates/project.html:2213
+msgid "Весь день"
+msgstr ""
+
+#: templates/my_calendar.html:254 templates/project.html:1785
+msgid "Начало"
+msgstr ""
+
+#: templates/my_calendar.html:261 templates/project.html:1790
+msgid "Окончание"
+msgstr ""
+
+#: templates/my_calendar.html:267 templates/project.html:1795
+msgid "Цвет"
+msgstr ""
+
+#: templates/companies/form.html:109 templates/my_calendar.html:285
+#: templates/project.html:782
+msgid "Создать"
+msgstr ""
+
+#: templates/my_calendar.html:357 templates/project.html:1976
+msgid "Все типы скрыты"
+msgstr ""
+
+#: templates/my_calendar.html:448 templates/project.html:2057
+msgid "Январь"
+msgstr ""
+
+#: templates/my_calendar.html:448 templates/project.html:2057
+msgid "Февраль"
+msgstr ""
+
+#: templates/my_calendar.html:448 templates/project.html:2057
+msgid "Март"
+msgstr ""
+
+#: templates/my_calendar.html:448 templates/project.html:2057
+msgid "Апрель"
+msgstr ""
+
+#: templates/my_calendar.html:449 templates/project.html:2058
+msgid "Май"
+msgstr ""
+
+#: templates/my_calendar.html:449 templates/project.html:2058
+msgid "Июнь"
+msgstr ""
+
+#: templates/my_calendar.html:449 templates/project.html:2058
+msgid "Июль"
+msgstr ""
+
+#: templates/my_calendar.html:449 templates/project.html:2058
+msgid "Август"
+msgstr ""
+
+#: templates/my_calendar.html:450 templates/project.html:2059
+msgid "Сентябрь"
+msgstr ""
+
+#: templates/my_calendar.html:450 templates/project.html:2059
+msgid "Октябрь"
+msgstr ""
+
+#: templates/my_calendar.html:450 templates/project.html:2059
+msgid "Ноябрь"
+msgstr ""
+
+#: templates/my_calendar.html:450 templates/project.html:2059
+msgid "Декабрь"
+msgstr ""
+
+#: templates/my_calendar.html:452 templates/my_calendar.html:578
+#: templates/project.html:2061 templates/project.html:2165
+msgid "неделя"
+msgstr ""
+
+#: templates/my_calendar.html:461 templates/project.html:2070
+msgid "Сегодня"
+msgstr ""
+
+#: templates/my_calendar.html:462 templates/project.html:2071
+msgid "Месяц"
+msgstr ""
+
+#: templates/my_calendar.html:463 templates/project.html:2072
+msgid "Неделя"
+msgstr ""
+
+#: templates/my_calendar.html:464 templates/project.html:2073
+msgid "Список"
+msgstr ""
+
+#: templates/my_calendar.html:483 templates/support/ticket.html:44
+msgid "Автор:"
+msgstr ""
+
+#: templates/my_calendar.html:503 templates/project.html:2099
+msgid "ISO-неделя"
+msgstr ""
+
+#: templates/my_calendar.html:534 templates/project.html:2121
+msgid "января"
+msgstr ""
+
+#: templates/my_calendar.html:534 templates/project.html:2121
+msgid "февраля"
+msgstr ""
+
+#: templates/my_calendar.html:534 templates/project.html:2121
+msgid "марта"
+msgstr ""
+
+#: templates/my_calendar.html:534 templates/project.html:2121
+msgid "апреля"
+msgstr ""
+
+#: templates/my_calendar.html:535 templates/project.html:2122
+msgid "мая"
+msgstr ""
+
+#: templates/my_calendar.html:535 templates/project.html:2122
+msgid "июня"
+msgstr ""
+
+#: templates/my_calendar.html:535 templates/project.html:2122
+msgid "июля"
+msgstr ""
+
+#: templates/my_calendar.html:535 templates/project.html:2122
+msgid "августа"
+msgstr ""
+
+#: templates/my_calendar.html:536 templates/project.html:2123
+msgid "сентября"
+msgstr ""
+
+#: templates/my_calendar.html:536 templates/project.html:2123
+msgid "октября"
+msgstr ""
+
+#: templates/my_calendar.html:536 templates/project.html:2123
+msgid "ноября"
+msgstr ""
+
+#: templates/my_calendar.html:536 templates/project.html:2123
+msgid "декабря"
+msgstr ""
+
+#: templates/my_calendar.html:539 templates/project.html:2126
+msgid "воскресенье"
+msgstr ""
+
+#: templates/my_calendar.html:539 templates/project.html:2126
+msgid "понедельник"
+msgstr ""
+
+#: templates/my_calendar.html:539 templates/project.html:2126
+msgid "вторник"
+msgstr ""
+
+#: templates/my_calendar.html:539 templates/project.html:2126
+msgid "среда"
+msgstr ""
+
+#: templates/my_calendar.html:540 templates/project.html:2127
+msgid "четверг"
+msgstr ""
+
+#: templates/my_calendar.html:540 templates/project.html:2127
+msgid "пятница"
+msgstr ""
+
+#: templates/my_calendar.html:540 templates/project.html:2127
+msgid "суббота"
+msgstr ""
+
+#: templates/my_calendar.html:583 templates/project.html:77
+#: templates/project.html:2170
+msgid "Всего:"
+msgstr ""
+
+#: templates/my_calendar.html:584 templates/project.html:2171
+msgid "Событий:"
+msgstr ""
+
+#: templates/my_calendar.html:585 templates/project.html:2172
+msgid "Личных:"
+msgstr ""
+
+#: templates/my_calendar.html:586 templates/project.html:2173
+msgid "Задач:"
+msgstr ""
+
+#: templates/my_calendar.html:587 templates/project.html:2174
+msgid "To-Do:"
+msgstr ""
+
+#: templates/my_calendar.html:592 templates/project.html:2179
+msgid "Нет событий на этот день"
+msgstr ""
+
+#: templates/my_calendar.html:599 templates/project.html:1292
+#: templates/project.html:2186
+msgid "Личные"
+msgstr ""
+
+#: templates/my_calendar.html:607 templates/project.html:445
+#: templates/project.html:1316 templates/project.html:1713
+#: templates/project.html:2194
+msgid "To-Do"
+msgstr ""
+
+#: templates/my_calendar.html:611 templates/project.html:1312
+#: templates/project.html:1711 templates/project.html:2198
+msgid "Вехи"
+msgstr ""
+
+#: templates/my_calendar.html:653 templates/my_calendar.html:680
+#: templates/my_calendar.html:700 templates/project.html:938
+#: templates/project.html:2238 templates/project.html:2265
+#: templates/project.html:2285 templates/suppliers.html:52
+msgid "Открыть"
+msgstr ""
+
+#: templates/my_calendar.html:697 templates/project.html:2282
+msgid "Активно"
+msgstr ""
+
+#: templates/my_mentions.html:10
+msgid "Сообщения, где вас упомянули через"
+msgstr ""
+
+#: templates/my_mentions.html:10
+msgid "Имя Фамилия"
+msgstr ""
+
+#: templates/my_mentions.html:13 templates/my_mentions.html:62
+#: templates/my_tasks.html:9 templates/my_tasks.html:294
+#: templates/support/admin_tickets.html:8
+msgid "новых"
+msgstr ""
+
+#: templates/my_mentions.html:23
+msgid "Отметить всё прочитанным"
+msgstr ""
+
+#: templates/my_mentions.html:57
+msgid "Проект удалён"
+msgstr ""
+
+#: templates/my_mentions.html:69
+msgid "Перейти в чат проекта"
+msgstr ""
+
+#: templates/my_mentions.html:70
+msgid "В чат"
+msgstr ""
+
+#: templates/my_mentions.html:96
+msgid "Неизвестный автор"
+msgstr ""
+
+#: templates/my_mentions.html:105
+msgid "новое"
+msgstr ""
+
+#: templates/my_mentions.html:118
+msgid "Сообщение удалено"
+msgstr ""
+
+#: templates/my_mentions.html:134
+msgid "Упоминаний пока нет"
+msgstr ""
+
+#: templates/my_mentions.html:136
+msgid "Когда кто-то напишет в чате"
+msgstr ""
+
+#: templates/my_mentions.html:136
+msgid "Ваше Имя"
+msgstr ""
+
+#: templates/my_mentions.html:136
+msgid "упоминание появится здесь."
+msgstr ""
+
+#: templates/my_tasks.html:7
+msgid "Все задачи по всем проектам, где вы назначены исполнителем"
+msgstr ""
+
+#: templates/my_tasks.html:17
+msgid "Отметить все как прочитанные"
+msgstr ""
+
+#: templates/my_tasks.html:18
+msgid "Прочитать все"
+msgstr ""
+
+#: templates/companies/list.html:35 templates/my_tasks.html:33
+msgid "Активных"
+msgstr ""
+
+#: templates/my_tasks.html:42
+msgid "Срочных"
+msgstr ""
+
+#: templates/my_tasks.html:68 templates/pdf/project_report.html:503
+msgid "Просроченные задачи"
+msgstr ""
+
+#: templates/my_tasks.html:73 templates/project.html:155
+#: templates/project.html:177
+msgid "просрочено на"
+msgstr ""
+
+#: templates/my_tasks.html:74
+msgid "проект:"
+msgstr ""
+
+#: templates/my_tasks.html:86
+msgid "Срочные (дедлайн ≤ 3 дней):"
+msgstr ""
+
+#: templates/my_tasks.html:91 templates/project.html:310
+#: templates/project_settings.html:126
+msgid "до"
+msgstr ""
+
+#: templates/my_tasks.html:92
+msgid "дн. осталось"
+msgstr ""
+
+#: templates/my_tasks.html:104
+msgid "Проект"
+msgstr ""
+
+#: templates/my_tasks.html:106
+msgid "Все проекты"
+msgstr ""
+
+#: templates/my_tasks.html:117
+msgid "Все статусы"
+msgstr ""
+
+#: templates/my_tasks.html:134
+msgid "Список задач"
+msgstr ""
+
+#: templates/my_tasks.html:173 templates/my_tasks.html:314
+msgid "НОВОЕ"
+msgstr ""
+
+#: templates/my_tasks.html:214
+msgid "У вас нет задач по выбранным фильтрам"
+msgstr ""
+
+#: templates/my_tasks.html:223
+msgid "Навигация по страницам"
+msgstr ""
+
+#: templates/my_tasks.html:233
+msgid "Назад"
+msgstr ""
+
+#: templates/my_tasks.html:275
+msgid "Вперёд"
+msgstr ""
+
+#: templates/my_tasks.html:282
+msgid "Показано"
+msgstr ""
+
+#: templates/my_tasks.html:282
+msgid "задач"
+msgstr ""
+
+#: templates/my_tasks.html:283
+msgid "страница"
+msgstr ""
+
+#: templates/my_tasks.html:330
+msgid "Открыть в проекте"
+msgstr ""
+
+#: templates/profile.html:8
+msgid "Профиль"
+msgstr ""
+
+#: templates/profile.html:15
+msgid "Данные аккаунта"
+msgstr ""
+
+#: templates/profile.html:19
+msgid "Email (логин)"
+msgstr ""
+
+#: templates/profile.html:24 templates/project_settings.html:393
+msgid "Компания"
+msgstr ""
+
+#: templates/profile.html:29 templates/project_settings.html:178
+#: templates/project_settings.html:292
+msgid "Роль"
+msgstr ""
+
+#: templates/profile.html:37
+msgid "Смена пароля"
+msgstr ""
+
+#: templates/profile.html:42
+msgid "Текущий пароль"
+msgstr ""
+
+#: templates/profile.html:47
+msgid "Новый пароль"
+msgstr ""
+
+#: templates/profile.html:51
+msgid "Минимум 6 символов"
+msgstr ""
+
+#: templates/profile.html:54
+msgid "Подтвердите новый пароль"
+msgstr ""
+
+#: templates/profile.html:60
+msgid "Изменить пароль"
+msgstr ""
+
+#: templates/project.html:53
+msgid "PDF-отчёт"
+msgstr ""
+
+#: templates/project.html:80
+msgid "Завершено:"
+msgstr ""
+
+#: templates/project.html:83
+msgid "В работе:"
+msgstr ""
+
+#: templates/project.html:91
+msgid "Участников:"
+msgstr ""
+
+#: templates/project.html:101
+msgid "Заказчик не указан"
+msgstr ""
+
+#: templates/project.html:109
+msgid "Группа компаний АМ Станко:"
+msgstr ""
+
+#: templates/project.html:118 templates/project.html:766
+msgid "Субподрядчик:"
+msgstr ""
+
+#: templates/project.html:123
+msgid "Субподрядчики не указаны"
+msgstr ""
+
+#: templates/project.html:124
+msgid "Без субподрядчиков"
+msgstr ""
+
+#: templates/project.html:135
+msgid "Проект просрочен!"
+msgstr ""
+
+#: templates/project.html:136
+msgid "Плановое окончание"
+msgstr ""
+
+#: templates/project.html:136
+msgid "дн. назад"
+msgstr ""
+
+#: templates/project.html:143
+msgid "Просрочено вех:"
+msgstr ""
+
+#: templates/project.html:147 templates/project.html:170
+msgid "Показать"
+msgstr ""
+
+#: templates/project.html:166
+msgid "Просрочено задач:"
+msgstr ""
+
+#: templates/project.html:196 templates/project.html:815
+msgid "Прогресс"
+msgstr ""
+
+#: templates/pdf/project_report.html:427 templates/project.html:230
+#: templates/project.html:293 templates/project.html:364
+msgid "Текущая"
+msgstr ""
+
+#: templates/project.html:271
+msgid "Показать/скрыть вехи"
+msgstr ""
+
+#: templates/project.html:273
+msgid "Вехи:"
+msgstr ""
+
+#: templates/project.html:284
+msgid "Добавить веху"
+msgstr ""
+
+#: templates/pdf/project_report.html:435 templates/project.html:294
+#: templates/project.html:362 templates/project.html:501
+msgid "Просрочена"
+msgstr ""
+
+#: templates/project.html:310
+msgid "просрочено"
+msgstr ""
+
+#: templates/project.html:366
+msgid "Ожидает"
+msgstr ""
+
+#: templates/project.html:377
+msgid "Снять отметку"
+msgstr ""
+
+#: templates/project.html:377
+msgid "Отметить выполненной"
+msgstr ""
+
+#: templates/project.html:390
+msgid "Удалить веху"
+msgstr ""
+
+#: templates/project.html:414
+msgid "Название вехи"
+msgstr ""
+
+#: templates/project.html:421
+msgid "Описание (опц.)"
+msgstr ""
+
+#: templates/project.html:450 templates/project.html:1712
+msgid "Отчёты"
+msgstr ""
+
+#: templates/project.html:455
+msgid "Календарь"
+msgstr ""
+
+#: templates/project.html:460
+msgid "Файлы"
+msgstr ""
+
+#: templates/pdf/project_report.html:509 templates/pdf/project_report.html:544
+#: templates/pdf/project_report.html:578 templates/pdf/project_report.html:613
+#: templates/pdf/task_report.html:231 templates/project.html:482
+#: templates/project.html:812 templates/project.html:998
+#: templates/project.html:1877 templates/task_detail.html:590
+msgid "Исполнитель"
+msgstr ""
+
+#: templates/project.html:485 templates/project.html:1001
+#: templates/project.html:1879 templates/task_detail.html:592
+msgid "— Не назначен —"
+msgstr ""
+
+#: templates/project.html:505 templates/project.html:1020
+msgid "Дедлайн с"
+msgstr ""
+
+#: templates/project.html:509 templates/project.html:1024
+msgid "по"
+msgstr ""
+
+#: templates/project.html:537 templates/task_detail.html:73
+msgid "Задача от администратора"
+msgstr ""
+
+#: templates/project.html:539 templates/task_detail.html:75
+msgid "Задача от супервизора"
+msgstr ""
+
+#: templates/project.html:548 templates/project.html:713
+msgid "Развернуть"
+msgstr ""
+
+#: templates/project.html:549 templates/project.html:714
+msgid "Свернуть"
+msgstr ""
+
+#: templates/project.html:562
+msgid "Руководителю"
+msgstr ""
+
+#: templates/project.html:570
+msgid "Любому участнику"
+msgstr ""
+
+#: templates/project.html:581
+msgid "Задача будет назначена руководителю или менеджеру проекта."
+msgstr ""
+
+#: templates/project.html:586 templates/project_settings.html:66
+#: templates/project_settings.html:222 templates/project_settings.html:337
+msgid "Руководитель проекта"
+msgstr ""
+
+#: templates/project.html:588 templates/project.html:638
+msgid "— Выберите —"
+msgstr ""
+
+#: templates/project.html:598 templates/project.html:675
+#: templates/project.html:723
+msgid "Название задачи"
+msgstr ""
+
+#: templates/project.html:600
+msgid "Например: Подготовить отчёт за квартал"
+msgstr ""
+
+#: templates/project.html:609 templates/project.html:686
+msgid "Детали задачи..."
+msgstr ""
+
+#: templates/project.html:614
+msgid "Поставить руководителю"
+msgstr ""
+
+#: templates/project.html:622
+msgid "В проекте нет руководителей или менеджеров."
+msgstr ""
+
+#: templates/project.html:630
+msgid "Задача будет назначена любому участнику — команде, АМ Станко или гостю."
+msgstr ""
+
+#: templates/project.html:636 templates/project_settings.html:70
+#: templates/project_settings.html:119 templates/project_settings.html:226
+#: templates/project_settings.html:341
+msgid "Участник"
+msgstr ""
+
+#: templates/project.html:641 templates/project.html:733
+#: templates/project_settings.html:19 templates/project_settings.html:65
+#: templates/project_settings.html:168 templates/project_settings.html:221
+#: templates/project_settings.html:454
+msgid "Команда проекта"
+msgstr ""
+
+#: templates/project.html:652 templates/project.html:744
+#: templates/project.html:1074 templates/project.html:1606
+#: templates/project.html:1886 templates/project_settings.html:72
+#: templates/project_settings.html:279 templates/project_settings.html:455
+msgid "Группа компаний АМ Станко"
+msgstr ""
+
+#: templates/project.html:663 templates/project.html:1652
+#: templates/project_settings.html:380 templates/project_settings.html:457
+msgid "Гости проекта"
+msgstr ""
+
+#: templates/project.html:667 templates/project.html:1674
+#: templates/project.html:1841 templates/project_settings.html:409
+msgid "Гость"
+msgstr ""
+
+#: templates/project.html:677
+msgid "Например: Подготовить документы"
+msgstr ""
+
+#: templates/project.html:691
+msgid "Поставить задачу"
+msgstr ""
+
+#: templates/project.html:707
+msgid "Новая задача"
+msgstr ""
+
+#: templates/project.html:727
+msgid "Назначить..."
+msgstr ""
+
+#: templates/project.html:729 templates/task_detail.html:244
+msgid "Я"
+msgstr ""
+
+#: templates/project.html:788
+msgid "Описание (опционально)"
+msgstr ""
+
+#: templates/project.html:792 templates/project.html:1184
+msgid "Веха (опц.)"
+msgstr ""
+
+#: templates/companies/list.html:102 templates/project.html:816
+#: templates/project_settings.html:179 templates/project_settings.html:293
+#: templates/project_settings.html:394 templates/suppliers.html:24
+msgid "Действия"
+msgstr ""
+
+#: templates/project.html:841
+msgid "подзадач"
+msgstr ""
+
+#: templates/project.html:847 templates/project.html:854
+msgid "Поставил:"
+msgstr ""
+
+#: templates/project.html:849
+msgid "от администратора"
+msgstr ""
+
+#: templates/project.html:856
+msgid "от супервизора"
+msgstr ""
+
+#: templates/project.html:868 templates/task_detail.html:341
+#: templates/task_detail.html:492
+msgid "Причина просрочки..."
+msgstr ""
+
+#: templates/project.html:884
+msgid "не назначен"
+msgstr ""
+
+#: templates/project.html:943
+msgid "Открыть и редактировать"
+msgstr ""
+
+#: templates/project.html:950
+msgid "Удалить задачу?"
+msgstr ""
+
+#: templates/project.html:972
+msgid "Задач пока нет"
+msgstr ""
+
+#: templates/project.html:981
+msgid "Создайте первую задачу и назначьте исполнителя"
+msgstr ""
+
+#: templates/project.html:984
+msgid "Создать первую задачу"
+msgstr ""
+
+#: templates/pdf/project_report.html:471 templates/pdf/project_report.html:497
+#: templates/pdf/task_report.html:212 templates/project.html:1014
+#: templates/task_detail.html:396
+msgid "Не начато"
+msgstr ""
+
+#: templates/project.html:1044
+msgid "To-Do лист проекта"
+msgstr ""
+
+#: templates/project.html:1059
+msgid "Добавить To-Do"
+msgstr ""
+
+#: templates/project.html:1065
+msgid "Что нужно сделать?"
+msgstr ""
+
+#: templates/project.html:1069
+msgid "Кто делает?"
+msgstr ""
+
+#: templates/project.html:1149
+msgid "Список пуст"
+msgstr ""
+
+#: templates/project.html:1161
+msgid "Отчёты по проекту"
+msgstr ""
+
+#: templates/project.html:1164
+msgid "Скачать PDF"
+msgstr ""
+
+#: templates/project.html:1173
+msgid "Создать отчёт"
+msgstr ""
+
+#: templates/project.html:1180
+msgid "Заголовок отчёта"
+msgstr ""
+
+#: templates/project.html:1191
+msgid "Статус / причина срыва"
+msgstr ""
+
+#: templates/project.html:1193
+msgid "Всё по плану"
+msgstr ""
+
+#: templates/project.html:1194
+msgid "Задержка поставки"
+msgstr ""
+
+#: templates/project.html:1195
+msgid "Изменение ТЗ"
+msgstr ""
+
+#: templates/project.html:1196
+msgid "Проблема с подрядчиком"
+msgstr ""
+
+#: templates/project.html:1197
+msgid "Форс-мажор"
+msgstr ""
+
+#: templates/project.html:1198
+msgid "Проблемы с бюджетом"
+msgstr ""
+
+#: templates/project.html:1199
+msgid "Другое"
+msgstr ""
+
+#: templates/project.html:1203
+msgid "Задержка (дней)"
+msgstr ""
+
+#: templates/project.html:1207
+msgid "Причина подробно"
+msgstr ""
+
+#: templates/project.html:1211
+msgid "Содержание..."
+msgstr ""
+
+#: templates/project.html:1215
+msgid "Сохранить отчёт"
+msgstr ""
+
+#: templates/pdf/project_report.html:638 templates/project.html:1230
+msgid "Задержка:"
+msgstr ""
+
+#: templates/pdf/task_report.html:176 templates/project.html:1233
+msgid "Веха:"
+msgstr ""
+
+#: templates/project.html:1245
+msgid "Удалить отчёт?"
+msgstr ""
+
+#: templates/pdf/project_report.html:526 templates/pdf/project_report.html:561
+#: templates/pdf/project_report.html:646 templates/pdf/task_report.html:261
+#: templates/project.html:1253
+msgid "Причина:"
+msgstr ""
+
+#: templates/project.html:1265
+msgid "Отчётов пока нет"
+msgstr ""
+
+#: templates/project.html:1276 templates/project.html:1714
+msgid "Календарь событий"
+msgstr ""
+
+#: templates/project.html:1280
+msgid "Новое событие"
+msgstr ""
+
+#: templates/project.html:1288 templates/project.html:1343
+#: templates/project.html:2182
+msgid "События проекта"
+msgstr ""
+
+#: templates/project.html:1296
+msgid "Новые задачи"
+msgstr ""
+
+#: templates/project.html:1322
+msgid "Клик по цвету — скрыть/показать тип."
+msgstr ""
+
+#: templates/project.html:1374
+msgid "Удалить событие"
+msgstr ""
+
+#: templates/project.html:1386
+msgid "Событий пока нет"
+msgstr ""
+
+#: templates/project.html:1391
+msgid "Создать первое событие"
+msgstr ""
+
+#: templates/project.html:1409
+msgid "Загрузить / создать папку"
+msgstr ""
+
+#: templates/project.html:1415
+msgid "Название папки"
+msgstr ""
+
+#: templates/project.html:1419
+msgid "Создать папку"
+msgstr ""
+
+#: templates/project.html:1430
+msgid "Загрузить"
+msgstr ""
+
+#: templates/project.html:1449
+msgid "Удалить папку?"
+msgstr ""
+
+#: templates/project.html:1481
+msgid "Нет файлов и папок"
+msgstr ""
+
+#: templates/project.html:1490
+msgid "Чат проекта"
+msgstr ""
+
+#: templates/project.html:1492
+msgid "Введите"
+msgstr ""
+
+#: templates/project.html:1492
+msgid "упомянуть участника или админа"
+msgstr ""
+
+#: templates/project.html:1501
+msgid "Загрузить ещё"
+msgstr ""
+
+#: templates/project.html:1501
+msgid "сообщений"
+msgstr ""
+
+#: templates/project.html:1504
+msgid "Показаны последние"
+msgstr ""
+
+#: templates/project.html:1515
+msgid "Вы"
+msgstr ""
+
+#: templates/project.html:1525 templates/support/ticket.html:86
+msgid "Сообщений пока нет"
+msgstr ""
+
+#: templates/project.html:1534
+msgid "Напишите сообщение... (введите @ чтобы упомянуть)"
+msgstr ""
+
+#: templates/project.html:1537 templates/support/my_tickets.html:28
+#: templates/support/ticket.html:106
+msgid "Отправить"
+msgstr ""
+
+#: templates/project.html:1574 templates/project_settings.html:194
+#: templates/project_settings.html:309
+msgid "Создатель"
+msgstr ""
+
+#: templates/project.html:1579
+msgid "все задачи"
+msgstr ""
+
+#: templates/project.html:1595
+msgid "В команде пока никого"
+msgstr ""
+
+#: templates/project.html:1680
+msgid "Видят только назначенные на них задачи."
+msgstr ""
+
+#: templates/project.html:1699
+msgid "Удаление проекта"
+msgstr ""
+
+#: templates/project.html:1708
+msgid "Будут удалены"
+msgstr ""
+
+#: templates/project.html:1708
+msgid "все"
+msgstr ""
+
+#: templates/project.html:1708
+msgid "данные проекта:"
+msgstr ""
+
+#: templates/project.html:1710
+msgid "и подзадачи"
+msgstr ""
+
+#: templates/project.html:1715
+msgid "Файлы и папки"
+msgstr ""
+
+#: templates/project.html:1716
+msgid "Сообщения в чате"
+msgstr ""
+
+#: templates/project.html:1717
+msgid "Участники"
+msgstr ""
+
+#: templates/project.html:1719
+msgid "Для подтверждения введите слово"
+msgstr ""
+
+#: templates/project.html:1719
+msgid "заглавными буквами:"
+msgstr ""
+
+#: templates/project.html:1728
+msgid "Удалить проект"
+msgstr ""
+
+#: templates/project.html:1753
+msgid "Добавить событие"
+msgstr ""
+
+#: templates/project.html:1766
+msgid "Новое событие проекта"
+msgstr ""
+
+#: templates/project.html:1773
+msgid "Например: Планёрка"
+msgstr ""
+
+#: templates/project.html:1777
+msgid "Детали события..."
+msgstr ""
+
+#: templates/project.html:1808
+msgid "Кому отправить уведомление?"
+msgstr ""
+
+#: templates/project.html:1813
+msgid "Всем участникам проекта"
+msgstr ""
+
+#: templates/project.html:1814
+msgid "команда + АМ Станко"
+msgstr ""
+
+#: templates/project.html:1820
+msgid "Гостям проекта"
+msgstr ""
+
+#: templates/project.html:1821
+msgid "контакты субподрядчиков/заказчиков"
+msgstr ""
+
+#: templates/project.html:1826
+msgid "Или выбрать вручную..."
+msgstr ""
+
+#: templates/project.html:1852
+msgid "Создать и разослать"
+msgstr ""
+
+#: templates/project.html:1867
+msgid "Редактировать To-Do"
+msgstr ""
+
+#: templates/project.html:1902 templates/task_detail.html:209
+msgid "Комментарий"
+msgstr ""
+
+#: templates/project.html:2389
+msgid "Участники не найдены"
+msgstr ""
+
+#: templates/project.html:2489
+msgid "Задачи:"
+msgstr ""
+
+#: templates/project_settings.html:34
+msgid "Пригласить в проект"
+msgstr ""
+
+#: templates/project_settings.html:37
+msgid "Кликните на поле — увидите всех зарегистрированных"
+msgstr ""
+
+#: templates/project_settings.html:44
+msgid "Пользователь / Email"
+msgstr ""
+
+#: templates/project_settings.html:47
+msgid "Кликните или начните вводить имя / email / компанию..."
+msgstr ""
+
+#: templates/project_settings.html:58
+msgid "Из списка"
+msgstr ""
+
+#: templates/project_settings.html:58
+msgid "если аккаунт уже есть, добавится сразу."
+msgstr ""
+
+#: templates/project_settings.html:59
+msgid "Вручную"
+msgstr ""
+
+#: templates/project_settings.html:59
+msgid "если нет, будет создана ссылка-приглашение."
+msgstr ""
+
+#: templates/project_settings.html:63
+msgid "Роль в проекте"
+msgstr ""
+
+#: templates/project_settings.html:67 templates/project_settings.html:116
+#: templates/project_settings.html:223 templates/project_settings.html:338
+msgid "Менеджер"
+msgstr ""
+
+#: templates/project_settings.html:68 templates/project_settings.html:117
+#: templates/project_settings.html:224 templates/project_settings.html:339
+msgid "Главный инженер"
+msgstr ""
+
+#: templates/project_settings.html:69 templates/project_settings.html:118
+#: templates/project_settings.html:225 templates/project_settings.html:340
+msgid "Логистик"
+msgstr ""
+
+#: templates/project_settings.html:73 templates/project_settings.html:120
+#: templates/project_settings.html:229 templates/project_settings.html:330
+msgid "АМ Станко · Руководитель"
+msgstr ""
+
+#: templates/project_settings.html:74 templates/project_settings.html:121
+#: templates/project_settings.html:230 templates/project_settings.html:331
+msgid "АМ Станко · Менеджер"
+msgstr ""
+
+#: templates/project_settings.html:75 templates/project_settings.html:122
+#: templates/project_settings.html:231 templates/project_settings.html:332
+msgid "АМ Станко · Гл. инженер"
+msgstr ""
+
+#: templates/project_settings.html:76 templates/project_settings.html:123
+#: templates/project_settings.html:232 templates/project_settings.html:333
+msgid "АМ Станко · Логистик"
+msgstr ""
+
+#: templates/project_settings.html:77 templates/project_settings.html:124
+#: templates/project_settings.html:233 templates/project_settings.html:334
+msgid "АМ Станко · Участник"
+msgstr ""
+
+#: templates/project_settings.html:83
+msgid "Пригласить"
+msgstr ""
+
+#: templates/project_settings.html:99
+msgid "Ожидают регистрации"
+msgstr ""
+
+#: templates/project_settings.html:102
+msgid "Ссылка действует 7 дней"
+msgstr ""
+
+#: templates/project_settings.html:115
+msgid "Руководитель"
+msgstr ""
+
+#: templates/project_settings.html:127
+msgid "создано"
+msgstr ""
+
+#: templates/project_settings.html:139
+msgid "Скопировать ссылку"
+msgstr ""
+
+#: templates/project_settings.html:146
+msgid "Отменить приглашение для"
+msgstr ""
+
+#: templates/project_settings.html:149
+msgid "Отменить приглашение"
+msgstr ""
+
+#: templates/project_settings.html:176 templates/project_settings.html:290
+#: templates/project_settings.html:391
+msgid "Имя"
+msgstr ""
+
+#: templates/project_settings.html:228
+msgid "Перевести в АМ Станко"
+msgstr ""
+
+#: templates/project_settings.html:243 templates/project_settings.html:351
+#: templates/project_settings.html:427
+msgid "из проекта?"
+msgstr ""
+
+#: templates/project_settings.html:247 templates/project_settings.html:355
+#: templates/project_settings.html:431
+msgid "Удалить из проекта"
+msgstr ""
+
+#: templates/project_settings.html:261
+msgid "Пока в команде только создатель проекта"
+msgstr ""
+
+#: templates/project_settings.html:282
+msgid "Добавляются автоматически из контактов поставщика"
+msgstr ""
+
+#: templates/project_settings.html:329
+msgid "АМ Станко"
+msgstr ""
+
+#: templates/project_settings.html:336
+msgid "Перевести в команду проекта"
+msgstr ""
+
+#: templates/project_settings.html:383
+msgid "Контакты субподрядчиков и заказчиков"
+msgstr ""
+
+#: templates/project_settings.html:450
+msgid "Как это работает:"
+msgstr ""
+
+#: templates/project_settings.html:452
+msgid "Если у человека уже есть аккаунт — он добавляется в проект сразу."
+msgstr ""
+
+#: templates/project_settings.html:453
+msgid ""
+"Если аккаунта нет — создаётся ссылка-приглашение. Скопируйте её и "
+"передайте любым способом."
+msgstr ""
+
+#: templates/project_settings.html:454
+msgid ""
+"сотрудники вашей компании. Роли: руководитель, менеджер, главный инженер,"
+" логистик, участник."
+msgstr ""
+
+#: templates/project_settings.html:455
+msgid ""
+"сотрудники одноимённого поставщика. Добавляются автоматически из "
+"контактов."
+msgstr ""
+
+#: templates/project_settings.html:456
+msgid ""
+"Руководитель и менеджер (в том числе АМ Станко) могут управлять проектом,"
+" создавать задачи и вехи."
+msgstr ""
+
+#: templates/project_settings.html:457
+msgid ""
+"контакты субподрядчиков и заказчиков, назначенные на конкретные задачи. "
+"Видят только свои задачи."
+msgstr ""
+
+#: templates/project_settings.html:520
+msgid "Не удалось скопировать. Выделите текст вручную."
+msgstr ""
+
+#: templates/project_settings.html:600
+msgid "Ничего не найдено"
+msgstr ""
+
+#: templates/project_settings.html:600
+msgid "Нет доступных пользователей"
+msgstr ""
+
+#: templates/project_settings.html:601
+msgid "Можно ввести email вручную и пригласить по ссылке."
+msgstr ""
+
+#: templates/project_settings.html:610
+msgid "Первые"
+msgstr ""
+
+#: templates/project_settings.html:610
+msgid "зарегистрированных (без участников проекта)"
+msgstr ""
+
+#: templates/suppliers.html:10
+msgid "Добавить субподрядчика"
+msgstr ""
+
+#: templates/suppliers.html:22
+msgid "Контактных лиц"
+msgstr ""
+
+#: templates/suppliers.html:73
+msgid "Субподрядчиков пока нет"
+msgstr ""
+
+#: templates/suppliers.html:75
+msgid "Компаний группы пока нет"
+msgstr ""
+
+#: templates/suppliers.html:80
+msgid "Добавьте первого субподрядчика"
+msgstr ""
+
+#: templates/suppliers.html:82
+msgid "Добавьте первую компанию группы"
+msgstr ""
+
+#: templates/task_detail.html:19
+msgid "К родительской задаче"
+msgstr ""
+
+#: templates/task_detail.html:27
+msgid "Вы — гость проекта."
+msgstr ""
+
+#: templates/task_detail.html:28
+msgid ""
+"Вам доступна только эта задача. Здесь вы можете менять статус, оставить "
+"комментарий и видеть дедлайн."
+msgstr ""
+
+#: templates/task_detail.html:48
+msgid "Просрочена на"
+msgstr ""
+
+#: templates/task_detail.html:82
+msgid "Поставил(а):"
+msgstr ""
+
+#: templates/task_detail.html:99
+msgid "Описание не указано"
+msgstr ""
+
+#: templates/task_detail.html:106
+msgid "Назначена"
+msgstr ""
+
+#: templates/task_detail.html:112
+msgid "вы"
+msgstr ""
+
+#: templates/task_detail.html:116
+msgid "не назначена"
+msgstr ""
+
+#: templates/pdf/task_report.html:170 templates/task_detail.html:128
+#: templates/task_detail.html:486
+msgid "Просрочено на"
+msgstr ""
+
+#: templates/task_detail.html:139 templates/task_detail.html:643
+msgid "Веха"
+msgstr ""
+
+#: templates/task_detail.html:148
+msgid "Создана"
+msgstr ""
+
+#: templates/task_detail.html:165
+msgid "Отметить статус"
+msgstr ""
+
+#: templates/task_detail.html:165
+msgid "Изменить статус"
+msgstr ""
+
+#: templates/pdf/task_report.html:274 templates/task_detail.html:187
+msgid "Причина просрочки задачи"
+msgstr ""
+
+#: templates/task_detail.html:191
+msgid "Задача просрочена на"
+msgstr ""
+
+#: templates/task_detail.html:192
+msgid "Укажите причину — она попадёт в отчёт по проекту."
+msgstr ""
+
+#: templates/task_detail.html:197
+msgid "Например: задержка поставки материалов..."
+msgstr ""
+
+#: templates/task_detail.html:220
+msgid "Подзадачи"
+msgstr ""
+
+#: templates/task_detail.html:238
+msgid "Название подзадачи"
+msgstr ""
+
+#: templates/task_detail.html:242
+msgid "Исполнитель..."
+msgstr ""
+
+#: templates/task_detail.html:261 templates/task_detail.html:615
+msgid "Поставщик:"
+msgstr ""
+
+#: templates/task_detail.html:276
+msgid "Описание подзадачи"
+msgstr ""
+
+#: templates/task_detail.html:280
+msgid "Создать подзадачу"
+msgstr ""
+
+#: templates/task_detail.html:325
+msgid "Удалить подзадачу?"
+msgstr ""
+
+#: templates/task_detail.html:357
+msgid "Подзадач пока нет"
+msgstr ""
+
+#: templates/pdf/task_report.html:5 templates/task_detail.html:371
+msgid "Отчёт по задаче"
+msgstr ""
+
+#: templates/pdf/project_report.html:482 templates/pdf/task_report.html:197
+#: templates/task_detail.html:378
+msgid "Всего"
+msgstr ""
+
+#: templates/task_detail.html:384
+msgid "Готово"
+msgstr ""
+
+#: templates/task_detail.html:390
+msgid "Просроч."
+msgstr ""
+
+#: templates/task_detail.html:405
+msgid "Прогресс подзадач"
+msgstr ""
+
+#: templates/task_detail.html:417
+msgid "PDF-отчёт по задаче"
+msgstr ""
+
+#: templates/task_detail.html:425
+msgid "Файлы задачи"
+msgstr ""
+
+#: templates/task_detail.html:454
+msgid "Удалить файл?"
+msgstr ""
+
+#: templates/task_detail.html:463
+msgid "Нет файлов"
+msgstr ""
+
+#: templates/task_detail.html:473
+msgid "Просроченные подзадачи"
+msgstr ""
+
+#: templates/task_detail.html:508
+msgid "Информация"
+msgstr ""
+
+#: templates/task_detail.html:521
+msgid "Родительская задача:"
+msgstr ""
+
+#: templates/task_detail.html:528
+msgid "ID задачи:"
+msgstr ""
+
+#: templates/task_detail.html:536
+msgid "Поставлена:"
+msgstr ""
+
+#: templates/task_detail.html:550
+msgid "Удалить задачу и все её подзадачи?"
+msgstr ""
+
+#: templates/task_detail.html:552
+msgid "Удалить задачу"
+msgstr ""
+
+#: templates/task_detail.html:571
+msgid "Редактировать задачу"
+msgstr ""
+
+#: templates/task_detail.html:645
+msgid "— Без вехи —"
+msgstr ""
+
+#: templates/companies/form.html:9
+msgid "К списку филиалов"
+msgstr ""
+
+#: templates/companies/form.html:17
+msgid "Редактировать филиал"
+msgstr ""
+
+#: templates/companies/form.html:19
+msgid "Новый филиал"
+msgstr ""
+
+#: templates/companies/form.html:31
+msgid "Например: ООО СтройМастер"
+msgstr ""
+
+#: templates/companies/form.html:35
+msgid "Отображается в проектах, сайдбаре и фильтрах."
+msgstr ""
+
+#: templates/companies/form.html:74
+msgid "Цвет филиала"
+msgstr ""
+
+#: templates/companies/form.html:98
+msgid "Используется как метка филиала в проектах."
+msgstr ""
+
+#: templates/companies/form.html:124
+msgid "Создан:"
+msgstr ""
+
+#: templates/companies/list.html:7
+msgid "Филиалы компании"
+msgstr ""
+
+#: templates/companies/list.html:9
+msgid "Справочник филиалов, которые ведут проекты"
+msgstr ""
+
+#: templates/companies/list.html:13
+msgid "Добавить филиал"
+msgstr ""
+
+#: templates/companies/list.html:26
+msgid "Всего филиалов"
+msgstr ""
+
+#: templates/companies/list.html:44
+msgid "Деактивированных"
+msgstr ""
+
+#: templates/companies/list.html:54
+msgid "Поиск"
+msgstr ""
+
+#: templates/companies/list.html:56
+msgid "Название, ИНН, email, адрес..."
+msgstr ""
+
+#: templates/companies/list.html:63
+msgid "Только активные"
+msgstr ""
+
+#: templates/companies/list.html:64
+msgid "Только деактивированные"
+msgstr ""
+
+#: templates/companies/list.html:68
+msgid "Сортировка"
+msgstr ""
+
+#: templates/companies/list.html:70
+msgid "По названию"
+msgstr ""
+
+#: templates/companies/list.html:71
+msgid "Сначала новые"
+msgstr ""
+
+#: templates/companies/list.html:98
+msgid "Контакты"
+msgstr ""
+
+#: templates/companies/list.html:144
+msgid "Активен"
+msgstr ""
+
+#: templates/companies/list.html:146
+msgid "Неактивен"
+msgstr ""
+
+#: templates/companies/list.html:163
+msgid "Деактивировать"
+msgstr ""
+
+#: templates/companies/list.html:163
+msgid "Активировать"
+msgstr ""
+
+#: templates/companies/list.html:174
+msgid "Удалить филиал"
+msgstr ""
+
+#: templates/companies/list.html:200
+msgid "Филиалов пока нет"
+msgstr ""
+
+#: templates/companies/list.html:209
+msgid "Добавить первый филиал"
+msgstr ""
+
+#: templates/errors/404.html:6 templates/errors/404.html:58
+msgid "Страница не найдена"
+msgstr ""
+
+#: templates/errors/404.html:60
+msgid ""
+"Возможно, ссылка устарела или была удалена. Вернитесь на главную и "
+"попробуйте снова."
+msgstr ""
+
+#: templates/errors/404.html:63 templates/errors/500.html:222
+msgid "На главную"
+msgstr ""
+
+#: templates/errors/500.html:6 templates/errors/500.html:202
+msgid "Сервер на техническом обслуживании"
+msgstr ""
+
+#: templates/errors/500.html:204
+msgid ""
+"Мы улучшаем сервис, чтобы вам было удобнее работать. Скоро всё заработает"
+" — пожалуйста, потерпите немного."
+msgstr ""
+
+#: templates/errors/500.html:209
+msgid "Что можно сделать"
+msgstr ""
+
+#: templates/errors/500.html:211
+msgid "Подождите 5-10 минут и обновите страницу"
+msgstr ""
+
+#: templates/errors/500.html:212
+msgid "Попробуйте зайти позже, если сейчас не срочно"
+msgstr ""
+
+#: templates/errors/500.html:213
+msgid "Если нужно срочно — свяжитесь с администратором"
+msgstr ""
+
+#: templates/errors/500.html:219
+msgid "Обновить страницу"
+msgstr ""
+
+#: templates/errors/500.html:227
+msgid "Работаем над улучшениями"
+msgstr ""
+
+#: templates/pdf/project_report.html:5
+msgid "Отчёт по проекту"
+msgstr ""
+
+#: templates/pdf/project_report.html:306
+msgid "Отчёт по проекту:"
+msgstr ""
+
+#: templates/pdf/project_report.html:318
+msgid "Контактное лицо:"
+msgstr ""
+
+#: templates/pdf/project_report.html:325
+msgid "Руководитель проекта:"
+msgstr ""
+
+#: templates/pdf/project_report.html:329 templates/pdf/task_report.html:154
+msgid "Статус:"
+msgstr ""
+
+#: templates/pdf/project_report.html:343
+msgid "Дата создания:"
+msgstr ""
+
+#: templates/pdf/project_report.html:347
+msgid "Дата старта:"
+msgstr ""
+
+#: templates/pdf/project_report.html:351
+msgid "Плановая дата окончания:"
+msgstr ""
+
+#: templates/pdf/project_report.html:360
+msgid "Общий прогресс:"
+msgstr ""
+
+#: templates/pdf/project_report.html:370
+msgid "Линия проекта и вехи"
+msgstr ""
+
+#: templates/pdf/project_report.html:387
+msgid "ТЕКУЩАЯ"
+msgstr ""
+
+#: templates/pdf/project_report.html:402
+msgid "д"
+msgstr ""
+
+#: templates/pdf/project_report.html:447
+msgid "Вехи не заданы."
+msgstr ""
+
+#: templates/pdf/project_report.html:450
+msgid "Сводка по задачам"
+msgstr ""
+
+#: templates/pdf/project_report.html:476
+msgid "Сводка по To-Do"
+msgstr ""
+
+#: templates/pdf/project_report.html:538
+msgid "Просроченные To-Do"
+msgstr ""
+
+#: templates/pdf/project_report.html:571
+msgid "Текущие задачи"
+msgstr ""
+
+#: templates/pdf/project_report.html:603
+msgid "Активных задач нет."
+msgstr ""
+
+#: templates/pdf/project_report.html:607
+msgid "Выполненные задачи"
+msgstr ""
+
+#: templates/pdf/project_report.html:632
+msgid "История отчётов"
+msgstr ""
+
+#: templates/pdf/task_report.html:141
+msgid "Отчёт по задаче:"
+msgstr ""
+
+#: templates/pdf/task_report.html:150
+msgid "Исполнитель:"
+msgstr ""
+
+#: templates/pdf/task_report.html:166
+msgid "Дедлайн:"
+msgstr ""
+
+#: templates/pdf/task_report.html:192
+msgid "Статистика подзадач"
+msgstr ""
+
+#: templates/pdf/task_report.html:225
+msgid "Список подзадач"
+msgstr ""
+
+#: templates/pdf/task_report.html:270
+msgid "Подзадач нет."
+msgstr ""
+
+#: templates/support/admin_tickets.html:6
+msgid "Обращения в поддержку"
+msgstr ""
+
+#: templates/support/admin_tickets.html:8
+msgid "Всего в очереди:"
+msgstr ""
+
+#: templates/support/admin_tickets.html:18
+msgid "Открытые"
+msgstr ""
+
+#: templates/support/admin_tickets.html:22
+msgid "Закрытые"
+msgstr ""
+
+#: templates/support/admin_tickets.html:50 templates/support/my_tickets.html:53
+#: templates/support/ticket.html:21
+msgid "открыт"
+msgstr ""
+
+#: templates/support/admin_tickets.html:52 templates/support/my_tickets.html:55
+#: templates/support/ticket.html:23
+msgid "закрыт"
+msgstr ""
+
+#: templates/support/admin_tickets.html:73 templates/support/my_tickets.html:50
+msgid "сообщ."
+msgstr ""
+
+#: templates/support/admin_tickets.html:91
+msgid "Обращений пока нет"
+msgstr ""
+
+#: templates/support/admin_tickets.html:92
+msgid "Все тикеты будут появляться здесь"
+msgstr ""
+
+#: templates/support/my_tickets.html:6
+msgid "Техподдержка"
+msgstr ""
+
+#: templates/support/my_tickets.html:7
+msgid "Опишите проблему — администратор ответит"
+msgstr ""
+
+#: templates/support/my_tickets.html:13
+msgid "Новое обращение"
+msgstr ""
+
+#: templates/support/my_tickets.html:18
+msgid "Опишите, что случилось"
+msgstr ""
+
+#: templates/support/my_tickets.html:20
+msgid "Например: не могу зайти в раздел проекты..."
+msgstr ""
+
+#: templates/support/my_tickets.html:24
+msgid "Обращение создастся автоматически, вы сразу увидите ответ здесь."
+msgstr ""
+
+#: templates/support/my_tickets.html:35
+msgid "История обращений"
+msgstr ""
+
+#: templates/support/ticket.html:8
+msgid "К списку тикетов"
+msgstr ""
+
+#: templates/support/ticket.html:8
+msgid "К поддержке"
+msgstr ""
+
+#: templates/support/ticket.html:19
+msgid "Обращение"
+msgstr ""
+
+#: templates/support/ticket.html:31
+msgid "Закрыть обращение"
+msgstr ""
+
+#: templates/support/ticket.html:49
+msgid "Создано:"
+msgstr ""
+
+#: templates/support/ticket.html:69
+msgid "поддержка"
+msgstr ""
+
+#: templates/support/ticket.html:99
+msgid "Ответ от поддержки"
+msgstr ""
+
+#: templates/support/ticket.html:99
+msgid "Ваше сообщение"
+msgstr ""
+
+#: templates/support/ticket.html:102
+msgid "Введите текст..."
+msgstr ""
+
+#: templates/support/ticket.html:114
+msgid "Обращение закрыто. Чтобы продолжить переписку — создайте новое."
+msgstr ""
+

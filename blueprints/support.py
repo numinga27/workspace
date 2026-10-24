@@ -9,7 +9,7 @@ from models import User, SupportTicket, SupportMessage
 from decorators import login_required
 from utils import utcnow, get_user_projects
 from services.push import notify_new_support_message
-from services.tasks import send_push_async  # ← ДОБАВЛЕН ИМПОРТ
+from services.tasks import send_push_async
 
 bp = Blueprint('support', __name__, url_prefix='/support')
 
@@ -18,8 +18,10 @@ bp = Blueprint('support', __name__, url_prefix='/support')
 #  ХЕЛПЕРЫ
 # ============================================================
 
-def _is_privileged(user):
-    return user and user.role in ('admin', 'supervisor')
+def _is_admin(user):
+    """Только главный администратор имеет доступ к админке поддержки.
+    Супервизор в поддержке — обычный пользователь."""
+    return user and user.role == 'admin'
 
 
 def _get_or_create_ticket(user):
@@ -41,7 +43,7 @@ def _get_or_create_ticket(user):
 
 
 # ============================================================
-#  ПОДДЕРЖКА ДЛЯ ПОЛЬЗОВАТЕЛЯ
+#  ПОДДЕРЖКА ДЛЯ ПОЛЬЗОВАТЕЛЯ (включая супервизора)
 # ============================================================
 
 @bp.route('/')
@@ -50,7 +52,7 @@ def my_tickets():
     """Список тикетов текущего пользователя."""
     user = User.query.get(session['user_id'])
 
-    if _is_privileged(user):
+    if _is_admin(user):
         return redirect(url_for('support.admin_tickets'))
 
     tickets = SupportTicket.query.filter_by(user_id=user.id)\
@@ -65,10 +67,10 @@ def my_tickets():
 @bp.route('/new', methods=['POST'])
 @login_required
 def create_ticket():
-    """Пользователь создаёт новый тикет (или пишет в текущий)."""
+    """Пользователь (или супервизор) создаёт новый тикет."""
     user = User.query.get(session['user_id'])
 
-    if _is_privileged(user):
+    if _is_admin(user):
         flash('Администраторы не создают тикеты.', 'warning')
         return redirect(url_for('support.admin_tickets'))
 
@@ -94,7 +96,6 @@ def create_ticket():
 
     db.session.commit()
 
-    # ← Push-уведомление всем админам (АСИНХРОННО)
     try:
         push_data_list = notify_new_support_message(ticket, msg, for_admin=True)
         if push_data_list:
@@ -114,7 +115,7 @@ def ticket_detail(ticket_id):
     user = User.query.get(session['user_id'])
     ticket = SupportTicket.query.get_or_404(ticket_id)
 
-    is_admin = _is_privileged(user)
+    is_admin = _is_admin(user)
     if not is_admin and ticket.user_id != user.id:
         flash('Нет доступа к этому обращению.', 'danger')
         return redirect(url_for('support.my_tickets'))
@@ -137,7 +138,6 @@ def ticket_detail(ticket_id):
 
     db.session.commit()
 
-    # POST — новое сообщение
     if request.method == 'POST':
         text = (request.form.get('text') or '').strip()
         if not text:
@@ -163,7 +163,6 @@ def ticket_detail(ticket_id):
 
         db.session.commit()
 
-        # ← Push-уведомление (АСИНХРОННО)
         try:
             push_data_list = notify_new_support_message(ticket, msg, for_admin=not is_admin)
             if push_data_list:
@@ -189,7 +188,7 @@ def ticket_detail(ticket_id):
 def close_ticket(ticket_id):
     """Админ закрывает тикет."""
     user = User.query.get(session['user_id'])
-    if not _is_privileged(user):
+    if not _is_admin(user):
         flash('Нет прав.', 'danger')
         return redirect(url_for('support.my_tickets'))
 
@@ -203,15 +202,15 @@ def close_ticket(ticket_id):
 
 
 # ============================================================
-#  АДМИНСКИЕ ФУНКЦИИ
+#  АДМИНСКИЕ ФУНКЦИИ (только admin)
 # ============================================================
 
 @bp.route('/admin')
 @login_required
 def admin_tickets():
-    """Список всех тикетов — только для админов."""
+    """Список всех тикетов — только для главного админа."""
     user = User.query.get(session['user_id'])
-    if not _is_privileged(user):
+    if not _is_admin(user):
         flash('Нет прав.', 'danger')
         return redirect(url_for('dashboard.dashboard'))
 
@@ -245,7 +244,7 @@ def admin_tickets():
 def unread_count():
     """API: количество непрочитанных тикетов — для бейджа в сайдбаре."""
     user = User.query.get(session['user_id'])
-    if not _is_privileged(user):
+    if not _is_admin(user):
         return jsonify({'count': 0})
 
     count = db.session.query(

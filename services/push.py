@@ -267,16 +267,20 @@ def notify_new_support_message(ticket, message, for_admin=True):
     Параметры:
         ticket: SupportTicket
         message: SupportMessage (только что созданное)
-        for_admin: True — уведомляем админов о новом обращении юзера,
-                   False — уведомляем юзера об ответе админа.
+        for_admin: True — уведомляем ТОЛЬКО главного админа о новом обращении юзера/супервизора,
+                   False — уведомляем автора тикета об ответе админа.
+    
+    ВАЖНО: супервизор в поддержке — обычный пользователь (пишет свои тикеты).
+    Push о новых тикетах получает только role='admin'.
     """
     from models import User
 
     result = []
 
     if for_admin:
+        # ← ТОЛЬКО главный администратор. Супервизор больше не получает push о тикетах.
         recipients = User.query.filter(
-            User.role.in_(['admin', 'supervisor']),
+            User.role == 'admin',
             User.is_active.is_(True),
         ).all()
         title = f'🎫 Новое обращение #{ticket.id}'

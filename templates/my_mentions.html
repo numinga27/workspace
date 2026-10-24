@@ -4,13 +4,13 @@
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
         <h2 class="mb-1">
-            <i class="bi bi-at"></i> Мои упоминания
+            <i class="bi bi-at"></i> {{ _('Мои упоминания') }}
         </h2>
         <p class="text-muted mb-0">
-            Сообщения, где вас упомянули через <code>@Имя Фамилия</code>
+            {{ _('Сообщения, где вас упомянули через') }} <code>@{{ _('Имя Фамилия') }}</code>
             {% if total_unread and total_unread.values()|sum > 0 %}
                 · <span class="badge bg-primary">
-                    {{ total_unread.values()|sum }} новых
+                    {{ total_unread.values()|sum }} {{ _('новых') }}
                 </span>
             {% endif %}
         </p>
@@ -20,7 +20,7 @@
     {% if total_unread and total_unread.values()|sum > 0 %}
     <form method="POST" action="{{ url_for('chat.my_mentions_mark_all_read') }}" class="d-inline">
         <button type="submit" class="btn btn-outline-primary">
-            <i class="bi bi-check-all"></i> Отметить всё прочитанным
+            <i class="bi bi-check-all"></i> {{ _('Отметить всё прочитанным') }}
         </button>
     </form>
     {% endif %}
@@ -54,20 +54,20 @@
                     </span>
                     {% endif %}
                 {% else %}
-                    <span class="text-muted fst-italic">Проект удалён</span>
+                    <span class="text-muted fst-italic">{{ _('Проект удалён') }}</span>
                 {% endif %}
 
                 {% if group.unread_count > 0 %}
                 <span class="badge bg-primary" style="font-size: 10px;">
-                    {{ group.unread_count }} новых
+                    {{ group.unread_count }} {{ _('новых') }}
                 </span>
                 {% endif %}
             </div>
             {% if project %}
             <a href="{{ url_for('projects.view_project', project_id=project.id) }}?mark_read=1#chat"
                class="btn btn-sm btn-outline-secondary"
-               title="Перейти в чат проекта">
-                <i class="bi bi-arrow-right"></i> В чат
+               title="{{ _('Перейти в чат проекта') }}">
+                <i class="bi bi-arrow-right"></i> {{ _('В чат') }}
             </a>
             {% endif %}
         </div>
@@ -93,16 +93,16 @@
                                         {% if author %}
                                             {{ author.first_name }} {{ author.last_name }}
                                         {% else %}
-                                            Неизвестный автор
+                                            {{ _('Неизвестный автор') }}
                                         {% endif %}
                                     </strong>
                                     {% if author and author.role == 'admin' %}
-                                        <span class="badge bg-danger" style="font-size: 9px;">Администратор</span>
+                                        <span class="badge bg-danger" style="font-size: 9px;">{{ _('Администратор') }}</span>
                                     {% elif author and author.role == 'supervisor' %}
-                                        <span class="badge bg-warning text-dark" style="font-size: 9px;">Супервизор</span>
+                                        <span class="badge bg-warning text-dark" style="font-size: 9px;">{{ _('Супервизор') }}</span>
                                     {% endif %}
                                     {% if not mention.is_read %}
-                                        <span class="badge bg-primary ms-2" style="font-size: 9px;">новое</span>
+                                        <span class="badge bg-primary ms-2" style="font-size: 9px;">{{ _('новое') }}</span>
                                     {% endif %}
                                 </div>
                                 <small class="text-muted text-nowrap">
@@ -115,7 +115,7 @@
                                 {% if msg %}
                                     {{ msg.text }}
                                 {% else %}
-                                    <span class="text-muted fst-italic">Сообщение удалено</span>
+                                    <span class="text-muted fst-italic">{{ _('Сообщение удалено') }}</span>
                                 {% endif %}
                             </div>
                         </div>
@@ -131,12 +131,12 @@
     <div class="empty-state-icon">
         <i class="bi bi-at"></i>
     </div>
-    <h5>Упоминаний пока нет</h5>
+    <h5>{{ _('Упоминаний пока нет') }}</h5>
     <p>
-        Когда кто-то напишет в чате <code>@Ваше Имя</code> — упоминание появится здесь.
+        {{ _('Когда кто-то напишет в чате') }} <code>@{{ _('Ваше Имя') }}</code> — {{ _('упоминание появится здесь.') }}
     </p>
     <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left"></i> К дашборду
+        <i class="bi bi-arrow-left"></i> {{ _('К дашборду') }}
     </a>
 </div>
 {% endif %}

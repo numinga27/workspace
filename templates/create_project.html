@@ -4,57 +4,57 @@
     <div class="col-md-8 col-lg-7">
         <div class="mb-3">
             <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left"></i> К дашборду
+                <i class="bi bi-arrow-left"></i> {{ _('К дашборду') }}
             </a>
         </div>
 
         <div class="card shadow">
             <div class="card-header bg-primary text-white">
-                <h4 class="mb-0"><i class="bi bi-folder-plus"></i> Новый проект</h4>
+                <h4 class="mb-0"><i class="bi bi-folder-plus"></i> {{ _('Новый проект') }}</h4>
             </div>
             <div class="card-body">
                 <form method="POST">
 
                     <!-- Название -->
                     <div class="mb-3">
-                        <label class="form-label">Название проекта *</label>
+                        <label class="form-label">{{ _('Название проекта') }} *</label>
                         <input type="text" name="name" class="form-control"
-                               placeholder="Например: Строительство склада" required autofocus>
+                               placeholder="{{ _('Например: Строительство склада') }}" required autofocus>
                     </div>
 
                     <!-- Описание -->
                     <div class="mb-3">
-                        <label class="form-label">Описание</label>
+                        <label class="form-label">{{ _('Описание') }}</label>
                         <textarea name="description" class="form-control" rows="3"
-                                  placeholder="Краткое описание проекта..."></textarea>
+                                  placeholder="{{ _('Краткое описание проекта...') }}"></textarea>
                     </div>
 
                     <!-- Филиал компании -->
                     <div class="mb-3">
                         <label class="form-label">
-                            <i class="bi bi-building"></i> Филиал компании
+                            <i class="bi bi-building"></i> {{ _('Филиал компании') }}
                         </label>
                         <div class="input-group">
                             <select name="company_id" class="form-select">
-                                <option value="">— Без филиала —</option>
+                                <option value="">{{ _('— Без филиала —') }}</option>
                                 {% for c in companies|default([]) %}
                                 <option value="{{ c.id }}">
-                                    {{ c.name }}{% if c.inn %} (ИНН: {{ c.inn }}){% endif %}
+                                    {{ c.name }}{% if c.inn %} ({{ _('ИНН:') }} {{ c.inn }}){% endif %}
                                 </option>
                                 {% endfor %}
                             </select>
                             <a href="{{ url_for('companies.companies_create') }}?next={{ url_for('projects.create_project') }}"
                                class="btn btn-outline-primary"
-                               title="Добавить новый филиал">
+                               title="{{ _('Добавить новый филиал') }}">
                                 <i class="bi bi-plus-lg"></i>
                             </a>
                         </div>
                         <small class="text-muted">
                             <i class="bi bi-info-circle"></i>
-                            Какой филиал ведёт проект. Влияет на фильтр дашборда и группировку в сайдбаре.
+                            {{ _('Какой филиал ведёт проект. Влияет на фильтр дашборда и группировку в сайдбаре.') }}
                             {% if not companies %}
                             <br><span class="text-warning">
-                                Список пуст — сначала добавьте филиал.
+                                {{ _('Список пуст — сначала добавьте филиал.') }}
                             </span>
                             {% endif %}
                         </small>
@@ -62,19 +62,19 @@
 
                     <!-- Заказчик -->
                     <div class="mb-3">
-                        <label class="form-label">Заказчик</label>
+                        <label class="form-label">{{ _('Заказчик') }}</label>
                         <div class="input-group">
                             <select name="customer_id" class="form-select">
-                                <option value="">— Без заказчика —</option>
+                                <option value="">{{ _('— Без заказчика —') }}</option>
                                 {% for c in customers %}
                                 <option value="{{ c.id }}">
-                                    {{ c.name }}{% if c.inn %} (ИНН: {{ c.inn }}){% endif %}
+                                    {{ c.name }}{% if c.inn %} ({{ _('ИНН:') }} {{ c.inn }}){% endif %}
                                 </option>
                                 {% endfor %}
                             </select>
                             <a href="{{ url_for('customers.create_customer') }}?next={{ url_for('projects.create_project') }}"
                                class="btn btn-outline-info"
-                               title="Добавить нового заказчика">
+                               title="{{ _('Добавить нового заказчика') }}">
                                 <i class="bi bi-plus-lg"></i>
                             </a>
                         </div>
@@ -83,49 +83,49 @@
                     <!-- Поставщик + Субподрядчики -->
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Поставщик</label>
+                            <label class="form-label">{{ _('Поставщик') }}</label>
                             <div class="input-group">
                                 <select name="supplier_id" class="form-select">
-                                    <option value="">— Без поставщика —</option>
+                                    <option value="">{{ _('— Без поставщика —') }}</option>
                                     {% for s in suppliers|default([]) %}
                                     <option value="{{ s.id }}">
-                                        {{ s.name }}{% if s.inn %} (ИНН: {{ s.inn }}){% endif %}
+                                        {{ s.name }}{% if s.inn %} ({{ _('ИНН:') }} {{ s.inn }}){% endif %}
                                     </option>
                                     {% endfor %}
                                 </select>
                                 <a href="{{ url_for('suppliers.create_supplier') }}?next={{ url_for('projects.create_project') }}"
                                    class="btn btn-outline-warning"
-                                   title="Добавить нового поставщика">
+                                   title="{{ _('Добавить нового поставщика') }}">
                                     <i class="bi bi-plus-lg"></i>
                                 </a>
                             </div>
                             <small class="text-muted">
-                                <i class="bi bi-truck"></i> Основной поставщик
+                                <i class="bi bi-truck"></i> {{ _('Основной поставщик') }}
                             </small>
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label class="form-label">
-                                <i class="bi bi-people-fill"></i> Субподрядчики
-                                <span class="text-muted small">(можно несколько)</span>
+                                <i class="bi bi-people-fill"></i> {{ _('Субподрядчики') }}
+                                <span class="text-muted small">({{ _('можно несколько') }})</span>
                             </label>
                             <div class="input-group">
                                 <select name="subcontractor_ids" class="form-select" multiple size="4">
                                     {% for s in available_subcontractors|default([]) %}
                                     <option value="{{ s.id }}">
-                                        {{ s.name }}{% if s.inn %} (ИНН: {{ s.inn }}){% endif %}
+                                        {{ s.name }}{% if s.inn %} ({{ _('ИНН:') }} {{ s.inn }}){% endif %}
                                     </option>
                                     {% endfor %}
                                 </select>
                                 <a href="{{ url_for('suppliers.create_subcontractor') }}?next={{ url_for('projects.create_project') }}"
                                    class="btn btn-outline-primary"
-                                   title="Добавить нового субподрядчика">
+                                   title="{{ _('Добавить нового субподрядчика') }}">
                                     <i class="bi bi-plus-lg"></i>
                                 </a>
                             </div>
                             <small class="text-muted">
                                 <i class="bi bi-info-circle"></i>
-                                Ctrl+клик (⌘ на Mac) — выбрать несколько.
+                                {{ _('Ctrl+клик (⌘ на Mac) — выбрать несколько.') }}
                             </small>
                         </div>
                     </div>
@@ -133,38 +133,38 @@
                     <!-- Даты -->
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Дата старта</label>
+                            <label class="form-label">{{ _('Дата старта') }}</label>
                             <input type="date" name="start_date" class="form-control">
-                            <small class="text-muted">По умолчанию — сегодня</small>
+                            <small class="text-muted">{{ _('По умолчанию — сегодня') }}</small>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Плановая дата окончания</label>
+                            <label class="form-label">{{ _('Плановая дата окончания') }}</label>
                             <input type="date" name="end_date" class="form-control">
-                            <small class="text-muted">Можно изменить позже</small>
+                            <small class="text-muted">{{ _('Можно изменить позже') }}</small>
                         </div>
                     </div>
 
                     <!-- Инфо -->
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle"></i>
-                        <strong>После создания</strong> вы автоматически становитесь
-                        <strong>руководителем проекта</strong> и сможете:
+                        <strong>{{ _('После создания') }}</strong> {{ _('вы автоматически становитесь') }}
+                        <strong>{{ _('руководителем проекта') }}</strong> {{ _('и сможете:') }}
                         <ul class="mb-0 mt-1 small">
-                            <li>Приглашать участников и назначать им роли</li>
-                            <li>Создавать задачи, вехи и To-Do</li>
-                            <li>Назначать задачи на контактных лиц заказчика / поставщика / субподрядчиков</li>
-                            <li>Загружать файлы и писать отчёты</li>
-                            <li>Удалять проект (с подтверждением)</li>
+                            <li>{{ _('Приглашать участников и назначать им роли') }}</li>
+                            <li>{{ _('Создавать задачи, вехи и To-Do') }}</li>
+                            <li>{{ _('Назначать задачи на контактных лиц заказчика / поставщика / субподрядчиков') }}</li>
+                            <li>{{ _('Загружать файлы и писать отчёты') }}</li>
+                            <li>{{ _('Удалять проект (с подтверждением)') }}</li>
                         </ul>
                     </div>
 
                     <!-- Кнопки -->
                     <div class="d-flex justify-content-between mt-3">
                         <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-secondary">
-                            <i class="bi bi-x"></i> Отмена
+                            <i class="bi bi-x"></i> {{ _('Отмена') }}
                         </a>
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i> Создать проект
+                            <i class="bi bi-check-circle"></i> {{ _('Создать проект') }}
                         </button>
                     </div>
                 </form>
@@ -175,11 +175,8 @@
         <div class="card mt-3" style="border-left: 3px solid var(--accent);">
             <div class="card-body small text-muted">
                 <i class="bi bi-lightbulb text-warning"></i>
-                <strong>Совет по субподрядчикам:</strong>
-                если проект ведут несколько субподрядных организаций (например,
-                ООО «ЭлектроМонтаж» и ООО «СантехМонтаж»), выберите обоих в списке.
-                В сайдбаре проект появится под каждым из них, а в фильтре дашборда
-                можно будет найти по любому.
+                <strong>{{ _('Совет по субподрядчикам:') }}</strong>
+                {{ _('если проект ведут несколько субподрядных организаций (например, ООО «ЭлектроМонтаж» и ООО «СантехМонтаж»), выберите обоих в списке. В сайдбаре проект появится под каждым из них, а в фильтре дашборда можно будет найти по любому.') }}
             </div>
         </div>
     </div>

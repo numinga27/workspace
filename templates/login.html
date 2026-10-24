@@ -247,8 +247,8 @@
                 <span>Workspace</span>
             </div>
 
-            <h1 class="auth-title">С возвращением 👋</h1>
-            <p class="auth-subtitle">Войдите, чтобы продолжить работу</p>
+            <h1 class="auth-title">{{ _('С возвращением 👋') }}</h1>
+            <p class="auth-subtitle">{{ _('Войдите, чтобы продолжить работу') }}</p>
 
             <form method="POST">
                 <div class="auth-field">
@@ -258,18 +258,18 @@
                 </div>
 
                 <div class="auth-field">
-                    <label for="password">Пароль</label>
+                    <label for="password">{{ _('Пароль') }}</label>
                     <input type="password" id="password" name="password"
                            placeholder="••••••••" required>
                 </div>
 
                 <button type="submit" class="auth-btn">
-                    Войти →
+                    {{ _('Войти') }} →
                 </button>
             </form>
 
             <div class="auth-footer">
-                Нет аккаунта? <a href="{{ url_for('auth.register') }}">Зарегистрироваться</a>
+                {{ _('Нет аккаунта?') }} <a href="{{ url_for('auth.register') }}">{{ _('Зарегистрироваться') }}</a>
             </div>
         </div>
     </div>
@@ -277,43 +277,43 @@
     <!-- Правая сторона: иллюстрация -->
     <div class="auth-visual-side">
         <div class="auth-visual-content">
-            <h2>Управляйте проектами <span>эффективно</span></h2>
-            <p>Всё необходимое для команды в одном месте: задачи, вехи, отчёты, файлы и общение.</p>
+            <h2>{{ _('Управляйте проектами') }} <span>{{ _('эффективно') }}</span></h2>
+            <p>{{ _('Всё необходимое для команды в одном месте: задачи, вехи, отчёты, файлы и общение.') }}</p>
 
             <ul class="feature-list">
                 <li>
                     <div class="feature-icon">📋</div>
                     <div class="feature-text">
-                        <strong>Задачи и подзадачи</strong>
-                        <span>Назначайте исполнителей и следите за прогрессом</span>
+                        <strong>{{ _('Задачи и подзадачи') }}</strong>
+                        <span>{{ _('Назначайте исполнителей и следите за прогрессом') }}</span>
                     </div>
                 </li>
                 <li>
                     <div class="feature-icon">🎯</div>
                     <div class="feature-text">
-                        <strong>Вехи проекта</strong>
-                        <span>Контрольные точки с уведомлениями о просрочке</span>
+                        <strong>{{ _('Вехи проекта') }}</strong>
+                        <span>{{ _('Контрольные точки с уведомлениями о просрочке') }}</span>
                     </div>
                 </li>
                 <li>
                     <div class="feature-icon">👥</div>
                     <div class="feature-text">
-                        <strong>Команда с ролями</strong>
-                        <span>Руководитель, менеджер, инженер, логистик</span>
+                        <strong>{{ _('Команда с ролями') }}</strong>
+                        <span>{{ _('Руководитель, менеджер, инженер, логистик') }}</span>
                     </div>
                 </li>
                 <li>
                     <div class="feature-icon">📊</div>
                     <div class="feature-text">
-                        <strong>PDF-отчёты</strong>
-                        <span>По проекту и по каждому сотруднику</span>
+                        <strong>{{ _('PDF-отчёты') }}</strong>
+                        <span>{{ _('По проекту и по каждому сотруднику') }}</span>
                     </div>
                 </li>
                 <li>
                     <div class="feature-icon">📧</div>
                     <div class="feature-text">
-                        <strong>Email-уведомления</strong>
-                        <span>Автоматические напоминания о дедлайнах</span>
+                        <strong>{{ _('Email-уведомления') }}</strong>
+                        <span>{{ _('Автоматические напоминания о дедлайнах') }}</span>
                     </div>
                 </li>
             </ul>

@@ -1,0 +1,3540 @@
+# Chinese translations for Workspace.
+# This file is distributed under the same license as the Workspace project.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Workspace 1.0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-23 11:50+0000\n"
+"PO-Revision-Date: 2026-10-24 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: Chinese\n"
+"Language: zh\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: templates/base.html
+msgid "Меню"
+msgstr "菜单"
+
+#: templates/base.html
+msgid "Поиск..."
+msgstr "搜索..."
+
+#: templates/base.html
+msgid "Глобальный поиск"
+msgstr "全局搜索"
+
+#: templates/base.html
+msgid "Язык"
+msgstr "语言"
+
+#: templates/base.html
+msgid "Русский"
+msgstr "俄语"
+
+#: templates/base.html
+msgid "English"
+msgstr "英语"
+
+#: templates/base.html
+msgid "Скачать приложение для Android"
+msgstr "下载 Android 应用"
+
+#: templates/base.html
+msgid "Установить на iPhone"
+msgstr "安装到 iPhone"
+
+#: templates/base.html
+msgid "Профиль и смена пароля"
+msgstr "个人资料和修改密码"
+
+#: templates/base.html
+msgid "Администратор"
+msgstr "管理员"
+
+#: templates/base.html
+msgid "Супервизор"
+msgstr "主管"
+
+#: templates/base.html
+msgid "Выйти"
+msgstr "退出"
+
+#: templates/base.html
+msgid "Основное"
+msgstr "主要"
+
+#: templates/base.html
+msgid "Дашборд"
+msgstr "仪表板"
+
+#: templates/base.html
+msgid "Мои задачи"
+msgstr "我的任务"
+
+#: templates/base.html
+msgid "Мои упоминания"
+msgstr "我的提及"
+
+#: templates/base.html
+msgid "Мой календарь"
+msgstr "我的日历"
+
+#: templates/base.html
+msgid "Включить уведомления"
+msgstr "启用通知"
+
+#: templates/base.html
+msgid "Обращения"
+msgstr "工单"
+
+#: templates/base.html
+msgid "Поддержка"
+msgstr "支持"
+
+#: templates/base.html
+msgid "Управление"
+msgstr "管理"
+
+#: templates/base.html
+msgid "Пользователи"
+msgstr "用户"
+
+#: templates/base.html
+msgid "Журнал действий"
+msgstr "操作日志"
+
+#: templates/base.html
+msgid "Филиалы"
+msgstr "分公司"
+
+#: templates/base.html
+msgid "Заказчики"
+msgstr "客户"
+
+#: templates/base.html
+msgid "Субподрядчики"
+msgstr "分包商"
+
+#: templates/base.html
+msgid "Создать проект"
+msgstr "创建项目"
+
+#: templates/base.html
+msgid "Проекты"
+msgstr "项目"
+
+#: templates/base.html
+msgid "Поиск проектов..."
+msgstr "搜索项目..."
+
+#: templates/base.html
+msgid "Без заказчика"
+msgstr "无客户"
+
+#: templates/base.html
+msgid "Задачи"
+msgstr "任务"
+
+#: templates/base.html
+msgid "Чат"
+msgstr "聊天"
+
+#: templates/base.html
+msgid "Нет проектов"
+msgstr "没有项目"
+
+#: templates/base.html
+msgid "Установка на iPhone"
+msgstr "安装到 iPhone"
+
+#: templates/base.html
+msgid "Приложение Workspace устанавливается как PWA — без App Store. Занимает 30 секунд."
+msgstr "Workspace 以 PWA 方式安装 — 无需 App Store。只需 30 秒。"
+
+#: templates/base.html
+msgid "Откройте сайт в Safari"
+msgstr "在 Safari 中打开网站"
+
+#: templates/base.html
+msgid "Именно в Safari! Chrome и Яндекс.Браузер не подходят."
+msgstr "必须使用 Safari！Chrome 和 Yandex 浏览器不支持。"
+
+#: templates/base.html
+msgid "Нажмите «Поделиться»"
+msgstr "点击“分享”"
+
+#: templates/base.html
+msgid "Квадрат со стрелкой вверх внизу экрана."
+msgstr "屏幕底部带向上箭头的方框。"
+
+#: templates/base.html
+msgid "Выберите «На экран \"Домой\"»"
+msgstr "选择“添加到主屏幕”"
+
+#: templates/base.html
+msgid "В самом низу списка."
+msgstr "在列表最底部。"
+
+#: templates/base.html
+msgid "Нажмите «Добавить»"
+msgstr "点击“添加”"
+
+#: templates/base.html
+msgid "Иконка появится на домашнем экране."
+msgstr "图标将出现在主屏幕上。"
+
+#: templates/base.html
+msgid "После установки откройте приложение с домашнего экрана и разрешите уведомления."
+msgstr "安装后，从主屏幕打开应用并允许通知。"
+
+#: templates/base.html
+msgid "Понятно"
+msgstr "知道了"
+
+#: templates/base.html
+msgid "Открыть сайт"
+msgstr "打开网站"
+
+#: templates/base.html
+msgid "Как обновить приложение"
+msgstr "如何更新应用"
+
+#: templates/base.html
+msgid "Android (PWA)"
+msgstr "Android (PWA)"
+
+#: templates/base.html
+msgid "Нажмите кнопку «Скачать APK» в баннере."
+msgstr "点击横幅中的“下载 APK”按钮。"
+
+#: templates/base.html
+msgid "Откройте скачанный файл"
+msgstr "打开下载的文件"
+
+#: templates/base.html
+msgid "Разрешите установку из неизвестных источников (если попросит)."
+msgstr "允许从未知来源安装（如果提示）。"
+
+#: templates/base.html
+msgid "Нажмите «Установить»."
+msgstr "点击“安装”。"
+
+#: templates/base.html
+msgid "Готово! Откройте приложение — оно уже обновлено."
+msgstr "完成！打开应用 — 它已更新。"
+
+#: templates/base.html
+msgid "Все ваши данные (проекты, задачи, чаты) сохранятся."
+msgstr "您的所有数据（项目、任务、聊天）都将保留。"
+
+#: templates/base.html
+msgid "iPhone / iPad (PWA)"
+msgstr "iPhone / iPad (PWA)"
+
+#: templates/base.html
+msgid "Нажмите кнопку «Обновить» в баннере."
+msgstr "点击横幅中的“更新”按钮。"
+
+#: templates/base.html
+msgid "Приложение перезагрузится с новой версией."
+msgstr "应用将以新版本重新加载。"
+
+#: templates/base.html
+msgid "Готово! Все данные сохранятся."
+msgstr "完成！所有数据都将保留。"
+
+#: templates/base.html
+msgid ""
+"Если кнопка «Обновить» не сработала — удалите иконку Workspace с домашнего "
+"экрана, откройте сайт в Safari и снова добавьте на экран «Домой»."
+msgstr ""
+"如果“更新”按钮无效 — 请从主屏幕删除 Workspace 图标，在 Safari 中打开网站，"
+"然后再次添加到主屏幕。"
+
+#: templates/base.html
+msgid "Компьютер (браузер)"
+msgstr "电脑（浏览器）"
+
+#: templates/base.html
+msgid "Нажмите «Обновить» в модалке (или закройте её)."
+msgstr "点击弹窗中的“更新”（或关闭它）。"
+
+#: templates/base.html
+msgid "Обновите страницу:"
+msgstr "刷新页面："
+
+#: templates/base.html
+msgid "или"
+msgstr "或"
+
+#: templates/base.html
+msgid "Готово! Вы увидите новую версию."
+msgstr "完成！您将看到新版本。"
+
+#: templates/base.html
+msgid "Обычно обновление подхватывается автоматически при следующем заходе."
+msgstr "通常更新会在下次访问时自动应用。"
+
+#: templates/base.html
+msgid "Что нового в версии"
+msgstr "新版本内容"
+
+#: templates/base.html
+msgid "Добавлена техподдержка, улучшен интерфейс"
+msgstr "新增技术支持，改进界面"
+
+#: templates/base.html
+msgid "Отмена"
+msgstr "取消"
+
+#: templates/base.html
+msgid "Обновить"
+msgstr "更新"
+
+#: templates/base.html
+msgid "Ваш браузер не поддерживает push-уведомления."
+msgstr "您的浏览器不支持推送通知。"
+
+#: templates/base.html
+msgid "Уведомления не разрешены."
+msgstr "通知未授权。"
+
+#: templates/base.html
+msgid "Настройки → Уведомления → Workspace → Разрешить"
+msgstr "设置 → 通知 → Workspace → 允许"
+
+#: templates/base.html
+msgid "Ошибка: сервер не отдаёт VAPID-ключ"
+msgstr "错误：服务器未提供 VAPID 密钥"
+
+#: templates/base.html
+msgid "Не удалось:"
+msgstr "失败："
+
+#: templates/base.html
+msgid "Уведомления включены!"
+msgstr "通知已启用！"
+
+#: templates/base.html
+msgid "Включить"
+msgstr "启用"
+
+#: templates/base.html
+msgid "Получайте оповещения о задачах и сообщениях"
+msgstr "接收任务和消息提醒"
+
+#: templates/base.html
+msgid "Скачать APK"
+msgstr "下载 APK"
+
+#: templates/base.html
+msgid "Как?"
+msgstr "如何？"
+
+#: templates/base.html
+msgid "Доступна новая версия"
+msgstr "有新版本可用"
+
+#: templates/base.html
+msgid "Обновление готово к установке"
+msgstr "更新已准备好安装"
+
+#: templates/login.html
+msgid "С возвращением 👋"
+msgstr "欢迎回来 👋"
+
+#: templates/login.html
+msgid "Войдите, чтобы продолжить работу"
+msgstr "登录以继续工作"
+
+#: templates/login.html
+msgid "Пароль"
+msgstr "密码"
+
+#: templates/login.html
+msgid "Войти"
+msgstr "登录"
+
+#: templates/login.html
+msgid "Нет аккаунта?"
+msgstr "没有账号？"
+
+#: templates/login.html
+msgid "Зарегистрироваться"
+msgstr "注册"
+
+#: templates/login.html
+msgid "Управляйте проектами"
+msgstr "管理项目"
+
+#: templates/login.html
+msgid "эффективно"
+msgstr "高效地"
+
+#: templates/login.html
+msgid "Всё необходимое для команды в одном месте: задачи, вехи, отчёты, файлы и общение."
+msgstr "团队所需的一切都在这里：任务、里程碑、报告、文件和沟通。"
+
+#: templates/login.html
+msgid "Задачи и подзадачи"
+msgstr "任务和子任务"
+
+#: templates/login.html
+msgid "Назначайте исполнителей и следите за прогрессом"
+msgstr "分配执行人并跟踪进度"
+
+#: templates/login.html
+msgid "Вехи проекта"
+msgstr "项目里程碑"
+
+#: templates/login.html
+msgid "Контрольные точки с уведомлениями о просрочке"
+msgstr "带逾期通知的检查点"
+
+#: templates/login.html
+msgid "Команда с ролями"
+msgstr "带角色的团队"
+
+#: templates/login.html
+msgid "Руководитель, менеджер, инженер, логистик"
+msgstr "项目经理、经理、工程师、物流"
+
+#: templates/login.html
+msgid "PDF-отчёты"
+msgstr "PDF 报告"
+
+#: templates/login.html
+msgid "По проекту и по каждому сотруднику"
+msgstr "按项目和每位员工"
+
+#: templates/login.html
+msgid "Email-уведомления"
+msgstr "邮件通知"
+
+#: templates/login.html
+msgid "Автоматические напоминания о дедлайнах"
+msgstr "自动截止日期提醒"
+
+#: templates/dashboard.html
+msgid "Привет,"
+msgstr "你好，"
+
+#: templates/dashboard.html
+msgid "Ваши проекты"
+msgstr "您的项目"
+
+#: templates/dashboard.html
+msgid "Создать проект"
+msgstr "创建项目"
+
+#: templates/dashboard.html
+msgid "Запустить рассылку уведомлений о дедлайнах?"
+msgstr "发送截止日期提醒邮件？"
+
+#: templates/dashboard.html
+msgid "Отправить email всем, у кого приближается дедлайн"
+msgstr "向所有即将到期的人发送邮件"
+
+#: templates/dashboard.html
+msgid "Разослать"
+msgstr "发送"
+
+#: templates/dashboard.html
+msgid "Требует внимания"
+msgstr "需要关注"
+
+#: templates/dashboard.html
+msgid "Все задачи"
+msgstr "所有任务"
+
+#: templates/dashboard.html
+msgid "дн."
+msgstr "天"
+
+#: templates/dashboard.html
+msgid "…и ещё"
+msgstr "…还有"
+
+#: templates/dashboard.html
+msgid "Проектов:"
+msgstr "项目："
+
+#: templates/dashboard.html
+msgid "Показано:"
+msgstr "显示："
+
+#: templates/dashboard.html
+msgid "Филиалов:"
+msgstr "分公司："
+
+#: templates/dashboard.html
+msgid "Субподрядчиков:"
+msgstr "分包商："
+
+#: templates/dashboard.html
+msgid "Моих активных задач:"
+msgstr "我的活跃任务："
+
+#: templates/dashboard.html
+msgid "Просрочено:"
+msgstr "逾期："
+
+#: templates/dashboard.html
+msgid "Новых задач:"
+msgstr "新任务："
+
+#: templates/dashboard.html
+msgid "Филиал"
+msgstr "分公司"
+
+#: templates/dashboard.html
+msgid "Все филиалы"
+msgstr "所有分公司"
+
+#: templates/dashboard.html
+msgid "— Без филиала —"
+msgstr "— 无分公司 —"
+
+#: templates/dashboard.html
+msgid "Субподрядчик"
+msgstr "分包商"
+
+#: templates/dashboard.html
+msgid "Все субподрядчики"
+msgstr "所有分包商"
+
+#: templates/dashboard.html
+msgid "— Без субподрядчика —"
+msgstr "— 无分包商 —"
+
+#: templates/dashboard.html
+msgid "Заказчик"
+msgstr "客户"
+
+#: templates/dashboard.html
+msgid "Все заказчики"
+msgstr "所有客户"
+
+#: templates/dashboard.html
+msgid "Старт с"
+msgstr "开始于"
+
+#: templates/dashboard.html
+msgid "Старт по"
+msgstr "开始至"
+
+#: templates/dashboard.html
+msgid "Статус"
+msgstr "状态"
+
+#: templates/dashboard.html
+msgid "Все"
+msgstr "全部"
+
+#: templates/dashboard.html
+msgid "Применить"
+msgstr "应用"
+
+#: templates/dashboard.html
+msgid "Сбросить фильтры"
+msgstr "重置筛选"
+
+#: templates/dashboard.html
+msgid "Найдено:"
+msgstr "找到："
+
+#: templates/dashboard.html
+msgid "из"
+msgstr "共"
+
+#: templates/dashboard.html
+msgid "Просрочен на"
+msgstr "逾期"
+
+#: templates/dashboard.html
+msgid "Нет описания"
+msgstr "无描述"
+
+#: templates/dashboard.html
+msgid "Завершён"
+msgstr "已完成"
+
+#: templates/dashboard.html
+msgid "Приостановлен"
+msgstr "已暂停"
+
+#: templates/dashboard.html
+msgid "Отменён"
+msgstr "已取消"
+
+#: templates/dashboard.html
+msgid "По фильтрам ничего не найдено"
+msgstr "没有符合筛选条件的结果"
+
+#: templates/dashboard.html
+msgid "У вас пока нет проектов"
+msgstr "您还没有项目"
+
+#: templates/dashboard.html
+msgid "Попробуйте изменить условия фильтрации"
+msgstr "尝试更改筛选条件"
+
+#: templates/dashboard.html
+msgid "Создайте свой первый проект — вы станете его руководителем"
+msgstr "创建您的第一个项目 — 您将成为项目经理"
+
+#: templates/dashboard.html
+msgid "Создать первый проект"
+msgstr "创建第一个项目"
+
+#: templates/project.html
+msgid "В работе"
+msgstr "进行中"
+
+#: templates/project.html
+msgid "Филиал компании"
+msgstr "公司分公司"
+
+#: templates/project.html
+msgid "PDF-отчёт"
+msgstr "PDF 报告"
+
+#: templates/project.html
+msgid "Редактировать"
+msgstr "编辑"
+
+#: templates/project.html
+msgid "Команда"
+msgstr "团队"
+
+#: templates/project.html
+msgid "Удалить"
+msgstr "删除"
+
+#: templates/project.html
+msgid "Всего:"
+msgstr "总计："
+
+#: templates/project.html
+msgid "Завершено:"
+msgstr "已完成："
+
+#: templates/project.html
+msgid "В работе:"
+msgstr "进行中："
+
+#: templates/project.html
+msgid "Участников:"
+msgstr "成员："
+
+#: templates/project.html
+msgid "ИНН:"
+msgstr "税号："
+
+#: templates/project.html
+msgid "Заказчик не указан"
+msgstr "未指定客户"
+
+#: templates/project.html
+msgid "Группа компаний АМ Станко:"
+msgstr "AM Stanko 集团公司："
+
+#: templates/project.html
+msgid "Субподрядчик:"
+msgstr "分包商："
+
+#: templates/project.html
+msgid "Субподрядчики не указаны"
+msgstr "未指定分包商"
+
+#: templates/project.html
+msgid "Без субподрядчиков"
+msgstr "无分包商"
+
+#: templates/project.html
+msgid "Проект просрочен!"
+msgstr "项目已逾期！"
+
+#: templates/project.html
+msgid "Плановое окончание"
+msgstr "计划结束"
+
+#: templates/project.html
+msgid "дн. назад"
+msgstr "天前"
+
+#: templates/project.html
+msgid "Просрочено вех:"
+msgstr "逾期里程碑："
+
+#: templates/project.html
+msgid "Показать"
+msgstr "显示"
+
+#: templates/project.html
+msgid "просрочено на"
+msgstr "逾期"
+
+#: templates/project.html
+msgid "Просрочено задач:"
+msgstr "逾期任务："
+
+#: templates/project.html
+msgid "…и ещё"
+msgstr "…还有"
+
+#: templates/project.html
+msgid "Прогресс"
+msgstr "进度"
+
+#: templates/project.html
+msgid "Показать/скрыть вехи"
+msgstr "显示/隐藏里程碑"
+
+#: templates/project.html
+msgid "Вехи:"
+msgstr "里程碑："
+
+#: templates/project.html
+msgid "Добавить веху"
+msgstr "添加里程碑"
+
+#: templates/project.html
+msgid "до"
+msgstr "至"
+
+#: templates/project.html
+msgid "просрочено"
+msgstr "逾期"
+
+#: templates/project.html
+msgid "Название"
+msgstr "名称"
+
+#: templates/project.html
+msgid "Дедлайн"
+msgstr "截止日期"
+
+#: templates/project.html
+msgid "Статус"
+msgstr "状态"
+
+#: templates/project.html
+msgid "Завершена"
+msgstr "已完成"
+
+#: templates/project.html
+msgid "Просрочена"
+msgstr "已逾期"
+
+#: templates/project.html
+msgid "Текущая"
+msgstr "当前"
+
+#: templates/project.html
+msgid "Ожидает"
+msgstr "待处理"
+
+#: templates/project.html
+msgid "Снять отметку"
+msgstr "取消勾选"
+
+#: templates/project.html
+msgid "Отметить выполненной"
+msgstr "标记为已完成"
+
+#: templates/project.html
+msgid "Удалить веху"
+msgstr "删除里程碑"
+
+#: templates/project.html
+msgid "Название вехи"
+msgstr "里程碑名称"
+
+#: templates/project.html
+msgid "Описание (опц.)"
+msgstr "描述（可选）"
+
+#: templates/project.html
+msgid "Добавить"
+msgstr "添加"
+
+#: templates/project.html
+msgid "To-Do"
+msgstr "待办"
+
+#: templates/project.html
+msgid "Отчёты"
+msgstr "报告"
+
+#: templates/project.html
+msgid "Календарь"
+msgstr "日历"
+
+#: templates/project.html
+msgid "Файлы"
+msgstr "文件"
+
+#: templates/project.html
+msgid "Исполнитель"
+msgstr "执行人"
+
+#: templates/project.html
+msgid "— Не назначен —"
+msgstr "— 未分配 —"
+
+#: templates/project.html
+msgid "Новая"
+msgstr "新"
+
+#: templates/project.html
+msgid "Дедлайн с"
+msgstr "截止日期从"
+
+#: templates/project.html
+msgid "по"
+msgstr "至"
+
+#: templates/project.html
+msgid "Применить"
+msgstr "应用"
+
+#: templates/project.html
+msgid "Сбросить"
+msgstr "重置"
+
+#: templates/project.html
+msgid "Задача от администратора"
+msgstr "管理员任务"
+
+#: templates/project.html
+msgid "Задача от супервизора"
+msgstr "主管任务"
+
+#: templates/project.html
+msgid "Развернуть"
+msgstr "展开"
+
+#: templates/project.html
+msgid "Свернуть"
+msgstr "收起"
+
+#: templates/project.html
+msgid "Руководителю"
+msgstr "给项目经理"
+
+#: templates/project.html
+msgid "Любому участнику"
+msgstr "给任何成员"
+
+#: templates/project.html
+msgid "Задача будет назначена руководителю или менеджеру проекта."
+msgstr "任务将分配给项目经理或经理。"
+
+#: templates/project.html
+msgid "Руководитель проекта"
+msgstr "项目经理"
+
+#: templates/project.html
+msgid "— Выберите —"
+msgstr "— 请选择 —"
+
+#: templates/project.html
+msgid "Название задачи"
+msgstr "任务名称"
+
+#: templates/project.html
+msgid "Например: Подготовить отчёт за квартал"
+msgstr "例如：准备季度报告"
+
+#: templates/project.html
+msgid "Описание"
+msgstr "描述"
+
+#: templates/project.html
+msgid "Детали задачи..."
+msgstr "任务详情..."
+
+#: templates/project.html
+msgid "Поставить руководителю"
+msgstr "分配给项目经理"
+
+#: templates/project.html
+msgid "В проекте нет руководителей или менеджеров."
+msgstr "项目中没有项目经理或经理。"
+
+#: templates/project.html
+msgid "Задача будет назначена любому участнику — команде, АМ Станко или гостю."
+msgstr "任务将分配给任何成员 — 团队、AM Stanko 或访客。"
+
+#: templates/project.html
+msgid "Участник"
+msgstr "成员"
+
+#: templates/project.html
+msgid "Команда проекта"
+msgstr "项目团队"
+
+#: templates/project.html
+msgid "Группа компаний АМ Станко"
+msgstr "AM Stanko 集团公司"
+
+#: templates/project.html
+msgid "Гости проекта"
+msgstr "项目访客"
+
+#: templates/project.html
+msgid "Например: Подготовить документы"
+msgstr "例如：准备文件"
+
+#: templates/project.html
+msgid "Поставить задачу"
+msgstr "分配任务"
+
+#: templates/project.html
+msgid "Новая задача"
+msgstr "新任务"
+
+#: templates/project.html
+msgid "Назначить..."
+msgstr "分配..."
+
+#: templates/project.html
+msgid "Я"
+msgstr "我"
+
+#: templates/project.html
+msgid "Заказчик:"
+msgstr "客户："
+
+#: templates/project.html
+msgid "Создать"
+msgstr "创建"
+
+#: templates/project.html
+msgid "Описание (опционально)"
+msgstr "描述（可选）"
+
+#: templates/project.html
+msgid "Веха (опц.)"
+msgstr "里程碑（可选）"
+
+#: templates/project.html
+msgid "Задача"
+msgstr "任务"
+
+#: templates/project.html
+msgid "Действия"
+msgstr "操作"
+
+#: templates/project.html
+msgid "подзадач"
+msgstr "子任务"
+
+#: templates/project.html
+msgid "Поставил:"
+msgstr "分配人："
+
+#: templates/project.html
+msgid "от администратора"
+msgstr "来自管理员"
+
+#: templates/project.html
+msgid "от супервизора"
+msgstr "来自主管"
+
+#: templates/project.html
+msgid "Причина просрочки..."
+msgstr "逾期原因..."
+
+#: templates/project.html
+msgid "не назначен"
+msgstr "未分配"
+
+#: templates/project.html
+msgid "Открыть"
+msgstr "打开"
+
+#: templates/project.html
+msgid "Открыть и редактировать"
+msgstr "打开并编辑"
+
+#: templates/project.html
+msgid "Удалить задачу?"
+msgstr "删除任务？"
+
+#: templates/project.html
+msgid "По фильтрам ничего не найдено"
+msgstr "没有符合筛选条件的结果"
+
+#: templates/project.html
+msgid "Задач пока нет"
+msgstr "暂无任务"
+
+#: templates/project.html
+msgid "Создайте первую задачу и назначьте исполнителя"
+msgstr "创建第一个任务并分配执行人"
+
+#: templates/project.html
+msgid "Создать первую задачу"
+msgstr "创建第一个任务"
+
+#: templates/project.html
+msgid "Не начато"
+msgstr "未开始"
+
+#: templates/project.html
+msgid "Выполнено"
+msgstr "已完成"
+
+#: templates/project.html
+msgid "Просрочено"
+msgstr "逾期"
+
+#: templates/project.html
+msgid "To-Do лист проекта"
+msgstr "项目待办列表"
+
+#: templates/project.html
+msgid "Добавить To-Do"
+msgstr "添加待办"
+
+#: templates/project.html
+msgid "Что нужно сделать?"
+msgstr "需要做什么？"
+
+#: templates/project.html
+msgid "Кто делает?"
+msgstr "谁来做？"
+
+#: templates/project.html
+msgid "Список пуст"
+msgstr "列表为空"
+
+#: templates/project.html
+msgid "Отчёты по проекту"
+msgstr "项目报告"
+
+#: templates/project.html
+msgid "Скачать PDF"
+msgstr "下载 PDF"
+
+#: templates/project.html
+msgid "Создать отчёт"
+msgstr "创建报告"
+
+#: templates/project.html
+msgid "Заголовок отчёта"
+msgstr "报告标题"
+
+#: templates/project.html
+msgid "Статус / причина срыва"
+msgstr "状态 / 延误原因"
+
+#: templates/project.html
+msgid "Всё по плану"
+msgstr "按计划"
+
+#: templates/project.html
+msgid "Задержка поставки"
+msgstr "供货延迟"
+
+#: templates/project.html
+msgid "Изменение ТЗ"
+msgstr "范围变更"
+
+#: templates/project.html
+msgid "Проблема с подрядчиком"
+msgstr "承包商问题"
+
+#: templates/project.html
+msgid "Форс-мажор"
+msgstr "不可抗力"
+
+#: templates/project.html
+msgid "Проблемы с бюджетом"
+msgstr "预算问题"
+
+#: templates/project.html
+msgid "Другое"
+msgstr "其他"
+
+#: templates/project.html
+msgid "Задержка (дней)"
+msgstr "延误（天）"
+
+#: templates/project.html
+msgid "Причина подробно"
+msgstr "原因详情"
+
+#: templates/project.html
+msgid "Содержание..."
+msgstr "内容..."
+
+#: templates/project.html
+msgid "Сохранить отчёт"
+msgstr "保存报告"
+
+#: templates/project.html
+msgid "Задержка:"
+msgstr "延误："
+
+#: templates/project.html
+msgid "Веха:"
+msgstr "里程碑："
+
+#: templates/project.html
+msgid "Удалить отчёт?"
+msgstr "删除报告？"
+
+#: templates/project.html
+msgid "Причина:"
+msgstr "原因："
+
+#: templates/project.html
+msgid "Отчётов пока нет"
+msgstr "暂无报告"
+
+#: templates/project.html
+msgid "Календарь событий"
+msgstr "事件日历"
+
+#: templates/project.html
+msgid "Новое событие"
+msgstr "新事件"
+
+#: templates/project.html
+msgid "События проекта"
+msgstr "项目事件"
+
+#: templates/project.html
+msgid "Личные"
+msgstr "个人"
+
+#: templates/project.html
+msgid "Новые задачи"
+msgstr "新任务"
+
+#: templates/project.html
+msgid "Вехи"
+msgstr "里程碑"
+
+#: templates/project.html
+msgid "Клик по цвету — скрыть/показать тип."
+msgstr "点击颜色以隐藏/显示类型。"
+
+#: templates/project.html
+msgid "Показано:"
+msgstr "显示："
+
+#: templates/project.html
+msgid "Показать все типы"
+msgstr "显示所有类型"
+
+#: templates/project.html
+msgid "Загрузить / создать папку"
+msgstr "上传 / 创建文件夹"
+
+#: templates/project.html
+msgid "Название папки"
+msgstr "文件夹名称"
+
+#: templates/project.html
+msgid "Создать папку"
+msgstr "创建文件夹"
+
+#: templates/project.html
+msgid "Загрузить"
+msgstr "上传"
+
+#: templates/project.html
+msgid "Удалить папку?"
+msgstr "删除文件夹？"
+
+#: templates/project.html
+msgid "Нет файлов и папок"
+msgstr "没有文件和文件夹"
+
+#: templates/project.html
+msgid "Чат проекта"
+msgstr "项目聊天"
+
+#: templates/project.html
+msgid "Введите"
+msgstr "输入"
+
+#: templates/project.html
+msgid "упомянуть участника или админа"
+msgstr "以提及成员或管理员"
+
+#: templates/project.html
+msgid "Загрузить ещё"
+msgstr "加载更多"
+
+#: templates/project.html
+msgid "сообщений"
+msgstr "条消息"
+
+#: templates/project.html
+msgid "Показаны последние"
+msgstr "显示最新"
+
+#: templates/project.html
+msgid "из"
+msgstr "共"
+
+#: templates/project.html
+msgid "Вы"
+msgstr "您"
+
+#: templates/project.html
+msgid "Сообщений пока нет"
+msgstr "暂无消息"
+
+#: templates/project.html
+msgid "Напишите сообщение... (введите @ чтобы упомянуть)"
+msgstr "写消息...（输入 @ 以提及）"
+
+#: templates/project.html
+msgid "Отправить"
+msgstr "发送"
+
+#: templates/project.html
+msgid "Создатель"
+msgstr "创建者"
+
+#: templates/project.html
+msgid "все задачи"
+msgstr "所有任务"
+
+#: templates/project.html
+msgid "В команде пока никого"
+msgstr "团队中还没有人"
+
+#: templates/project.html
+msgid "Управление"
+msgstr "管理"
+
+#: templates/project.html
+msgid "Гость"
+msgstr "访客"
+
+#: templates/project.html
+msgid "Видят только назначенные на них задачи."
+msgstr "只能看到分配给他们的任务。"
+
+#: templates/project.html
+msgid "Удаление проекта"
+msgstr "删除项目"
+
+#: templates/project.html
+msgid "Внимание! Это действие нельзя отменить."
+msgstr "警告！此操作无法撤销。"
+
+#: templates/project.html
+msgid "Будут удалены"
+msgstr "将被删除"
+
+#: templates/project.html
+msgid "все"
+msgstr "所有"
+
+#: templates/project.html
+msgid "данные проекта:"
+msgstr "项目数据："
+
+#: templates/project.html
+msgid "Задачи"
+msgstr "任务"
+
+#: templates/project.html
+msgid "и подзадачи"
+msgstr "和子任务"
+
+#: templates/project.html
+msgid "Вехи"
+msgstr "里程碑"
+
+#: templates/project.html
+msgid "To-Do"
+msgstr "待办"
+
+#: templates/project.html
+msgid "Календарь событий"
+msgstr "事件日历"
+
+#: templates/project.html
+msgid "Файлы и папки"
+msgstr "文件和文件夹"
+
+#: templates/project.html
+msgid "Сообщения в чате"
+msgstr "聊天消息"
+
+#: templates/project.html
+msgid "Участники"
+msgstr "成员"
+
+#: templates/project.html
+msgid "Для подтверждения введите слово"
+msgstr "要确认，请输入单词"
+
+#: templates/project.html
+msgid "заглавными буквами:"
+msgstr "大写字母："
+
+#: templates/project.html
+msgid "Отмена"
+msgstr "取消"
+
+#: templates/project.html
+msgid "Удалить проект"
+msgstr "删除项目"
+
+#: templates/project.html
+msgid "Дата"
+msgstr "日期"
+
+#: templates/project.html
+msgid "Закрыть"
+msgstr "关闭"
+
+#: templates/project.html
+msgid "Добавить событие"
+msgstr "添加事件"
+
+#: templates/project.html
+msgid "Новое событие проекта"
+msgstr "新项目事件"
+
+#: templates/project.html
+msgid "Например: Планёрка"
+msgstr "例如：站会"
+
+#: templates/project.html
+msgid "Детали события..."
+msgstr "事件详情..."
+
+#: templates/project.html
+msgid "Весь день"
+msgstr "全天"
+
+#: templates/project.html
+msgid "Начало"
+msgstr "开始"
+
+#: templates/project.html
+msgid "Окончание"
+msgstr "结束"
+
+#: templates/project.html
+msgid "Цвет"
+msgstr "颜色"
+
+#: templates/project.html
+msgid "Кому отправить уведомление?"
+msgstr "向谁发送通知？"
+
+#: templates/project.html
+msgid "Всем участникам проекта"
+msgstr "所有项目成员"
+
+#: templates/project.html
+msgid "команда + АМ Станко"
+msgstr "团队 + AM Stanko"
+
+#: templates/project.html
+msgid "Гостям проекта"
+msgstr "项目访客"
+
+#: templates/project.html
+msgid "контакты субподрядчиков/заказчиков"
+msgstr "分包商/客户联系人"
+
+#: templates/project.html
+msgid "Или выбрать вручную..."
+msgstr "或手动选择..."
+
+#: templates/project.html
+msgid "Создать и разослать"
+msgstr "创建并发送"
+
+#: templates/project.html
+msgid "Редактировать To-Do"
+msgstr "编辑待办"
+
+#: templates/project.html
+msgid "Комментарий"
+msgstr "评论"
+
+#: templates/project.html
+msgid "Сохранить"
+msgstr "保存"
+
+#: templates/profile.html
+msgid "Профиль"
+msgstr "个人资料"
+
+#: templates/profile.html
+msgid "Данные аккаунта"
+msgstr "账户数据"
+
+#: templates/profile.html
+msgid "Email (логин)"
+msgstr "邮箱（登录名）"
+
+#: templates/profile.html
+msgid "Компания"
+msgstr "公司"
+
+#: templates/profile.html
+msgid "Роль"
+msgstr "角色"
+
+#: templates/profile.html
+msgid "Смена пароля"
+msgstr "修改密码"
+
+#: templates/profile.html
+msgid "Текущий пароль"
+msgstr "当前密码"
+
+#: templates/profile.html
+msgid "Новый пароль"
+msgstr "新密码"
+
+#: templates/profile.html
+msgid "Минимум 6 символов"
+msgstr "至少 6 个字符"
+
+#: templates/profile.html
+msgid "Подтвердите новый пароль"
+msgstr "确认新密码"
+
+#: templates/profile.html
+msgid "Изменить пароль"
+msgstr "修改密码"
+
+#: templates/my_tasks.html
+msgid "Все задачи по всем проектам, где вы назначены исполнителем"
+msgstr "您被分配为执行人的所有项目中的所有任务"
+
+#: templates/my_tasks.html
+msgid "новых"
+msgstr "新"
+
+#: templates/my_tasks.html
+msgid "Отметить все как прочитанные"
+msgstr "全部标记为已读"
+
+#: templates/my_tasks.html
+msgid "Прочитать все"
+msgstr "全部已读"
+
+#: templates/my_tasks.html
+msgid "Активных"
+msgstr "活跃"
+
+#: templates/my_tasks.html
+msgid "Срочных"
+msgstr "紧急"
+
+#: templates/my_tasks.html
+msgid "Завершено"
+msgstr "已完成"
+
+#: templates/my_tasks.html
+msgid "Просроченные задачи"
+msgstr "逾期任务"
+
+#: templates/my_tasks.html
+msgid "проект:"
+msgstr "项目："
+
+#: templates/my_tasks.html
+msgid "Срочные (дедлайн ≤ 3 дней):"
+msgstr "紧急（截止日期 ≤ 3 天）："
+
+#: templates/my_tasks.html
+msgid "дн. осталось"
+msgstr "天剩余"
+
+#: templates/my_tasks.html
+msgid "Проект"
+msgstr "项目"
+
+#: templates/my_tasks.html
+msgid "Все проекты"
+msgstr "所有项目"
+
+#: templates/my_tasks.html
+msgid "Все статусы"
+msgstr "所有状态"
+
+#: templates/my_tasks.html
+msgid "Список задач"
+msgstr "任务列表"
+
+#: templates/my_tasks.html
+msgid "НОВОЕ"
+msgstr "新"
+
+#: templates/my_tasks.html
+msgid "У вас нет задач по выбранным фильтрам"
+msgstr "没有符合所选筛选条件的任务"
+
+#: templates/my_tasks.html
+msgid "Навигация по страницам"
+msgstr "分页"
+
+#: templates/my_tasks.html
+msgid "Назад"
+msgstr "上一页"
+
+#: templates/my_tasks.html
+msgid "Вперёд"
+msgstr "下一页"
+
+#: templates/my_tasks.html
+msgid "задач"
+msgstr "个任务"
+
+#: templates/my_tasks.html
+msgid "страница"
+msgstr "页"
+
+#: templates/my_tasks.html
+msgid "Мои To-Do"
+msgstr "我的待办"
+
+#: templates/my_tasks.html
+msgid "Открыть в проекте"
+msgstr "在项目中打开"
+
+#: templates/task_detail.html
+msgid "К проекту"
+msgstr "返回项目"
+
+#: templates/task_detail.html
+msgid "К родительской задаче"
+msgstr "到父任务"
+
+#: templates/task_detail.html
+msgid "Вы — гость проекта."
+msgstr "您是项目访客。"
+
+#: templates/task_detail.html
+msgid "Вам доступна только эта задача. Здесь вы можете менять статус, оставить комментарий и видеть дедлайн."
+msgstr "您只能访问此任务。您可以更改状态、留下评论并查看截止日期。"
+
+#: templates/task_detail.html
+msgid "Просрочена на"
+msgstr "逾期"
+
+#: templates/task_detail.html
+msgid "Поставил(а):"
+msgstr "分配人："
+
+#: templates/task_detail.html
+msgid "Администратор"
+msgstr "管理员"
+
+#: templates/task_detail.html
+msgid "Супервизор"
+msgstr "主管"
+
+#: templates/task_detail.html
+msgid "Описание не указано"
+msgstr "未指定描述"
+
+#: templates/task_detail.html
+msgid "Назначена"
+msgstr "已分配"
+
+#: templates/task_detail.html
+msgid "вы"
+msgstr "您"
+
+#: templates/task_detail.html
+msgid "не назначена"
+msgstr "未分配"
+
+#: templates/task_detail.html
+msgid "не указан"
+msgstr "未指定"
+
+#: templates/task_detail.html
+msgid "Веха"
+msgstr "里程碑"
+
+#: templates/task_detail.html
+msgid "Создана"
+msgstr "创建于"
+
+#: templates/task_detail.html
+msgid "Отметить статус"
+msgstr "设置状态"
+
+#: templates/task_detail.html
+msgid "Изменить статус"
+msgstr "更改状态"
+
+#: templates/task_detail.html
+msgid "Обновить"
+msgstr "更新"
+
+#: templates/task_detail.html
+msgid "Причина просрочки задачи"
+msgstr "任务逾期原因"
+
+#: templates/task_detail.html
+msgid "Задача просрочена на"
+msgstr "任务已逾期"
+
+#: templates/task_detail.html
+msgid "Укажите причину — она попадёт в отчёт по проекту."
+msgstr "请说明原因 — 它将包含在项目报告中。"
+
+#: templates/task_detail.html
+msgid "Например: задержка поставки материалов..."
+msgstr "例如：材料交付延迟..."
+
+#: templates/task_detail.html
+msgid "Комментарий"
+msgstr "评论"
+
+#: templates/task_detail.html
+msgid "Подзадачи"
+msgstr "子任务"
+
+#: templates/task_detail.html
+msgid "Добавить"
+msgstr "添加"
+
+#: templates/task_detail.html
+msgid "Название подзадачи"
+msgstr "子任务名称"
+
+#: templates/task_detail.html
+msgid "Исполнитель..."
+msgstr "执行人..."
+
+#: templates/task_detail.html
+msgid "Я"
+msgstr "我"
+
+#: templates/task_detail.html
+msgid "Поставщик:"
+msgstr "供应商："
+
+#: templates/task_detail.html
+msgid "Описание подзадачи"
+msgstr "子任务描述"
+
+#: templates/task_detail.html
+msgid "Создать подзадачу"
+msgstr "创建子任务"
+
+#: templates/task_detail.html
+msgid "Удалить подзадачу?"
+msgstr "删除子任务？"
+
+#: templates/task_detail.html
+msgid "Причина просрочки..."
+msgstr "逾期原因..."
+
+#: templates/task_detail.html
+msgid "Подзадач пока нет"
+msgstr "暂无子任务"
+
+#: templates/task_detail.html
+msgid "Отчёт по задаче"
+msgstr "任务报告"
+
+#: templates/task_detail.html
+msgid "Всего"
+msgstr "总计"
+
+#: templates/task_detail.html
+msgid "Готово"
+msgstr "完成"
+
+#: templates/task_detail.html
+msgid "Просроч."
+msgstr "逾期"
+
+#: templates/task_detail.html
+msgid "Не начато"
+msgstr "未开始"
+
+#: templates/task_detail.html
+msgid "Прогресс подзадач"
+msgstr "子任务进度"
+
+#: templates/task_detail.html
+msgid "PDF-отчёт по задаче"
+msgstr "任务 PDF 报告"
+
+#: templates/task_detail.html
+msgid "Файлы задачи"
+msgstr "任务文件"
+
+#: templates/task_detail.html
+msgid "Удалить файл?"
+msgstr "删除文件？"
+
+#: templates/task_detail.html
+msgid "Нет файлов"
+msgstr "没有文件"
+
+#: templates/task_detail.html
+msgid "Просроченные подзадачи"
+msgstr "逾期子任务"
+
+#: templates/task_detail.html
+msgid "Информация"
+msgstr "信息"
+
+#: templates/task_detail.html
+msgid "Проект:"
+msgstr "项目："
+
+#: templates/task_detail.html
+msgid "Родительская задача:"
+msgstr "父任务："
+
+#: templates/task_detail.html
+msgid "ID задачи:"
+msgstr "任务 ID："
+
+#: templates/task_detail.html
+msgid "Поставлена:"
+msgstr "分配于："
+
+#: templates/task_detail.html
+msgid "Удалить задачу и все её подзадачи?"
+msgstr "删除任务及其所有子任务？"
+
+#: templates/task_detail.html
+msgid "Удалить задачу"
+msgstr "删除任务"
+
+#: templates/task_detail.html
+msgid "Редактировать задачу"
+msgstr "编辑任务"
+
+#: templates/task_detail.html
+msgid "Название"
+msgstr "名称"
+
+#: templates/task_detail.html
+msgid "— Не назначен —"
+msgstr "— 未分配 —"
+
+#: templates/task_detail.html
+msgid "Команда"
+msgstr "团队"
+
+#: templates/task_detail.html
+msgid "Заказчик:"
+msgstr "客户："
+
+#: templates/task_detail.html
+msgid "Дедлайн"
+msgstr "截止日期"
+
+#: templates/task_detail.html
+msgid "Статус"
+msgstr "状态"
+
+#: templates/task_detail.html
+msgid "— Без вехи —"
+msgstr "— 无里程碑 —"
+
+#: templates/my_calendar.html
+msgid "Мой календарь"
+msgstr "我的日历"
+
+#: templates/my_calendar.html
+msgid "Все ваши события, задачи, вехи и To-Do в одном месте"
+msgstr "您的所有事件、任务、里程碑和待办都在一个地方"
+
+#: templates/my_calendar.html
+msgid "Личное событие"
+msgstr "个人事件"
+
+#: templates/my_calendar.html
+msgid "Кликните, чтобы скрыть/показать"
+msgstr "点击以隐藏/显示"
+
+#: templates/my_calendar.html
+msgid "Личные события"
+msgstr "个人事件"
+
+#: templates/my_calendar.html
+msgid "События проектов"
+msgstr "项目事件"
+
+#: templates/my_calendar.html
+msgid "Мои задачи (новые)"
+msgstr "我的任务（新）"
+
+#: templates/my_calendar.html
+msgid "Мои задачи (в работе)"
+msgstr "我的任务（进行中）"
+
+#: templates/my_calendar.html
+msgid "Мои To-Do"
+msgstr "我的待办"
+
+#: templates/my_calendar.html
+msgid "Клик по дню — просмотр расписания. Клик по цвету —"
+msgstr "点击日期查看日程。点击颜色以"
+
+#: templates/my_calendar.html
+msgid "скрыть/показать"
+msgstr "隐藏/显示"
+
+#: templates/my_calendar.html
+msgid "тип."
+msgstr "类型。"
+
+#: templates/my_calendar.html
+msgid "событий"
+msgstr "个事件"
+
+#: templates/my_calendar.html
+msgid "Сбросить"
+msgstr "重置"
+
+#: templates/my_calendar.html
+msgid "Личных событий"
+msgstr "个人事件"
+
+#: templates/my_calendar.html
+msgid "Событий проектов"
+msgstr "项目事件"
+
+#: templates/my_calendar.html
+msgid "Моих задач"
+msgstr "我的任务"
+
+#: templates/my_calendar.html
+msgid "Моих To-Do"
+msgstr "我的待办"
+
+#: templates/my_calendar.html
+msgid "Мои личные события"
+msgstr "我的个人事件"
+
+#: templates/my_calendar.html
+msgid "весь день"
+msgstr "全天"
+
+#: templates/my_calendar.html
+msgid "Удалить событие?"
+msgstr "删除事件？"
+
+#: templates/my_calendar.html
+msgid "События моих проектов"
+msgstr "我的项目事件"
+
+#: templates/my_calendar.html
+msgid "Закрыть"
+msgstr "关闭"
+
+#: templates/my_calendar.html
+msgid "Это событие видите только вы. Его нельзя привязать к проекту."
+msgstr "只有您能看到此事件。它不能关联到项目。"
+
+#: templates/my_calendar.html
+msgid "Например: Встреча с врачом"
+msgstr "例如：看医生"
+
+#: templates/my_calendar.html
+msgid "Заметки..."
+msgstr "备注..."
+
+#: templates/my_calendar.html
+msgid "Весь день"
+msgstr "全天"
+
+#: templates/my_calendar.html
+msgid "Начало"
+msgstr "开始"
+
+#: templates/my_calendar.html
+msgid "Окончание"
+msgstr "结束"
+
+#: templates/my_calendar.html
+msgid "Цвет"
+msgstr "颜色"
+
+#: templates/my_calendar.html
+msgid "Создать"
+msgstr "创建"
+
+#: templates/my_mentions.html
+msgid "Сообщения, где вас упомянули через"
+msgstr "通过以下方式提及您的消息"
+
+#: templates/my_mentions.html
+msgid "Имя Фамилия"
+msgstr "姓 名"
+
+#: templates/my_mentions.html
+msgid "Отметить всё прочитанным"
+msgstr "全部标记为已读"
+
+#: templates/my_mentions.html
+msgid "Проект удалён"
+msgstr "项目已删除"
+
+#: templates/my_mentions.html
+msgid "Перейти в чат проекта"
+msgstr "转到项目聊天"
+
+#: templates/my_mentions.html
+msgid "В чат"
+msgstr "到聊天"
+
+#: templates/my_mentions.html
+msgid "Неизвестный автор"
+msgstr "未知作者"
+
+#: templates/my_mentions.html
+msgid "Администратор"
+msgstr "管理员"
+
+#: templates/my_mentions.html
+msgid "Супервизор"
+msgstr "主管"
+
+#: templates/my_mentions.html
+msgid "новое"
+msgstr "新"
+
+#: templates/my_mentions.html
+msgid "Сообщение удалено"
+msgstr "消息已删除"
+
+#: templates/my_mentions.html
+msgid "Упоминаний пока нет"
+msgstr "暂无提及"
+
+#: templates/my_mentions.html
+msgid "Когда кто-то напишет в чате"
+msgstr "当有人在聊天中写"
+
+#: templates/my_mentions.html
+msgid "Ваше Имя"
+msgstr "您的名字"
+
+#: templates/my_mentions.html
+msgid "упоминание появится здесь."
+msgstr "提及将出现在这里。"
+
+#: templates/my_mentions.html
+msgid "К дашборду"
+msgstr "返回仪表板"
+
+#: templates/customers.html
+msgid "Добавить заказчика"
+msgstr "添加客户"
+
+#: templates/customers.html
+msgid "Наименование"
+msgstr "名称"
+
+#: templates/customers.html
+msgid "ИНН"
+msgstr "税号"
+
+#: templates/customers.html
+msgid "Контакт"
+msgstr "联系人"
+
+#: templates/customers.html
+msgid "Телефон"
+msgstr "电话"
+
+#: templates/customers.html
+msgid "Проектов"
+msgstr "项目"
+
+#: templates/customers.html
+msgid "Заказчиков пока нет"
+msgstr "暂无客户"
+
+#: templates/suppliers.html
+msgid "Добавить субподрядчика"
+msgstr "添加分包商"
+
+#: templates/suppliers.html
+msgid "Добавить поставщика"
+msgstr "添加供应商"
+
+#: templates/suppliers.html
+msgid "Контактных лиц"
+msgstr "联系人"
+
+#: templates/suppliers.html
+msgid "Действия"
+msgstr "操作"
+
+#: templates/suppliers.html
+msgid "Субподрядчиков пока нет"
+msgstr "暂无分包商"
+
+#: templates/suppliers.html
+msgid "Компаний группы пока нет"
+msgstr "暂无集团公司"
+
+#: templates/suppliers.html
+msgid "Добавьте первого субподрядчика"
+msgstr "添加第一个分包商"
+
+#: templates/suppliers.html
+msgid "Добавьте первую компанию группы"
+msgstr "添加第一个集团公司"
+
+#: templates/companies/list.html
+msgid "Филиалы компании"
+msgstr "公司分公司"
+
+#: templates/companies/list.html
+msgid "Справочник филиалов, которые ведут проекты"
+msgstr "负责项目的分公司目录"
+
+#: templates/companies/list.html
+msgid "Добавить филиал"
+msgstr "添加分公司"
+
+#: templates/companies/list.html
+msgid "Всего филиалов"
+msgstr "分公司总数"
+
+#: templates/companies/list.html
+msgid "Активных"
+msgstr "活跃"
+
+#: templates/companies/list.html
+msgid "Деактивированных"
+msgstr "已停用"
+
+#: templates/companies/list.html
+msgid "Поиск"
+msgstr "搜索"
+
+#: templates/companies/list.html
+msgid "Название, ИНН, email, адрес..."
+msgstr "名称、税号、邮箱、地址..."
+
+#: templates/companies/list.html
+msgid "Только активные"
+msgstr "仅活跃"
+
+#: templates/companies/list.html
+msgid "Только деактивированные"
+msgstr "仅已停用"
+
+#: templates/companies/list.html
+msgid "Сортировка"
+msgstr "排序"
+
+#: templates/companies/list.html
+msgid "По названию"
+msgstr "按名称"
+
+#: templates/companies/list.html
+msgid "Сначала новые"
+msgstr "最新优先"
+
+#: templates/companies/list.html
+msgid "Контакты"
+msgstr "联系人"
+
+#: templates/companies/list.html
+msgid "Активен"
+msgstr "活跃"
+
+#: templates/companies/list.html
+msgid "Неактивен"
+msgstr "不活跃"
+
+#: templates/companies/list.html
+msgid "Деактивировать"
+msgstr "停用"
+
+#: templates/companies/list.html
+msgid "Активировать"
+msgstr "启用"
+
+#: templates/companies/list.html
+msgid "Удалить филиал"
+msgstr "删除分公司"
+
+#: templates/companies/list.html
+msgid "Филиалов пока нет"
+msgstr "暂无分公司"
+
+#: templates/companies/list.html
+msgid "Добавить первый филиал"
+msgstr "添加第一个分公司"
+
+#: templates/companies/form.html
+msgid "К списку филиалов"
+msgstr "返回分公司列表"
+
+#: templates/companies/form.html
+msgid "Редактировать филиал"
+msgstr "编辑分公司"
+
+#: templates/companies/form.html
+msgid "Новый филиал"
+msgstr "新分公司"
+
+#: templates/companies/form.html
+msgid "Например: ООО СтройМастер"
+msgstr "例如：StroyMaster LLC"
+
+#: templates/companies/form.html
+msgid "Отображается в проектах, сайдбаре и фильтрах."
+msgstr "显示在项目、侧边栏和筛选中。"
+
+#: templates/companies/form.html
+msgid "ИНН должен содержать 10 или 12 цифр"
+msgstr "税号必须包含 10 或 12 位数字"
+
+#: templates/companies/form.html
+msgid "Адрес"
+msgstr "地址"
+
+#: templates/companies/form.html
+msgid "г. Москва, ул. Примерная, д. 1"
+msgstr "莫斯科，示例街 1 号"
+
+#: templates/companies/form.html
+msgid "Цвет филиала"
+msgstr "分公司颜色"
+
+#: templates/companies/form.html
+msgid "Используется как метка филиала в проектах."
+msgstr "在项目中用作分公司标签。"
+
+#: templates/companies/form.html
+msgid "Создан:"
+msgstr "创建于："
+
+#: templates/companies/form.html
+msgid "Проектов:"
+msgstr "项目："
+
+#: templates/errors/404.html
+msgid "Страница не найдена"
+msgstr "页面未找到"
+
+#: templates/errors/404.html
+msgid "Возможно, ссылка устарела или была удалена. Вернитесь на главную и попробуйте снова."
+msgstr "链接可能已过期或已删除。返回主页并重试。"
+
+#: templates/errors/404.html
+msgid "На главную"
+msgstr "返回主页"
+
+#: templates/errors/500.html
+msgid "Сервер на техническом обслуживании"
+msgstr "服务器维护中"
+
+#: templates/errors/500.html
+msgid "Мы улучшаем сервис, чтобы вам было удобнее работать. Скоро всё заработает — пожалуйста, потерпите немного."
+msgstr "我们正在改进服务，以便您更便捷地工作。很快将恢复 — 请稍等。"
+
+#: templates/errors/500.html
+msgid "Что можно сделать"
+msgstr "您可以做什么"
+
+#: templates/errors/500.html
+msgid "Подождите 5-10 минут и обновите страницу"
+msgstr "等待 5-10 分钟并刷新页面"
+
+#: templates/errors/500.html
+msgid "Попробуйте зайти позже, если сейчас не срочно"
+msgstr "如果不紧急，请稍后再试"
+
+#: templates/errors/500.html
+msgid "Если нужно срочно — свяжитесь с администратором"
+msgstr "如果需要紧急处理 — 请联系管理员"
+
+#: templates/errors/500.html
+msgid "Обновить страницу"
+msgstr "刷新页面"
+
+#: templates/errors/500.html
+msgid "Работаем над улучшениями"
+msgstr "正在改进中"
+
+#: templates/support/admin_tickets.html
+msgid "Обращения в поддержку"
+msgstr "支持工单"
+
+#: templates/support/admin_tickets.html
+msgid "Всего в очереди:"
+msgstr "队列中总计："
+
+#: templates/support/admin_tickets.html
+msgid "Открытые"
+msgstr "打开"
+
+#: templates/support/admin_tickets.html
+msgid "Закрытые"
+msgstr "已关闭"
+
+#: templates/support/admin_tickets.html
+msgid "открыт"
+msgstr "打开"
+
+#: templates/support/admin_tickets.html
+msgid "закрыт"
+msgstr "已关闭"
+
+#: templates/support/admin_tickets.html
+msgid "сообщ."
+msgstr "条消息"
+
+#: templates/support/admin_tickets.html
+msgid "Обращений пока нет"
+msgstr "暂无工单"
+
+#: templates/support/admin_tickets.html
+msgid "Все тикеты будут появляться здесь"
+msgstr "所有工单将出现在这里"
+
+#: templates/support/ticket.html
+msgid "К списку тикетов"
+msgstr "返回工单列表"
+
+#: templates/support/ticket.html
+msgid "К поддержке"
+msgstr "返回支持"
+
+#: templates/support/ticket.html
+msgid "Обращение"
+msgstr "工单"
+
+#: templates/support/ticket.html
+msgid "Закрыть обращение"
+msgstr "关闭工单"
+
+#: templates/support/ticket.html
+msgid "Закрыть"
+msgstr "关闭"
+
+#: templates/support/ticket.html
+msgid "Автор:"
+msgstr "作者："
+
+#: templates/support/ticket.html
+msgid "Создано:"
+msgstr "创建于："
+
+#: templates/support/ticket.html
+msgid "поддержка"
+msgstr "支持"
+
+#: templates/support/ticket.html
+msgid "Сообщений пока нет"
+msgstr "暂无消息"
+
+#: templates/support/ticket.html
+msgid "Ответ от поддержки"
+msgstr "支持回复"
+
+#: templates/support/ticket.html
+msgid "Ваше сообщение"
+msgstr "您的消息"
+
+#: templates/support/ticket.html
+msgid "Введите текст..."
+msgstr "输入文本..."
+
+#: templates/support/ticket.html
+msgid "Отправить"
+msgstr "发送"
+
+#: templates/support/ticket.html
+msgid "Обращение закрыто. Чтобы продолжить переписку — создайте новое."
+msgstr "工单已关闭。要继续对话 — 请创建新工单。"
+
+#: templates/support/my_tickets.html
+msgid "Техподдержка"
+msgstr "技术支持"
+
+#: templates/support/my_tickets.html
+msgid "Опишите проблему — администратор ответит"
+msgstr "描述问题 — 管理员将回复"
+
+#: templates/support/my_tickets.html
+msgid "Новое обращение"
+msgstr "新工单"
+
+#: templates/support/my_tickets.html
+msgid "Опишите, что случилось"
+msgstr "描述发生了什么"
+
+#: templates/support/my_tickets.html
+msgid "Например: не могу зайти в раздел проекты..."
+msgstr "例如：无法访问项目部分..."
+
+#: templates/support/my_tickets.html
+msgid "Обращение создастся автоматически, вы сразу увидите ответ здесь."
+msgstr "工单将自动创建，您将在这里看到回复。"
+
+#: templates/support/my_tickets.html
+msgid "История обращений"
+msgstr "工单历史"
+
+#: templates/my_calendar.html
+msgid "Все типы скрыты"
+msgstr "所有类型已隐藏"
+
+#: templates/my_calendar.html
+msgid "Сегодня"
+msgstr "今天"
+
+#: templates/my_calendar.html
+msgid "Месяц"
+msgstr "月"
+
+#: templates/my_calendar.html
+msgid "Неделя"
+msgstr "周"
+
+#: templates/my_calendar.html
+msgid "Список"
+msgstr "列表"
+
+#: templates/my_calendar.html
+msgid "Январь"
+msgstr "一月"
+
+#: templates/my_calendar.html
+msgid "Февраль"
+msgstr "二月"
+
+#: templates/my_calendar.html
+msgid "Март"
+msgstr "三月"
+
+#: templates/my_calendar.html
+msgid "Апрель"
+msgstr "四月"
+
+#: templates/my_calendar.html
+msgid "Май"
+msgstr "五月"
+
+#: templates/my_calendar.html
+msgid "Июнь"
+msgstr "六月"
+
+#: templates/my_calendar.html
+msgid "Июль"
+msgstr "七月"
+
+#: templates/my_calendar.html
+msgid "Август"
+msgstr "八月"
+
+#: templates/my_calendar.html
+msgid "Сентябрь"
+msgstr "九月"
+
+#: templates/my_calendar.html
+msgid "Октябрь"
+msgstr "十月"
+
+#: templates/my_calendar.html
+msgid "Ноябрь"
+msgstr "十一月"
+
+#: templates/my_calendar.html
+msgid "Декабрь"
+msgstr "十二月"
+
+#: templates/my_calendar.html
+msgid "неделя"
+msgstr "周"
+
+#: templates/my_calendar.html
+msgid "января"
+msgstr "一月"
+
+#: templates/my_calendar.html
+msgid "февраля"
+msgstr "二月"
+
+#: templates/my_calendar.html
+msgid "марта"
+msgstr "三月"
+
+#: templates/my_calendar.html
+msgid "апреля"
+msgstr "四月"
+
+#: templates/my_calendar.html
+msgid "мая"
+msgstr "五月"
+
+#: templates/my_calendar.html
+msgid "июня"
+msgstr "六月"
+
+#: templates/my_calendar.html
+msgid "июля"
+msgstr "七月"
+
+#: templates/my_calendar.html
+msgid "августа"
+msgstr "八月"
+
+#: templates/my_calendar.html
+msgid "сентября"
+msgstr "九月"
+
+#: templates/my_calendar.html
+msgid "октября"
+msgstr "十月"
+
+#: templates/my_calendar.html
+msgid "ноября"
+msgstr "十一月"
+
+#: templates/my_calendar.html
+msgid "декабря"
+msgstr "十二月"
+
+#: templates/my_calendar.html
+msgid "воскресенье"
+msgstr "星期日"
+
+#: templates/my_calendar.html
+msgid "понедельник"
+msgstr "星期一"
+
+#: templates/my_calendar.html
+msgid "вторник"
+msgstr "星期二"
+
+#: templates/my_calendar.html
+msgid "среда"
+msgstr "星期三"
+
+#: templates/my_calendar.html
+msgid "четверг"
+msgstr "星期四"
+
+#: templates/my_calendar.html
+msgid "пятница"
+msgstr "星期五"
+
+#: templates/my_calendar.html
+msgid "суббота"
+msgstr "星期六"
+
+#: templates/my_calendar.html
+msgid "ISO-неделя"
+msgstr "ISO 周"
+
+#: templates/my_calendar.html
+msgid "Проект:"
+msgstr "项目："
+
+#: templates/my_calendar.html
+msgid "Автор:"
+msgstr "作者："
+
+#: templates/my_calendar.html
+msgid "Событий:"
+msgstr "事件："
+
+#: templates/my_calendar.html
+msgid "Личных:"
+msgstr "个人："
+
+#: templates/my_calendar.html
+msgid "Задач:"
+msgstr "任务："
+
+#: templates/my_calendar.html
+msgid "To-Do:"
+msgstr "待办："
+
+#: templates/my_calendar.html
+msgid "Нет событий на этот день"
+msgstr "这一天没有事件"
+
+#: templates/my_calendar.html
+msgid "Весь день"
+msgstr "全天"
+
+#: templates/my_calendar.html
+msgid "Завершена"
+msgstr "已完成"
+
+#: templates/my_calendar.html
+msgid "Выполнено"
+msgstr "已完成"
+
+#: templates/my_calendar.html
+msgid "Активно"
+msgstr "活跃"
+
+#: templates/my_calendar.html
+msgid "Открыть"
+msgstr "打开"
+
+#: templates/customer_detail.html
+msgid "К списку заказчиков"
+msgstr "返回客户列表"
+
+#: templates/customer_detail.html
+msgid "ИНН:"
+msgstr "税号："
+
+#: templates/customer_detail.html
+msgid "ИНН не указан"
+msgstr "未指定税号"
+
+#: templates/customer_detail.html
+msgid "Контактные лица"
+msgstr "联系人"
+
+#: templates/customer_detail.html
+msgid "Новое контактное лицо"
+msgstr "新联系人"
+
+#: templates/customer_detail.html
+msgid "ФИО"
+msgstr "全名"
+
+#: templates/customer_detail.html
+msgid "Иванов Иван Иванович"
+msgstr "张三"
+
+#: templates/customer_detail.html
+msgid "Должность"
+msgstr "职位"
+
+#: templates/customer_detail.html
+msgid "Директор по закупкам"
+msgstr "采购总监"
+
+#: templates/customer_detail.html
+msgid "Добавить контакт"
+msgstr "添加联系人"
+
+#: templates/customer_detail.html
+msgid "контакты не указаны"
+msgstr "未指定联系人"
+
+#: templates/customer_detail.html
+msgid "Гость в системе"
+msgstr "系统访客"
+
+#: templates/customer_detail.html
+msgid "Удалить контактное лицо"
+msgstr "删除联系人"
+
+#: templates/customer_detail.html
+msgid "Удалить контакт"
+msgstr "删除联系人"
+
+#: templates/customer_detail.html
+msgid "Контактных лиц пока нет."
+msgstr "暂无联系人。"
+
+#: templates/customer_detail.html
+msgid "Нажмите «Добавить», чтобы создать первое контактное лицо."
+msgstr "点击“添加”创建第一个联系人。"
+
+#: templates/customer_detail.html
+msgid "Проекты заказчика"
+msgstr "客户项目"
+
+#: templates/customer_detail.html
+msgid "Заказчик ещё не привязан ни к одному проекту."
+msgstr "客户尚未关联到任何项目。"
+
+#: templates/customer_detail.html
+msgid "Укажите заказчика при создании или редактировании проекта."
+msgstr "在创建或编辑项目时指定客户。"
+
+#: templates/customer_detail.html
+msgid "Реквизиты"
+msgstr "详细信息"
+
+#: templates/customer_detail.html
+msgid "Контактное лицо (основное)"
+msgstr "联系人（主要）"
+
+#: templates/customer_detail.html
+msgid "Добавлен:"
+msgstr "添加于："
+
+#: templates/customer_detail.html
+msgid "Как это работает"
+msgstr "工作原理"
+
+#: templates/customer_detail.html
+msgid "Добавьте контактных лиц заказчика"
+msgstr "添加客户的联系人"
+
+#: templates/customer_detail.html
+msgid "Привяжите заказчика к проекту"
+msgstr "将客户关联到项目"
+
+#: templates/customer_detail.html
+msgid "В проекте при создании задачи выберите контактное лицо из выпадающего списка"
+msgstr "在项目中创建任务时，从下拉列表中选择联系人"
+
+#: templates/customer_detail.html
+msgid "Контакт автоматически станет гостем в проекте — увидит только свою задачу"
+msgstr "联系人将自动成为项目访客 — 只能看到自己的任务"
+
+#: templates/customer_detail.html
+msgid "Удаление заказчика"
+msgstr "删除客户"
+
+#: templates/customer_detail.html
+msgid "Будет удалён заказчик"
+msgstr "客户将被删除"
+
+#: templates/customer_detail.html
+msgid "Вместе с ним удалятся все контактные лица"
+msgstr "所有联系人将一并删除"
+
+#: templates/customer_detail.html
+msgid "шт."
+msgstr "个"
+
+#: templates/customer_detail.html
+msgid "Удаление заблокировано."
+msgstr "删除已阻止。"
+
+#: templates/customer_detail.html
+msgid "Заказчик привязан к"
+msgstr "客户关联到"
+
+#: templates/customer_detail.html
+msgid "проект(ам)."
+msgstr "个项目。"
+
+#: templates/customer_detail.html
+msgid "Сначала отвяжите его в разделе «Редактировать проект»."
+msgstr "请先在“编辑项目”中取消关联。"
+
+#: templates/customer_detail.html
+msgid "Удалить заказчика"
+msgstr "删除客户"
+
+#: templates/customer_detail.html
+msgid "Сначала отвяжите заказчика от всех проектов"
+msgstr "请先取消客户与所有项目的关联"
+
+#: templates/customer_detail.html
+msgid "Удалить (заблокировано)"
+msgstr "删除（已阻止）"
+
+#: templates/edit_customer.html
+msgid "Редактировать заказчика"
+msgstr "编辑客户"
+
+#: templates/edit_customer.html
+msgid "Наименование организации"
+msgstr "组织名称"
+
+#: templates/edit_customer.html
+msgid "ООО «Ромашка»"
+msgstr "Romashka LLC"
+
+#: templates/edit_customer.html
+msgid "10 или 12 цифр"
+msgstr "10 或 12 位数字"
+
+#: templates/edit_customer.html
+msgid "ИНН должен содержать 10 или 12 цифр"
+msgstr "税号必须包含 10 或 12 位数字"
+
+#: templates/edit_customer.html
+msgid "10 цифр — юрлицо, 12 — ИП"
+msgstr "10 位 — 法人，12 位 — 个体经营者"
+
+#: templates/edit_customer.html
+msgid "Контактное лицо"
+msgstr "联系人"
+
+#: templates/edit_customer.html
+msgid "Кто видит заказчика:"
+msgstr "谁可以看到客户："
+
+#: templates/edit_customer.html
+msgid "Вы и все участники ваших проектов"
+msgstr "您和您项目的所有成员"
+
+#: templates/edit_customer.html
+msgid "Если заказчик ещё не привязан ни к одному проекту — его видят все пользователи"
+msgstr "如果客户尚未关联到任何项目，所有用户都可以看到"
+
+#: templates/edit_customer.html
+msgid "Глобальный администратор видит всех заказчиков"
+msgstr "全局管理员可以看到所有客户"
+
+#: templates/edit_customer.html
+msgid "Сохранить изменения"
+msgstr "保存更改"
+
+#: templates/edit_customer.html
+msgid "Привязанные проекты"
+msgstr "关联项目"
+
+#: templates/create_supplier.html
+msgid "К списку"
+msgstr "返回列表"
+
+#: templates/create_supplier.html
+msgid "Наименование организации"
+msgstr "组织名称"
+
+#: templates/create_supplier.html
+msgid "ООО «Субподрядчик»"
+msgstr "Subcontractor LLC"
+
+#: templates/create_supplier.html
+msgid "ООО «Компания группы»"
+msgstr "Group company LLC"
+
+#: templates/create_supplier.html
+msgid "10 или 12 цифр"
+msgstr "10 或 12 位数字"
+
+#: templates/create_supplier.html
+msgid "ИНН должен содержать 10 или 12 цифр"
+msgstr "税号必须包含 10 或 12 位数字"
+
+#: templates/create_supplier.html
+msgid "10 цифр — юрлицо, 12 — ИП"
+msgstr "10 位 — 法人，12 位 — 个体经营者"
+
+#: templates/create_supplier.html
+msgid "Контактное лицо (основное)"
+msgstr "联系人（主要）"
+
+#: templates/create_supplier.html
+msgid "Иванов Иван Иванович"
+msgstr "张三"
+
+#: templates/create_supplier.html
+msgid "Кто видит субподрядчика:"
+msgstr "谁可以看到分包商："
+
+#: templates/create_supplier.html
+msgid "Кто видит поставщика:"
+msgstr "谁可以看到供应商："
+
+#: templates/create_supplier.html
+msgid "Вы и все участники ваших проектов"
+msgstr "您和您项目的所有成员"
+
+#: templates/create_supplier.html
+msgid "Если он ещё не привязан ни к одному проекту — его видят все пользователи"
+msgstr "如果尚未关联到任何项目，所有用户都可以看到"
+
+#: templates/create_supplier.html
+msgid "Глобальный администратор видит всех"
+msgstr "全局管理员可以看到所有人"
+
+#: templates/create_project.html
+msgid "К дашборду"
+msgstr "返回仪表板"
+
+#: templates/create_project.html
+msgid "Новый проект"
+msgstr "新项目"
+
+#: templates/create_project.html
+msgid "Название проекта"
+msgstr "项目名称"
+
+#: templates/create_project.html
+msgid "Например: Строительство склада"
+msgstr "例如：仓库建设"
+
+#: templates/create_project.html
+msgid "Краткое описание проекта..."
+msgstr "项目简介..."
+
+#: templates/create_project.html
+msgid "Филиал компании"
+msgstr "公司分公司"
+
+#: templates/create_project.html
+msgid "— Без филиала —"
+msgstr "— 无分公司 —"
+
+#: templates/create_project.html
+msgid "Добавить новый филиал"
+msgstr "添加新分公司"
+
+#: templates/create_project.html
+msgid "Какой филиал ведёт проект. Влияет на фильтр дашборда и группировку в сайдбаре."
+msgstr "哪个分公司负责项目。影响仪表板筛选和侧边栏分组。"
+
+#: templates/create_project.html
+msgid "Список пуст — сначала добавьте филиал."
+msgstr "列表为空 — 请先添加分公司。"
+
+#: templates/create_project.html
+msgid "Заказчик"
+msgstr "客户"
+
+#: templates/create_project.html
+msgid "— Без заказчика —"
+msgstr "— 无客户 —"
+
+#: templates/create_project.html
+msgid "Добавить нового заказчика"
+msgstr "添加新客户"
+
+#: templates/create_project.html
+msgid "Поставщик"
+msgstr "供应商"
+
+#: templates/create_project.html
+msgid "— Без поставщика —"
+msgstr "— 无供应商 —"
+
+#: templates/create_project.html
+msgid "Добавить нового поставщика"
+msgstr "添加新供应商"
+
+#: templates/create_project.html
+msgid "Основной поставщик"
+msgstr "主要供应商"
+
+#: templates/create_project.html
+msgid "Субподрядчики"
+msgstr "分包商"
+
+#: templates/create_project.html
+msgid "можно несколько"
+msgstr "可多选"
+
+#: templates/create_project.html
+msgid "Добавить нового субподрядчика"
+msgstr "添加新分包商"
+
+#: templates/create_project.html
+msgid "Ctrl+клик (⌘ на Mac) — выбрать несколько."
+msgstr "Ctrl+点击（Mac 上为 ⌘）— 多选。"
+
+#: templates/create_project.html
+msgid "Дата старта"
+msgstr "开始日期"
+
+#: templates/create_project.html
+msgid "По умолчанию — сегодня"
+msgstr "默认为今天"
+
+#: templates/create_project.html
+msgid "Плановая дата окончания"
+msgstr "计划结束日期"
+
+#: templates/create_project.html
+msgid "Можно изменить позже"
+msgstr "稍后可更改"
+
+#: templates/create_project.html
+msgid "После создания"
+msgstr "创建后"
+
+#: templates/create_project.html
+msgid "вы автоматически становитесь"
+msgstr "您自动成为"
+
+#: templates/create_project.html
+msgid "руководителем проекта"
+msgstr "项目经理"
+
+#: templates/create_project.html
+msgid "и сможете:"
+msgstr "并且可以："
+
+#: templates/create_project.html
+msgid "Приглашать участников и назначать им роли"
+msgstr "邀请成员并分配角色"
+
+#: templates/create_project.html
+msgid "Создавать задачи, вехи и To-Do"
+msgstr "创建任务、里程碑和待办"
+
+#: templates/create_project.html
+msgid "Назначать задачи на контактных лиц заказчика / поставщика / субподрядчиков"
+msgstr "将任务分配给客户/供应商/分包商联系人"
+
+#: templates/create_project.html
+msgid "Загружать файлы и писать отчёты"
+msgstr "上传文件并编写报告"
+
+#: templates/create_project.html
+msgid "Удалять проект (с подтверждением)"
+msgstr "删除项目（需确认）"
+
+#: templates/create_project.html
+msgid "Создать проект"
+msgstr "创建项目"
+
+#: templates/create_project.html
+msgid "Совет по субподрядчикам:"
+msgstr "分包商提示："
+
+#: templates/create_project.html
+msgid "если проект ведут несколько субподрядных организаций (например, ООО «ЭлектроМонтаж» и ООО «СантехМонтаж»), выберите обоих в списке. В сайдбаре проект появится под каждым из них, а в фильтре дашборда можно будет найти по любому."
+msgstr "如果项目由多个分包组织负责（例如 ElektroMontazh LLC 和 SantekhMontazh LLC），请在列表中全选。项目将在侧边栏中分别显示在每个组织下，仪表板筛选也可以按任一组织找到。"
+
+#: templates/edit_project.html
+msgid "Редактирование проекта"
+msgstr "编辑项目"
+
+#: templates/edit_project.html
+msgid "К проекту"
+msgstr "返回项目"
+
+#: templates/edit_project.html
+msgid "Статус проекта"
+msgstr "项目状态"
+
+#: templates/edit_project.html
+msgid "Завершён"
+msgstr "已完成"
+
+#: templates/edit_project.html
+msgid "Дата окончания (план)"
+msgstr "结束日期（计划）"
+
+#: templates/edit_project.html
+msgid "Дата создания не меняется"
+msgstr "创建日期不可更改"
+
+#: templates/edit_project.html
+msgid "Изменения вступят в силу сразу. Список участников и роли редактируются отдельно на странице"
+msgstr "更改立即生效。成员和角色在单独页面编辑："
+
+#: templates/edit_project.html
+msgid "Текущие привязки"
+msgstr "当前关联"
+
+#: templates/edit_project.html
+msgid "не указан"
+msgstr "未指定"
+
+#: templates/edit_project.html
+msgid "не указаны"
+msgstr "未指定"
+
+#: templates/edit_project.html
+msgid "Филиал"
+msgstr "分公司"
+
+#: templates/project_settings.html
+msgid "Команда проекта"
+msgstr "项目团队"
+
+#: templates/project_settings.html
+msgid "Пригласить в проект"
+msgstr "邀请加入项目"
+
+#: templates/project_settings.html
+msgid "Кликните на поле — увидите всех зарегистрированных"
+msgstr "点击字段 — 查看所有已注册用户"
+
+#: templates/project_settings.html
+msgid "Пользователь / Email"
+msgstr "用户 / 邮箱"
+
+#: templates/project_settings.html
+msgid "Кликните или начните вводить имя / email / компанию..."
+msgstr "点击或开始输入姓名 / 邮箱 / 公司..."
+
+#: templates/project_settings.html
+msgid "Из списка"
+msgstr "从列表"
+
+#: templates/project_settings.html
+msgid "если аккаунт уже есть, добавится сразу."
+msgstr "如果账号已存在，将立即添加。"
+
+#: templates/project_settings.html
+msgid "Вручную"
+msgstr "手动"
+
+#: templates/project_settings.html
+msgid "если нет, будет создана ссылка-приглашение."
+msgstr "如果不存在，将创建邀请链接。"
+
+#: templates/project_settings.html
+msgid "Роль в проекте"
+msgstr "项目角色"
+
+#: templates/project_settings.html
+msgid "Руководитель проекта"
+msgstr "项目经理"
+
+#: templates/project_settings.html
+msgid "Менеджер"
+msgstr "经理"
+
+#: templates/project_settings.html
+msgid "Главный инженер"
+msgstr "总工程师"
+
+#: templates/project_settings.html
+msgid "Логистик"
+msgstr "物流"
+
+#: templates/project_settings.html
+msgid "Участник"
+msgstr "成员"
+
+#: templates/project_settings.html
+msgid "АМ Станко · Руководитель"
+msgstr "AM Stanko · 负责人"
+
+#: templates/project_settings.html
+msgid "АМ Станко · Менеджер"
+msgstr "AM Stanko · 经理"
+
+#: templates/project_settings.html
+msgid "АМ Станко · Гл. инженер"
+msgstr "AM Stanko · 总工程师"
+
+#: templates/project_settings.html
+msgid "АМ Станко · Логистик"
+msgstr "AM Stanko · 物流"
+
+#: templates/project_settings.html
+msgid "АМ Станко · Участник"
+msgstr "AM Stanko · 成员"
+
+#: templates/project_settings.html
+msgid "Пригласить"
+msgstr "邀请"
+
+#: templates/project_settings.html
+msgid "Ожидают регистрации"
+msgstr "等待注册"
+
+#: templates/project_settings.html
+msgid "Ссылка действует 7 дней"
+msgstr "链接有效期 7 天"
+
+#: templates/project_settings.html
+msgid "Руководитель"
+msgstr "负责人"
+
+#: templates/project_settings.html
+msgid "до"
+msgstr "至"
+
+#: templates/project_settings.html
+msgid "создано"
+msgstr "创建于"
+
+#: templates/project_settings.html
+msgid "Скопировать ссылку"
+msgstr "复制链接"
+
+#: templates/project_settings.html
+msgid "Отменить приглашение для"
+msgstr "取消邀请"
+
+#: templates/project_settings.html
+msgid "Отменить приглашение"
+msgstr "取消邀请"
+
+#: templates/project_settings.html
+msgid "Имя"
+msgstr "姓名"
+
+#: templates/project_settings.html
+msgid "Роль"
+msgstr "角色"
+
+#: templates/project_settings.html
+msgid "Создатель"
+msgstr "创建者"
+
+#: templates/project_settings.html
+msgid "Перевести в АМ Станко"
+msgstr "移至 AM Stanko"
+
+#: templates/project_settings.html
+msgid "Удалить из проекта"
+msgstr "从项目中移除"
+
+#: templates/project_settings.html
+msgid "Удалить"
+msgstr "移除"
+
+#: templates/project_settings.html
+msgid "из проекта?"
+msgstr "从项目？"
+
+#: templates/project_settings.html
+msgid "Пока в команде только создатель проекта"
+msgstr "目前团队中只有项目创建者"
+
+#: templates/project_settings.html
+msgid "Группа компаний АМ Станко"
+msgstr "AM Stanko 集团公司"
+
+#: templates/project_settings.html
+msgid "Добавляются автоматически из контактов поставщика"
+msgstr "从供应商联系人自动添加"
+
+#: templates/project_settings.html
+msgid "АМ Станко"
+msgstr "AM Stanko"
+
+#: templates/project_settings.html
+msgid "Перевести в команду проекта"
+msgstr "移至项目团队"
+
+#: templates/project_settings.html
+msgid "Гости проекта"
+msgstr "项目访客"
+
+#: templates/project_settings.html
+msgid "Контакты субподрядчиков и заказчиков"
+msgstr "分包商和客户联系人"
+
+#: templates/project_settings.html
+msgid "Компания"
+msgstr "公司"
+
+#: templates/project_settings.html
+msgid "Гость"
+msgstr "访客"
+
+#: templates/project_settings.html
+msgid "Как это работает:"
+msgstr "工作原理："
+
+#: templates/project_settings.html
+msgid "Если у человека уже есть аккаунт — он добавляется в проект сразу."
+msgstr "如果此人已有账号，将立即添加到项目。"
+
+#: templates/project_settings.html
+msgid "Если аккаунта нет — создаётся ссылка-приглашение. Скопируйте её и передайте любым способом."
+msgstr "如果没有账号，将创建邀请链接。复制并以任何方式分享。"
+
+#: templates/project_settings.html
+msgid "сотрудники вашей компании. Роли: руководитель, менеджер, главный инженер, логистик, участник."
+msgstr "您公司的员工。角色：负责人、经理、总工程师、物流、成员。"
+
+#: templates/project_settings.html
+msgid "сотрудники одноимённого поставщика. Добавляются автоматически из контактов."
+msgstr "同名供应商的员工。从联系人自动添加。"
+
+#: templates/project_settings.html
+msgid "Руководитель и менеджер (в том числе АМ Станко) могут управлять проектом, создавать задачи и вехи."
+msgstr "负责人和经理（包括 AM Stanko）可以管理项目、创建任务和里程碑。"
+
+#: templates/project_settings.html
+msgid "контакты субподрядчиков и заказчиков, назначенные на конкретные задачи. Видят только свои задачи."
+msgstr "分配给具体任务的分包商和客户联系人。只能看到自己的任务。"
+
+#: templates/project_settings.html
+msgid "Не удалось скопировать. Выделите текст вручную."
+msgstr "复制失败。请手动选择文本。"
+
+#: templates/project_settings.html
+msgid "Ничего не найдено"
+msgstr "未找到"
+
+#: templates/project_settings.html
+msgid "Нет доступных пользователей"
+msgstr "没有可用用户"
+
+#: templates/project_settings.html
+msgid "Можно ввести email вручную и пригласить по ссылке."
+msgstr "可以手动输入邮箱并通过链接邀请。"
+
+#: templates/project_settings.html
+msgid "Первые"
+msgstr "前"
+
+#: templates/project_settings.html
+msgid "зарегистрированных (без участников проекта)"
+msgstr "位已注册用户（不含项目成员）"
+
+#: templates/pdf/project_report.html
+msgid "Отчёт по проекту"
+msgstr "项目报告"
+
+#: templates/pdf/project_report.html
+msgid "Стр."
+msgstr "第"
+
+#: templates/pdf/project_report.html
+msgid "из"
+msgstr "页，共"
+
+#: templates/pdf/project_report.html
+msgid "Отчёт по проекту:"
+msgstr "项目报告："
+
+#: templates/pdf/project_report.html
+msgid "Заказчик:"
+msgstr "客户："
+
+#: templates/pdf/project_report.html
+msgid "ИНН:"
+msgstr "税号："
+
+#: templates/pdf/project_report.html
+msgid "Контактное лицо:"
+msgstr "联系人："
+
+#: templates/pdf/project_report.html
+msgid "Руководитель проекта:"
+msgstr "项目经理："
+
+#: templates/pdf/project_report.html
+msgid "Статус:"
+msgstr "状态："
+
+#: templates/pdf/project_report.html
+msgid "Завершён"
+msgstr "已完成"
+
+#: templates/pdf/project_report.html
+msgid "Приостановлен"
+msgstr "已暂停"
+
+#: templates/pdf/project_report.html
+msgid "Отменён"
+msgstr "已取消"
+
+#: templates/pdf/project_report.html
+msgid "В работе"
+msgstr "进行中"
+
+#: templates/pdf/project_report.html
+msgid "Дата создания:"
+msgstr "创建日期："
+
+#: templates/pdf/project_report.html
+msgid "Дата старта:"
+msgstr "开始日期："
+
+#: templates/pdf/project_report.html
+msgid "Плановая дата окончания:"
+msgstr "计划结束日期："
+
+#: templates/pdf/project_report.html
+msgid "Просрочен на"
+msgstr "逾期"
+
+#: templates/pdf/project_report.html
+msgid "дн."
+msgstr "天"
+
+#: templates/pdf/project_report.html
+msgid "Общий прогресс:"
+msgstr "总体进度："
+
+#: templates/pdf/project_report.html
+msgid "Дата отчёта:"
+msgstr "报告日期："
+
+#: templates/pdf/project_report.html
+msgid "Линия проекта и вехи"
+msgstr "项目时间线和里程碑"
+
+#: templates/pdf/project_report.html
+msgid "ТЕКУЩАЯ"
+msgstr "当前"
+
+#: templates/pdf/project_report.html
+msgid "д"
+msgstr "天"
+
+#: templates/pdf/project_report.html
+msgid "Завершена"
+msgstr "已完成"
+
+#: templates/pdf/project_report.html
+msgid "Просрочена"
+msgstr "已逾期"
+
+#: templates/pdf/project_report.html
+msgid "Текущая"
+msgstr "当前"
+
+#: templates/pdf/project_report.html
+msgid "В плане"
+msgstr "计划中"
+
+#: templates/pdf/project_report.html
+msgid "Вехи не заданы."
+msgstr "未设置里程碑。"
+
+#: templates/pdf/project_report.html
+msgid "Сводка по задачам"
+msgstr "任务摘要"
+
+#: templates/pdf/project_report.html
+msgid "Выполнено"
+msgstr "已完成"
+
+#: templates/pdf/project_report.html
+msgid "Просрочено"
+msgstr "逾期"
+
+#: templates/pdf/project_report.html
+msgid "Не начато"
+msgstr "未开始"
+
+#: templates/pdf/project_report.html
+msgid "Сводка по To-Do"
+msgstr "待办摘要"
+
+#: templates/pdf/project_report.html
+msgid "Всего"
+msgstr "总计"
+
+#: templates/pdf/project_report.html
+msgid "Просроченные задачи"
+msgstr "逾期任务"
+
+#: templates/pdf/project_report.html
+msgid "Задача"
+msgstr "任务"
+
+#: templates/pdf/project_report.html
+msgid "Исполнитель"
+msgstr "执行人"
+
+#: templates/pdf/project_report.html
+msgid "Дедлайн"
+msgstr "截止日期"
+
+#: templates/pdf/project_report.html
+msgid "Причина:"
+msgstr "原因："
+
+#: templates/pdf/project_report.html
+msgid "Просроченные To-Do"
+msgstr "逾期待办"
+
+#: templates/pdf/project_report.html
+msgid "Текущие задачи"
+msgstr "当前任务"
+
+#: templates/pdf/project_report.html
+msgid "Новая"
+msgstr "新"
+
+#: templates/pdf/project_report.html
+msgid "Активных задач нет."
+msgstr "没有活跃任务。"
+
+#: templates/pdf/project_report.html
+msgid "Выполненные задачи"
+msgstr "已完成任务"
+
+#: templates/pdf/project_report.html
+msgid "История отчётов"
+msgstr "报告历史"
+
+#: templates/pdf/project_report.html
+msgid "Задержка:"
+msgstr "延误："
+
+#: templates/pdf/project_report.html
+msgid "Отчёт сформирован автоматически"
+msgstr "报告自动生成"
+
+#: templates/pdf/project_report.html
+msgid "в"
+msgstr "于"
+
+#: templates/pdf/project_report.html
+msgid "Система управления проектами Workspace"
+msgstr "Workspace 项目管理系统"
+
+#: templates/pdf/employee_report.html
+msgid "Отчёт по сотруднику"
+msgstr "员工报告"
+
+#: templates/pdf/employee_report.html
+msgid "Отчёт по сотруднику:"
+msgstr "员工报告："
+
+#: templates/pdf/employee_report.html
+msgid "Сотрудник:"
+msgstr "员工："
+
+#: templates/pdf/employee_report.html
+msgid "Компания:"
+msgstr "公司："
+
+#: templates/pdf/employee_report.html
+msgid "Роль в проекте:"
+msgstr "项目角色："
+
+#: templates/pdf/employee_report.html
+msgid "Проект:"
+msgstr "项目："
+
+#: templates/pdf/employee_report.html
+msgid "Общая оценка активности"
+msgstr "总体活跃度评分"
+
+#: templates/pdf/employee_report.html
+msgid "Баллов активности"
+msgstr "活跃度积分"
+
+#: templates/pdf/employee_report.html
+msgid "Всего задач"
+msgstr "任务总数"
+
+#: templates/pdf/employee_report.html
+msgid "Процент выполнения задач"
+msgstr "任务完成率"
+
+#: templates/pdf/employee_report.html
+msgid "Процент просроченных задач"
+msgstr "逾期率"
+
+#: templates/pdf/employee_report.html
+msgid "Детальная статистика"
+msgstr "详细统计"
+
+#: templates/pdf/employee_report.html
+msgid "Всего задач:"
+msgstr "任务总数："
+
+#: templates/pdf/employee_report.html
+msgid "Подзадач:"
+msgstr "子任务："
+
+#: templates/pdf/employee_report.html
+msgid "To-Do выполнено:"
+msgstr "待办已完成："
+
+#: templates/pdf/employee_report.html
+msgid "Сообщений в чате:"
+msgstr "聊天消息："
+
+#: templates/pdf/employee_report.html
+msgid "Отчётов создано:"
+msgstr "已创建报告："
+
+#: templates/pdf/employee_report.html
+msgid "Список задач сотрудника"
+msgstr "员工任务列表"
+
+#: templates/pdf/employee_report.html
+msgid "Подзадача:"
+msgstr "子任务："
+
+#: templates/pdf/employee_report.html
+msgid "Задач, назначенных сотруднику, нет."
+msgstr "没有分配给该员工的任务。"
+
+#: templates/pdf/employee_report.html
+msgid "To-Do сотрудника"
+msgstr "员工待办"
+
+#: templates/pdf/employee_report.html
+msgid "Выводы"
+msgstr "结论"
+
+#: templates/pdf/employee_report.html
+msgid "Отличная работа!"
+msgstr "工作出色！"
+
+#: templates/pdf/employee_report.html
+msgid "Большинство задач выполнено. Сотрудник укладывается в сроки."
+msgstr "大多数任务已完成。员工按时完成。"
+
+#: templates/pdf/employee_report.html
+msgid "Хорошая работа."
+msgstr "工作良好。"
+
+#: templates/pdf/employee_report.html
+msgid "Задачи выполняются, но есть что улучшить."
+msgstr "任务正在完成，但仍有改进空间。"
+
+#: templates/pdf/employee_report.html
+msgid "Средний результат."
+msgstr "中等结果。"
+
+#: templates/pdf/employee_report.html
+msgid "Много задач в работе. Возможно, требуется помощь."
+msgstr "许多任务正在进行中。可能需要帮助。"
+
+#: templates/pdf/employee_report.html
+msgid "Низкая активность."
+msgstr "活跃度低。"
+
+#: templates/pdf/employee_report.html
+msgid "Большинство задач не выполнено. Требуется внимание руководителя."
+msgstr "大多数任务未完成。需要负责人关注。"
+
+#: templates/pdf/employee_report.html
+msgid "Высокий процент просроченных задач"
+msgstr "逾期率高"
+
+#: templates/pdf/employee_report.html
+msgid "Необходимо пересмотреть сроки или нагрузку."
+msgstr "需要重新审视截止日期或工作量。"
+
+#: templates/pdf/employee_report.html
+msgid "Мало сообщений в чате. Возможно, сотрудник недостаточно вовлечён в обсуждения."
+msgstr "聊天消息少。员工可能参与讨论不足。"
+
+#: templates/pdf/task_report.html
+msgid "Отчёт по задаче"
+msgstr "任务报告"
+
+#: templates/pdf/task_report.html
+msgid "Отчёт по задаче:"
+msgstr "任务报告："
+
+#: templates/pdf/task_report.html
+msgid "Дедлайн:"
+msgstr "截止日期："
+
+#: templates/pdf/task_report.html
+msgid "Статистика подзадач"
+msgstr "子任务统计"
+
+#: templates/pdf/task_report.html
+msgid "Список подзадач"
+msgstr "子任务列表"
+
+#: templates/pdf/task_report.html
+msgid "Подзадач нет."
+msgstr "没有子任务。"
+
+#: templates/pdf/task_report.html
+msgid "Причина просрочки задачи"
+msgstr "任务逾期原因"

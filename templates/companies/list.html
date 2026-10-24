@@ -4,13 +4,13 @@
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
         <h2 class="mb-1">
-            <i class="bi bi-building"></i> Филиалы компании
+            <i class="bi bi-building"></i> {{ _('Филиалы компании') }}
         </h2>
-        <p class="text-muted mb-0">Справочник филиалов, которые ведут проекты</p>
+        <p class="text-muted mb-0">{{ _('Справочник филиалов, которые ведут проекты') }}</p>
     </div>
     {% if can_manage %}
     <a href="{{ url_for('companies.companies_create') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Добавить филиал
+        <i class="bi bi-plus-circle"></i> {{ _('Добавить филиал') }}
     </a>
     {% endif %}
 </div>
@@ -23,7 +23,7 @@
                 <i class="bi bi-building"></i>
             </div>
             <div class="stat-number">{{ stats.total }}</div>
-            <div class="stat-label">Всего филиалов</div>
+            <div class="stat-label">{{ _('Всего филиалов') }}</div>
         </div>
     </div>
     <div class="col-md-4 col-6">
@@ -32,7 +32,7 @@
                 <i class="bi bi-check-circle-fill"></i>
             </div>
             <div class="stat-number">{{ stats.active }}</div>
-            <div class="stat-label">Активных</div>
+            <div class="stat-label">{{ _('Активных') }}</div>
         </div>
     </div>
     <div class="col-md-4 col-6">
@@ -41,7 +41,7 @@
                 <i class="bi bi-pause-circle-fill"></i>
             </div>
             <div class="stat-number">{{ stats.inactive }}</div>
-            <div class="stat-label">Деактивированных</div>
+            <div class="stat-label">{{ _('Деактивированных') }}</div>
         </div>
     </div>
 </div>
@@ -51,33 +51,33 @@
     <div class="card-body">
         <form method="GET" class="row g-2 align-items-end">
             <div class="col-md-5">
-                <label class="form-label small">Поиск</label>
+                <label class="form-label small">{{ _('Поиск') }}</label>
                 <input type="text" name="q" class="form-control"
-                       placeholder="Название, ИНН, email, адрес..."
+                       placeholder="{{ _('Название, ИНН, email, адрес...') }}"
                        value="{{ q }}">
             </div>
             <div class="col-md-3">
-                <label class="form-label small">Статус</label>
+                <label class="form-label small">{{ _('Статус') }}</label>
                 <select name="status" class="form-select">
-                    <option value="">Все</option>
-                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Только активные</option>
-                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Только деактивированные</option>
+                    <option value="">{{ _('Все') }}</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>{{ _('Только активные') }}</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>{{ _('Только деактивированные') }}</option>
                 </select>
             </div>
             <div class="col-md-2">
-                <label class="form-label small">Сортировка</label>
+                <label class="form-label small">{{ _('Сортировка') }}</label>
                 <select name="sort" class="form-select">
-                    <option value="name" {% if sort == 'name' %}selected{% endif %}>По названию</option>
-                    <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Сначала новые</option>
+                    <option value="name" {% if sort == 'name' %}selected{% endif %}>{{ _('По названию') }}</option>
+                    <option value="newest" {% if sort == 'newest' %}selected{% endif %}>{{ _('Сначала новые') }}</option>
                 </select>
             </div>
             <div class="col-md-2 d-flex gap-1">
                 <button type="submit" class="btn btn-primary flex-grow-1">
-                    <i class="bi bi-funnel"></i> Применить
+                    <i class="bi bi-funnel"></i> {{ _('Применить') }}
                 </button>
                 {% if q or status_filter or sort != 'name' %}
                 <a href="{{ url_for('companies.companies_list') }}"
-                   class="btn btn-outline-secondary" title="Сбросить">
+                   class="btn btn-outline-secondary" title="{{ _('Сбросить') }}">
                     <i class="bi bi-x-lg"></i>
                 </a>
                 {% endif %}
@@ -93,13 +93,13 @@
         <table class="table table-hover mb-0">
             <thead class="table-light">
                 <tr>
-                    <th>Название</th>
-                    <th style="width: 140px;">ИНН</th>
-                    <th style="width: 200px;">Контакты</th>
-                    <th style="width: 120px;">Проектов</th>
-                    <th style="width: 110px;">Статус</th>
+                    <th>{{ _('Название') }}</th>
+                    <th style="width: 140px;">{{ _('ИНН') }}</th>
+                    <th style="width: 200px;">{{ _('Контакты') }}</th>
+                    <th style="width: 120px;">{{ _('Проектов') }}</th>
+                    <th style="width: 110px;">{{ _('Статус') }}</th>
                     {% if can_manage %}
-                    <th style="width: 180px;" class="text-end">Действия</th>
+                    <th style="width: 180px;" class="text-end">{{ _('Действия') }}</th>
                     {% endif %}
                 </tr>
             </thead>
@@ -141,9 +141,9 @@
                     </td>
                     <td>
                         {% if c.is_active %}
-                        <span class="badge bg-success">Активен</span>
+                        <span class="badge bg-success">{{ _('Активен') }}</span>
                         {% else %}
-                        <span class="badge bg-warning text-dark">Неактивен</span>
+                        <span class="badge bg-warning text-dark">{{ _('Неактивен') }}</span>
                         {% endif %}
                     </td>
                     {% if can_manage %}
@@ -152,7 +152,7 @@
                             <a href="{{ url_for('companies.companies_edit', company_id=c.id) }}"
                                class="btn btn-sm btn-outline-secondary"
                                style="width: 32px; height: 32px; padding: 0;"
-                               title="Редактировать">
+                               title="{{ _('Редактировать') }}">
                                 <i class="bi bi-pencil text-primary"></i>
                             </a>
                             <form method="POST"
@@ -160,7 +160,7 @@
                                   class="d-inline">
                                 <button type="submit" class="btn btn-sm btn-outline-secondary"
                                         style="width: 32px; height: 32px; padding: 0;"
-                                        title="{% if c.is_active %}Деактивировать{% else %}Активировать{% endif %}">
+                                        title="{% if c.is_active %}{{ _('Деактивировать') }}{% else %}{{ _('Активировать') }}{% endif %}">
                                     {% if c.is_active %}
                                     <i class="bi bi-pause-fill text-warning"></i>
                                     {% else %}
@@ -171,10 +171,10 @@
                             <form method="POST"
                                   action="{{ url_for('companies.companies_delete', company_id=c.id) }}"
                                   class="d-inline"
-                                  onsubmit="return confirm('Удалить филиал «{{ c.name }}»?');">
+                                  onsubmit="return confirm('{{ _('Удалить филиал') }} «{{ c.name }}»?');">
                                 <button type="submit" class="btn btn-sm btn-outline-secondary"
                                         style="width: 32px; height: 32px; padding: 0;"
-                                        title="Удалить"
+                                        title="{{ _('Удалить') }}"
                                         {% if c.projects_count > 0 %}disabled{% endif %}>
                                     <i class="bi bi-trash-fill text-danger"></i>
                                 </button>
@@ -195,18 +195,18 @@
     </div>
     <h5>
         {% if q or status_filter %}
-            По фильтрам ничего не найдено
+            {{ _('По фильтрам ничего не найдено') }}
         {% else %}
-            Филиалов пока нет
+            {{ _('Филиалов пока нет') }}
         {% endif %}
     </h5>
     {% if q or status_filter %}
     <a href="{{ url_for('companies.companies_list') }}" class="btn btn-outline-secondary">
-        <i class="bi bi-x-lg"></i> Сбросить
+        <i class="bi bi-x-lg"></i> {{ _('Сбросить') }}
     </a>
     {% elif can_manage %}
     <a href="{{ url_for('companies.companies_create') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Добавить первый филиал
+        <i class="bi bi-plus-circle"></i> {{ _('Добавить первый филиал') }}
     </a>
     {% endif %}
 </div>

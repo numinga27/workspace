@@ -2,11 +2,11 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
-        <h2 class="mb-1">📅 Мой календарь</h2>
-        <p class="text-muted mb-0">Все ваши события, задачи, вехи и To-Do в одном месте</p>
+        <h2 class="mb-1">📅 {{ _('Мой календарь') }}</h2>
+        <p class="text-muted mb-0">{{ _('Все ваши события, задачи, вехи и To-Do в одном месте') }}</p>
     </div>
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPersonalEventModal">
-        <i class="bi bi-plus-lg"></i> Личное событие
+        <i class="bi bi-plus-lg"></i> {{ _('Личное событие') }}
     </button>
 </div>
 
@@ -14,48 +14,48 @@
 <!-- ИНТЕРАКТИВНАЯ ЛЕГЕНДА-ФИЛЬТР -->
 <!-- ============================================================ -->
 <div class="d-flex flex-wrap gap-2 mb-3 small text-muted" id="calendarLegend">
-    <span class="legend-item" data-type="personal" onclick="toggleLegendFilter(this)" title="Кликните, чтобы скрыть/показать">
+    <span class="legend-item" data-type="personal" onclick="toggleLegendFilter(this)" title="{{ _('Кликните, чтобы скрыть/показать') }}">
         <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #8b5cf6; vertical-align: middle;"></span>
-        Личные события
+        {{ _('Личные события') }}
     </span>
-    <span class="legend-item" data-type="project_event" onclick="toggleLegendFilter(this)" title="Кликните, чтобы скрыть/показать">
+    <span class="legend-item" data-type="project_event" onclick="toggleLegendFilter(this)" title="{{ _('Кликните, чтобы скрыть/показать') }}">
         <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #5b5bd6; vertical-align: middle;"></span>
-        События проектов
+        {{ _('События проектов') }}
     </span>
-    <span class="legend-item" data-type="task-new" onclick="toggleLegendFilter(this)" title="Кликните, чтобы скрыть/показать">
+    <span class="legend-item" data-type="task-new" onclick="toggleLegendFilter(this)" title="{{ _('Кликните, чтобы скрыть/показать') }}">
         <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #a1a1aa; vertical-align: middle;"></span>
-        Мои задачи (новые)
+        {{ _('Мои задачи (новые)') }}
     </span>
-    <span class="legend-item" data-type="task-progress" onclick="toggleLegendFilter(this)" title="Кликните, чтобы скрыть/показать">
+    <span class="legend-item" data-type="task-progress" onclick="toggleLegendFilter(this)" title="{{ _('Кликните, чтобы скрыть/показать') }}">
         <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #f59e0b; vertical-align: middle;"></span>
-        Мои задачи (в работе)
+        {{ _('Мои задачи (в работе)') }}
     </span>
-    <span class="legend-item" data-type="overdue" onclick="toggleLegendFilter(this)" title="Кликните, чтобы скрыть/показать">
+    <span class="legend-item" data-type="overdue" onclick="toggleLegendFilter(this)" title="{{ _('Кликните, чтобы скрыть/показать') }}">
         <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #dc2626; vertical-align: middle;"></span>
-        Просрочено
+        {{ _('Просрочено') }}
     </span>
-    <span class="legend-item" data-type="completed" onclick="toggleLegendFilter(this)" title="Кликните, чтобы скрыть/показать">
+    <span class="legend-item" data-type="completed" onclick="toggleLegendFilter(this)" title="{{ _('Кликните, чтобы скрыть/показать') }}">
         <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #16a34a; vertical-align: middle;"></span>
-        Завершено
+        {{ _('Завершено') }}
     </span>
-    <span class="legend-item" data-type="todo" onclick="toggleLegendFilter(this)" title="Кликните, чтобы скрыть/показать">
+    <span class="legend-item" data-type="todo" onclick="toggleLegendFilter(this)" title="{{ _('Кликните, чтобы скрыть/показать') }}">
         <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #0891b2; vertical-align: middle;"></span>
-        Мои To-Do
+        {{ _('Мои To-Do') }}
     </span>
 </div>
 
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <div class="small text-muted">
         <i class="bi bi-info-circle"></i>
-        Клик по дню — просмотр расписания. Клик по цвету — <strong>скрыть/показать</strong> тип.
+        {{ _('Клик по дню — просмотр расписания. Клик по цвету —') }} <strong>{{ _('скрыть/показать') }}</strong> {{ _('тип.') }}
     </div>
     <div class="d-flex align-items-center gap-2">
         <div class="small text-muted" id="my-calendar-filter-count">
-            Показано: <strong>0</strong> событий
+            {{ _('Показано:') }} <strong>0</strong> {{ _('событий') }}
         </div>
         <button type="button" class="btn btn-sm btn-outline-secondary"
-                onclick="resetLegendFilters()" title="Показать все типы">
-            <i class="bi bi-arrow-counterclockwise"></i> Сбросить
+                onclick="resetLegendFilters()" title="{{ _('Показать все типы') }}">
+            <i class="bi bi-arrow-counterclockwise"></i> {{ _('Сбросить') }}
         </button>
     </div>
 </div>
@@ -75,7 +75,7 @@
                 <i class="bi bi-person-fill"></i>
             </div>
             <div class="stat-number">{{ personal_events|length }}</div>
-            <div class="stat-label">Личных событий</div>
+            <div class="stat-label">{{ _('Личных событий') }}</div>
         </div>
     </div>
     <div class="col-md-3 col-6">
@@ -84,7 +84,7 @@
                 <i class="bi bi-folder-fill"></i>
             </div>
             <div class="stat-number">{{ project_events|length }}</div>
-            <div class="stat-label">Событий проектов</div>
+            <div class="stat-label">{{ _('Событий проектов') }}</div>
         </div>
     </div>
     <div class="col-md-3 col-6">
@@ -93,7 +93,7 @@
                 <i class="bi bi-list-task"></i>
             </div>
             <div class="stat-number" id="tasksCount">—</div>
-            <div class="stat-label">Моих задач</div>
+            <div class="stat-label">{{ _('Моих задач') }}</div>
         </div>
     </div>
     <div class="col-md-3 col-6">
@@ -102,14 +102,14 @@
                 <i class="bi bi-check2-square"></i>
             </div>
             <div class="stat-number" id="todosCount">—</div>
-            <div class="stat-label">Моих To-Do</div>
+            <div class="stat-label">{{ _('Моих To-Do') }}</div>
         </div>
     </div>
 </div>
 
 <!-- Личные события списком -->
 {% if personal_events %}
-<h5 class="mb-3"><i class="bi bi-person-fill"></i> Мои личные события ({{ personal_events|length }})</h5>
+<h5 class="mb-3"><i class="bi bi-person-fill"></i> {{ _('Мои личные события') }} ({{ personal_events|length }})</h5>
 {% for e in personal_events %}
 <div class="card mb-2 {% if e.start_time < now %}opacity-50{% endif %}">
     <div class="card-body py-2 d-flex justify-content-between align-items-center">
@@ -121,7 +121,7 @@
                 <small class="text-muted">
                     <i class="bi bi-calendar-event"></i>
                     {% if e.all_day %}
-                        {{ e.start_time.strftime('%d.%m.%Y') }} (весь день)
+                        {{ e.start_time.strftime('%d.%m.%Y') }} ({{ _('весь день') }})
                     {% else %}
                         {{ e.start_time.strftime('%d.%m.%Y %H:%M') }}
                         {% if e.end_time %} — {{ e.end_time.strftime('%H:%M') }}{% endif %}
@@ -135,7 +135,7 @@
         <form method="POST" action="{{ url_for('calendar.delete_event', event_id=e.id) }}">
             <button type="submit" class="btn btn-outline-secondary btn-sm"
                     style="width: 32px; height: 32px; padding: 0;"
-                    onclick="return confirm('Удалить событие?')">
+                    onclick="return confirm('{{ _('Удалить событие?') }}')">
                 <i class="bi bi-trash-fill text-danger"></i>
             </button>
         </form>
@@ -148,7 +148,7 @@
 {% if project_events %}
 <h5 class="mb-3 mt-4">
     <i class="bi bi-folder-fill text-warning"></i>
-    События моих проектов ({{ project_events|length }})
+    {{ _('События моих проектов') }} ({{ project_events|length }})
 </h5>
 {% for e in project_events %}
 <div class="card mb-2 {% if e.start_time < now %}opacity-50{% endif %}">
@@ -167,7 +167,7 @@
                 <small class="text-muted">
                     <i class="bi bi-calendar-event"></i>
                     {% if e.all_day %}
-                        {{ e.start_time.strftime('%d.%m.%Y') }} (весь день)
+                        {{ e.start_time.strftime('%d.%m.%Y') }} ({{ _('весь день') }})
                     {% else %}
                         {{ e.start_time.strftime('%d.%m.%Y %H:%M') }}
                     {% endif %}
@@ -192,7 +192,7 @@
             <div class="modal-header">
                 <h5 class="modal-title">
                     <i class="bi bi-calendar-event"></i>
-                    <span id="myDayModalTitle">Дата</span>
+                    <span id="myDayModalTitle">{{ _('Дата') }}</span>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -201,10 +201,10 @@
             </div>
             <div class="modal-footer d-flex justify-content-between">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    Закрыть
+                    {{ _('Закрыть') }}
                 </button>
                 <button type="button" class="btn btn-primary" onclick="createMyEventFromDay()">
-                    <i class="bi bi-plus-lg"></i> Личное событие
+                    <i class="bi bi-plus-lg"></i> {{ _('Личное событие') }}
                 </button>
             </div>
         </div>
@@ -219,7 +219,7 @@
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title">
-                    <i class="bi bi-person-plus-fill"></i> Личное событие
+                    <i class="bi bi-person-plus-fill"></i> {{ _('Личное событие') }}
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
@@ -227,44 +227,44 @@
                 <div class="modal-body">
                     <p class="text-muted small">
                         <i class="bi bi-info-circle"></i>
-                        Это событие видите только вы. Его нельзя привязать к проекту.
+                        {{ _('Это событие видите только вы. Его нельзя привязать к проекту.') }}
                     </p>
 
                     <div class="mb-3">
-                        <label class="form-label">Название *</label>
+                        <label class="form-label">{{ _('Название') }} *</label>
                         <input type="text" name="title" class="form-control"
-                               placeholder="Например: Встреча с врачом" required>
+                               placeholder="{{ _('Например: Встреча с врачом') }}" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Описание</label>
+                        <label class="form-label">{{ _('Описание') }}</label>
                         <textarea name="description" class="form-control" rows="2"
-                                  placeholder="Заметки..."></textarea>
+                                  placeholder="{{ _('Заметки...') }}"></textarea>
                     </div>
 
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" name="all_day" id="myAllDayCheck"
                                onchange="toggleMyTimeFields()">
                         <label class="form-check-label" for="myAllDayCheck">
-                            Весь день
+                            {{ _('Весь день') }}
                         </label>
                     </div>
 
                     <div class="row g-2">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Начало *</label>
+                            <label class="form-label">{{ _('Начало') }} *</label>
                             <input type="datetime-local" name="start_time" id="myStartTimeField"
                                    class="form-control" required>
                             <input type="date" name="start_time" id="myStartDateField"
                                    class="form-control" style="display: none;">
                         </div>
                         <div class="col-md-6 mb-3" id="myEndTimeBlock">
-                            <label class="form-label">Окончание</label>
+                            <label class="form-label">{{ _('Окончание') }}</label>
                             <input type="datetime-local" name="end_time" class="form-control">
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Цвет</label>
+                        <label class="form-label">{{ _('Цвет') }}</label>
                         <div class="d-flex gap-2">
                             {% for color, hex in [('purple', '#8b5cf6'), ('blue', '#5b5bd6'), ('green', '#16a34a'), ('red', '#dc2626'), ('orange', '#f59e0b'), ('teal', '#0891b2')] %}
                             <label style="cursor: pointer;">
@@ -280,9 +280,9 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Отмена') }}</button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle"></i> Создать
+                        <i class="bi bi-check-circle"></i> {{ _('Создать') }}
                     </button>
                 </div>
             </form>
@@ -354,7 +354,7 @@ function toggleLegendFilter(el) {
     const enabledCount = ALL_TYPES.filter(t => state[t] !== false).length;
     if (enabledCount === 0) {
         const countEl = document.getElementById('my-calendar-filter-count');
-        if (countEl) countEl.innerHTML = '<span class="text-warning">⚠ Все типы скрыты</span>';
+        if (countEl) countEl.innerHTML = '<span class="text-warning">⚠ {{ _("Все типы скрыты") }}</span>';
         return;
     }
     applyLegendFilters();
@@ -418,14 +418,14 @@ function applyLegendFilters(force) {
     });
 
     const countEl = document.getElementById('my-calendar-filter-count');
-    if (countEl) countEl.innerHTML = `Показано: <strong>${visible}</strong> событий`;
+    if (countEl) countEl.innerHTML = `{{ _('Показано:') }} <strong>${visible}</strong> {{ _('событий') }}`;
 }
 
 function updateCalendarCount() {
     if (!myCalendar) return;
     const total = myCalendar.getEvents().filter(e => e.display !== 'none').length;
     const countEl = document.getElementById('my-calendar-filter-count');
-    if (countEl) countEl.innerHTML = `Показано: <strong>${total}</strong> событий`;
+    if (countEl) countEl.innerHTML = `{{ _('Показано:') }} <strong>${total}</strong> {{ _('событий') }}`;
 }
 
 // ============================================================
@@ -437,16 +437,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     myCalendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
-        locale: 'ru',
+        locale: '{{ get_locale() }}',
         height: 'auto',
         firstDay: 1,
 
         titleFormat: function(dateInfo) {
             const d = dateInfo.date.marker;
             const week = getISOWeek(d);
-            const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
-                                'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
-            return `${monthNames[d.getMonth()]} ${d.getFullYear()} · неделя ${week}`;
+            const monthNames = [
+                '{{ _("Январь") }}', '{{ _("Февраль") }}', '{{ _("Март") }}', '{{ _("Апрель") }}',
+                '{{ _("Май") }}', '{{ _("Июнь") }}', '{{ _("Июль") }}', '{{ _("Август") }}',
+                '{{ _("Сентябрь") }}', '{{ _("Октябрь") }}', '{{ _("Ноябрь") }}', '{{ _("Декабрь") }}'
+            ];
+            return `${monthNames[d.getMonth()]} ${d.getFullYear()} · {{ _("неделя") }} ${week}`;
         },
 
         headerToolbar: {
@@ -455,10 +458,10 @@ document.addEventListener('DOMContentLoaded', function() {
             right: 'dayGridMonth,timeGridWeek,listWeek'
         },
         buttonText: {
-            today: 'Сегодня',
-            month: 'Месяц',
-            week: 'Неделя',
-            list: 'Список'
+            today: '{{ _("Сегодня") }}',
+            month: '{{ _("Месяц") }}',
+            week: '{{ _("Неделя") }}',
+            list: '{{ _("Список") }}'
         },
         events: '{{ url_for("calendar.my_calendar_json") }}',
 
@@ -476,8 +479,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const props = info.event.extendedProps;
             let msg = info.event.title;
             if (props.description) msg += '\n\n' + props.description;
-            if (props.project) msg += '\n\nПроект: ' + props.project;
-            if (props.creator) msg += '\n\nАвтор: ' + props.creator;
+            if (props.project) msg += '\n\n{{ _("Проект:") }} ' + props.project;
+            if (props.creator) msg += '\n\n{{ _("Автор:") }} ' + props.creator;
             alert(msg);
         },
 
@@ -485,7 +488,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const props = info.event.extendedProps;
             let tooltip = info.event.title;
             if (props.description) tooltip += '\n' + props.description;
-            if (props.project) tooltip += '\nПроект: ' + props.project;
+            if (props.project) tooltip += '\n{{ _("Проект:") }} ' + props.project;
             info.el.title = tooltip;
         },
 
@@ -497,8 +500,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const badge = document.createElement('div');
                 badge.className = 'fc-week-number-badge';
                 badge.textContent = `Н${weekNum}`;
-                badge.title = `ISO-неделя ${weekNum}`;
-                arg.el.appendChild(badge);  // ← в саму ячейку, а не в dayTop
+                badge.title = `{{ _("ISO-неделя") }} ${weekNum}`;
+                arg.el.appendChild(badge);
             }
         },
 
@@ -527,10 +530,15 @@ document.addEventListener('DOMContentLoaded', function() {
 // ============================================================
 function openMyDayModal(dateStr, dateObj) {
     mySelectedDateStr = dateStr;
-    const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-                    'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
-    const days = ['воскресенье', 'понедельник', 'вторник', 'среда',
-                  'четверг', 'пятница', 'суббота'];
+    const months = [
+        '{{ _("января") }}', '{{ _("февраля") }}', '{{ _("марта") }}', '{{ _("апреля") }}',
+        '{{ _("мая") }}', '{{ _("июня") }}', '{{ _("июля") }}', '{{ _("августа") }}',
+        '{{ _("сентября") }}', '{{ _("октября") }}', '{{ _("ноября") }}', '{{ _("декабря") }}'
+    ];
+    const days = [
+        '{{ _("воскресенье") }}', '{{ _("понедельник") }}', '{{ _("вторник") }}', '{{ _("среда") }}',
+        '{{ _("четверг") }}', '{{ _("пятница") }}', '{{ _("суббота") }}'
+    ];
     const d = dateObj || new Date(dateStr);
     const weekNum = getISOWeek(d);
     const dateLabel = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${days[d.getDay()]}`;
@@ -567,40 +575,40 @@ function openMyDayModal(dateStr, dateObj) {
 
     document.getElementById('myDayModalTitle').innerHTML =
         `${dateLabel}
-         <span class="badge bg-secondary ms-2" style="font-size: 11px;">неделя ${weekNum}</span>`;
+         <span class="badge bg-secondary ms-2" style="font-size: 11px;">{{ _("неделя") }} ${weekNum}</span>`;
 
     const total = dayEvents.length;
     let html = `
         <div class="text-muted small mb-3">
-            Всего: <strong>${total}</strong>
-            ${events.length ? `· Событий: <strong>${events.length}</strong>` : ''}
-            ${personal.length ? `· Личных: <strong>${personal.length}</strong>` : ''}
-            ${tasks.length ? `· Задач: <strong>${tasks.length}</strong>` : ''}
-            ${todos.length ? `· To-Do: <strong>${todos.length}</strong>` : ''}
+            {{ _('Всего:') }} <strong>${total}</strong>
+            ${events.length ? `· {{ _("Событий:") }} <strong>${events.length}</strong>` : ''}
+            ${personal.length ? `· {{ _("Личных:") }} <strong>${personal.length}</strong>` : ''}
+            ${tasks.length ? `· {{ _("Задач:") }} <strong>${tasks.length}</strong>` : ''}
+            ${todos.length ? `· {{ _("To-Do:") }} <strong>${todos.length}</strong>` : ''}
         </div>
     `;
 
     if (total === 0) {
-        html += '<div class="text-center py-4 text-muted"><i class="bi bi-calendar-x" style="font-size: 36px; opacity: 0.3; display: block; margin-bottom: 8px;"></i>Нет событий на этот день</div>';
+        html += '<div class="text-center py-4 text-muted"><i class="bi bi-calendar-x" style="font-size: 36px; opacity: 0.3; display: block; margin-bottom: 8px;"></i>{{ _("Нет событий на этот день") }}</div>';
     } else {
         if (events.length) {
-            html += '<h6 class="text-uppercase small text-muted mb-2"><i class="bi bi-calendar-event"></i> События проектов</h6>';
+            html += '<h6 class="text-uppercase small text-muted mb-2"><i class="bi bi-calendar-event"></i> {{ _("События проектов") }}</h6>';
             html += events.map(ev => renderEventCard(ev)).join('');
         }
         if (personal.length) {
-            html += '<h6 class="text-uppercase small text-muted mb-2 mt-3"><i class="bi bi-person-fill"></i> Личные</h6>';
+            html += '<h6 class="text-uppercase small text-muted mb-2 mt-3"><i class="bi bi-person-fill"></i> {{ _("Личные") }}</h6>';
             html += personal.map(ev => renderEventCard(ev)).join('');
         }
         if (tasks.length) {
-            html += '<h6 class="text-uppercase small text-muted mb-2 mt-3"><i class="bi bi-list-task"></i> Задачи</h6>';
+            html += '<h6 class="text-uppercase small text-muted mb-2 mt-3"><i class="bi bi-list-task"></i> {{ _("Задачи") }}</h6>';
             html += tasks.map(ev => renderTaskCard(ev)).join('');
         }
         if (todos.length) {
-            html += '<h6 class="text-uppercase small text-muted mb-2 mt-3"><i class="bi bi-check2-square"></i> To-Do</h6>';
+            html += '<h6 class="text-uppercase small text-muted mb-2 mt-3"><i class="bi bi-check2-square"></i> {{ _("To-Do") }}</h6>';
             html += todos.map(ev => renderTodoCard(ev)).join('');
         }
         if (milestones.length) {
-            html += '<h6 class="text-uppercase small text-muted mb-2 mt-3"><i class="bi bi-flag-fill"></i> Вехи</h6>';
+            html += '<h6 class="text-uppercase small text-muted mb-2 mt-3"><i class="bi bi-flag-fill"></i> {{ _("Вехи") }}</h6>';
             html += milestones.map(ev => renderEventCard(ev)).join('');
         }
     }
@@ -618,13 +626,13 @@ function renderEventCard(ev) {
 
     let timeLabel = '';
     if (ev.allDay) {
-        timeLabel = 'Весь день';
+        timeLabel = '{{ _("Весь день") }}';
     } else if (ev.start && ev.end) {
-        const s = ev.start.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'});
-        const e = ev.end.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'});
+        const s = ev.start.toLocaleTimeString('{{ get_locale() }}', {hour: '2-digit', minute: '2-digit'});
+        const e = ev.end.toLocaleTimeString('{{ get_locale() }}', {hour: '2-digit', minute: '2-digit'});
         timeLabel = `${s} – ${e}`;
     } else if (ev.start) {
-        timeLabel = ev.start.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'});
+        timeLabel = ev.start.toLocaleTimeString('{{ get_locale() }}', {hour: '2-digit', minute: '2-digit'});
     }
 
     const metaParts = [];
@@ -642,7 +650,7 @@ function renderEventCard(ev) {
                 ${metaParts.length ? `<div class="small text-muted mt-1">${metaParts.join(' · ')}</div>` : ''}
                 ${props.description ? `<div class="small mt-1" style="color: var(--text-secondary);">📝 ${props.description}</div>` : ''}
             </div>
-            ${ev.url ? `<a href="${ev.url}" class="btn btn-sm btn-outline-secondary align-self-start" title="Открыть"><i class="bi bi-box-arrow-up-right"></i></a>` : ''}
+            ${ev.url ? `<a href="${ev.url}" class="btn btn-sm btn-outline-secondary align-self-start" title="{{ _('Открыть') }}"><i class="bi bi-box-arrow-up-right"></i></a>` : ''}
         </div>
     `;
 }
@@ -653,9 +661,9 @@ function renderTaskCard(ev) {
     const status = props.status || 'new';
 
     let statusBadge = '';
-    if (status === 'completed') statusBadge = '<span class="badge bg-success">✅ Завершена</span>';
-    else if (status === 'in_progress') statusBadge = '<span class="badge bg-warning text-dark">🔄 В работе</span>';
-    else statusBadge = '<span class="badge bg-secondary">🆕 Новая</span>';
+    if (status === 'completed') statusBadge = '<span class="badge bg-success">✅ {{ _("Завершена") }}</span>';
+    else if (status === 'in_progress') statusBadge = '<span class="badge bg-warning text-dark">🔄 {{ _("В работе") }}</span>';
+    else statusBadge = '<span class="badge bg-secondary">🆕 {{ _("Новая") }}</span>';
 
     const metaParts = [];
     if (props.assignee) metaParts.push(`👤 ${props.assignee}`);
@@ -669,7 +677,7 @@ function renderTaskCard(ev) {
                 ${metaParts.length ? `<div class="small text-muted mt-1">${metaParts.join(' · ')}</div>` : ''}
                 <div class="mt-1">${statusBadge}</div>
             </div>
-            ${ev.url ? `<a href="${ev.url}" class="btn btn-sm btn-outline-secondary align-self-start" title="Открыть"><i class="bi bi-box-arrow-up-right"></i></a>` : ''}
+            ${ev.url ? `<a href="${ev.url}" class="btn btn-sm btn-outline-secondary align-self-start" title="{{ _('Открыть') }}"><i class="bi bi-box-arrow-up-right"></i></a>` : ''}
         </div>
     `;
 }
@@ -686,10 +694,10 @@ function renderTodoCard(ev) {
                 <div class="fw-bold small ${done ? 'text-decoration-line-through text-muted' : ''}">${ev.title}</div>
                 ${props.project ? `<div class="small text-muted mt-1">📁 ${props.project}</div>` : ''}
                 <div class="mt-1">
-                    ${done ? '<span class="badge bg-success">✅ Выполнено</span>' : '<span class="badge bg-info">⚪ Активно</span>'}
+                    ${done ? '<span class="badge bg-success">✅ {{ _("Выполнено") }}</span>' : '<span class="badge bg-info">⚪ {{ _("Активно") }}</span>'}
                 </div>
             </div>
-            ${ev.url ? `<a href="${ev.url}" class="btn btn-sm btn-outline-secondary align-self-start" title="Открыть"><i class="bi bi-box-arrow-up-right"></i></a>` : ''}
+            ${ev.url ? `<a href="${ev.url}" class="btn btn-sm btn-outline-secondary align-self-start" title="{{ _('Открыть') }}"><i class="bi bi-box-arrow-up-right"></i></a>` : ''}
         </div>
     `;
 }

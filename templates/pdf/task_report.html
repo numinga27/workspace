@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ get_locale() }}">
 <head>
     <meta charset="UTF-8">
-    <title>Отчёт по задаче — {{ task.title }}</title>
+    <title>{{ _('Отчёт по задаче') }} — {{ task.title }}</title>
     <style>
         @page {
             size: A4;
@@ -138,81 +138,78 @@
 </head>
 <body>
 
-<h1>📋 Отчёт по задаче: {{ task.title }}</h1>
+<h1>📋 {{ _('Отчёт по задаче:') }} {{ task.title }}</h1>
 
-<!-- Основная информация -->
 <div class="header-info">
     <table>
         <tr>
-            <td>Проект:</td>
+            <td>{{ _('Проект:') }}</td>
             <td><strong>{{ task.project.name }}</strong></td>
         </tr>
         <tr>
-            <td>Исполнитель:</td>
+            <td>{{ _('Исполнитель:') }}</td>
             <td>{{ task.assignee.first_name ~ ' ' ~ task.assignee.last_name if task.assignee else '—' }}</td>
         </tr>
         <tr>
-            <td>Статус:</td>
+            <td>{{ _('Статус:') }}</td>
             <td>
                 {% if task.status == 'completed' %}
-                    <span class="badge badge-success">✔ Завершена</span>
+                    <span class="badge badge-success">✔ {{ _('Завершена') }}</span>
                 {% elif task.status == 'in_progress' %}
-                    <span class="badge badge-warning">🔄 В работе</span>
+                    <span class="badge badge-warning">🔄 {{ _('В работе') }}</span>
                 {% else %}
-                    <span class="badge badge-secondary">🆕 Новая</span>
+                    <span class="badge badge-secondary">🆕 {{ _('Новая') }}</span>
                 {% endif %}
             </td>
         </tr>
         <tr>
-            <td>Дедлайн:</td>
+            <td>{{ _('Дедлайн:') }}</td>
             <td>
                 {{ task.due_date.strftime('%d.%m.%Y') if task.due_date else '—' }}
                 {% if task.is_overdue %}
-                    <span class="badge badge-danger">Просрочено на {{ task.days_overdue }} дн.</span>
+                    <span class="badge badge-danger">{{ _('Просрочено на') }} {{ task.days_overdue }} {{ _('дн.') }}</span>
                 {% endif %}
             </td>
         </tr>
         {% if task.milestone %}
         <tr>
-            <td>Веха:</td>
+            <td>{{ _('Веха:') }}</td>
             <td>{{ task.milestone.name }}</td>
         </tr>
         {% endif %}
         <tr>
-            <td>Дата отчёта:</td>
+            <td>{{ _('Дата отчёта:') }}</td>
             <td>{{ now.strftime('%d.%m.%Y %H:%M') }}</td>
         </tr>
     </table>
 </div>
 
-<!-- Описание -->
 {% if task.description %}
-<h2>📝 Описание</h2>
+<h2>📝 {{ _('Описание') }}</h2>
 <p>{{ task.description }}</p>
 {% endif %}
 
-<!-- Статистика подзадач -->
-<h2>📊 Статистика подзадач</h2>
+<h2>📊 {{ _('Статистика подзадач') }}</h2>
 <div class="stats-grid">
     <div class="stat-box">
         <span class="icon">📋</span>
         <span class="num">{{ stats.total }}</span>
-        <span class="lbl">Всего</span>
+        <span class="lbl">{{ _('Всего') }}</span>
     </div>
     <div class="stat-box success">
         <span class="icon">✅</span>
         <span class="num">{{ stats.done }}</span>
-        <span class="lbl">Выполнено</span>
+        <span class="lbl">{{ _('Выполнено') }}</span>
     </div>
     <div class="stat-box danger">
         <span class="icon">⚠️</span>
         <span class="num">{{ stats.overdue }}</span>
-        <span class="lbl">Просрочено</span>
+        <span class="lbl">{{ _('Просрочено') }}</span>
     </div>
     <div class="stat-box">
         <span class="icon">⚪</span>
         <span class="num">{{ stats.new }}</span>
-        <span class="lbl">Не начато</span>
+        <span class="lbl">{{ _('Не начато') }}</span>
     </div>
 </div>
 
@@ -225,16 +222,15 @@
 </div>
 {% endif %}
 
-<!-- Список подзадач -->
-<h2>📋 Список подзадач</h2>
+<h2>📋 {{ _('Список подзадач') }}</h2>
 {% if subtasks %}
 <table class="data">
     <thead>
         <tr>
-            <th>Задача</th>
-            <th>Исполнитель</th>
-            <th>Дедлайн</th>
-            <th>Статус</th>
+            <th>{{ _('Задача') }}</th>
+            <th>{{ _('Исполнитель') }}</th>
+            <th>{{ _('Дедлайн') }}</th>
+            <th>{{ _('Статус') }}</th>
         </tr>
     </thead>
     <tbody>
@@ -245,16 +241,16 @@
             <td>
                 {{ st.due_date.strftime('%d.%m.%Y') if st.due_date else '—' }}
                 {% if st.is_overdue %}
-                    <span class="badge badge-danger">+{{ st.days_overdue }} дн.</span>
+                    <span class="badge badge-danger">+{{ st.days_overdue }} {{ _('дн.') }}</span>
                 {% endif %}
             </td>
             <td>
                 {% if st.status == 'completed' %}
-                    <span class="badge badge-success">✔ Завершена</span>
+                    <span class="badge badge-success">✔ {{ _('Завершена') }}</span>
                 {% elif st.status == 'in_progress' %}
-                    <span class="badge badge-warning">🔄 В работе</span>
+                    <span class="badge badge-warning">🔄 {{ _('В работе') }}</span>
                 {% else %}
-                    <span class="badge badge-secondary">🆕 Новая</span>
+                    <span class="badge badge-secondary">🆕 {{ _('Новая') }}</span>
                 {% endif %}
             </td>
         </tr>
@@ -262,7 +258,7 @@
         <tr>
             <td colspan="4" style="padding: 0;">
                 <div class="comment-box">
-                    <strong>💬 Причина:</strong> {{ st.comment }}
+                    <strong>💬 {{ _('Причина:') }}</strong> {{ st.comment }}
                 </div>
             </td>
         </tr>
@@ -271,20 +267,19 @@
     </tbody>
 </table>
 {% else %}
-<p style="color: #6b7280;">Подзадач нет.</p>
+<p style="color: #6b7280;">{{ _('Подзадач нет.') }}</p>
 {% endif %}
 
-<!-- Комментарий к самой задаче -->
 {% if task.is_overdue and task.comment %}
-<h2 style="color: #dc2626;">⚠️ Причина просрочки задачи</h2>
+<h2 style="color: #dc2626;">⚠️ {{ _('Причина просрочки задачи') }}</h2>
 <div class="comment-box" style="background: #fee2e2; border-left-color: #dc2626;">
     {{ task.comment }}
 </div>
 {% endif %}
 
 <div class="footer">
-    Отчёт сформирован автоматически {{ now.strftime('%d.%m.%Y в %H:%M') }}<br>
-    Система управления проектами Workspace
+    {{ _('Отчёт сформирован автоматически') }} {{ now.strftime('%d.%m.%Y') }} {{ _('в') }} {{ now.strftime('%H:%M') }}<br>
+    {{ _('Система управления проектами Workspace') }}
 </div>
 
 </body>

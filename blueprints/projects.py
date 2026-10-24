@@ -259,14 +259,13 @@ def view_project(project_id):
 
     project = Project.query.get_or_404(project_id)
 
-    should_mark_read = (
-        request.args.get('mark_read') == '1'
-        or request.args.get('_tab') == 'chat'
-    )
-
-    if should_mark_read:
-        mark_project_as_read(user.id, project_id)
-        mark_mentions_as_read(user.id, project_id)
+    # ============================================================
+    #  ВАРИАНТ B: всегда отмечаем чат проекта прочитанным при заходе
+    #  в проект (на любую вкладку). Это гарантирует, что счётчик
+    #  "непрочитанных" не залипает и не возвращается после прочтения.
+    # ============================================================
+    mark_project_as_read(user.id, project_id)
+    mark_mentions_as_read(user.id, project_id)
 
     members_all = ProjectMember.query.filter_by(project_id=project.id).all()
     own_team = [m for m in members_all if m.is_own_team]
@@ -396,6 +395,23 @@ def view_project(project_id):
         User.is_active.is_(True),
     ).all()
 
+    # ============================================================
+    #  ДАННЫЕ ДЛЯ ШКАЛЫ ВЕХ (масштаб относительно длины проекта)
+    # ============================================================
+    from datetime import timedelta
+
+    project_start = project.start_date or project.created_at
+    project_end = project.end_date
+    if not project_end:
+        # Если end_date не задан — растягиваем на 90 дней от старта
+        project_end = project_start + timedelta(days=90)
+    if project_end <= project_start:
+        project_end = project_start + timedelta(days=90)
+
+    total_project_days = (project_end - project_start).days
+    if total_project_days <= 0:
+        total_project_days = 1
+
     return render_template('project.html',
                            project=project,
                            members=own_team,
@@ -435,7 +451,11 @@ def view_project(project_id):
                            todo_filter_assignee=todo_filter_assignee,
                            todo_filter_status=todo_filter_status,
                            todo_filter_due_from=todo_filter_due_from,
-                           todo_filter_due_to=todo_filter_due_to)
+                           todo_filter_due_to=todo_filter_due_to,
+                           # ← Для шкалы вех
+                           project_start=project_start,
+                           project_end=project_end,
+                           total_project_days=total_project_days)
 
 
 # ============================================================
@@ -692,13 +712,13 @@ def create_task(project_id):
     try:
         from services.push import notify_new_task, notify_new_subtask
         from services.tasks import send_push_async
-        
+
         poster = User.query.get(session['user_id'])
         if parent_id_int:
             push_data = notify_new_subtask(task, poster)
         else:
             push_data = notify_new_task(task, poster)
-        
+
         if push_data:
             send_push_async.delay(**push_data)
     except Exception as e:

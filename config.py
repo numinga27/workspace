@@ -5,7 +5,15 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-only-change-me-in-production')
-
+    # ============================================================
+    #  КЭШИРОВАНИЕ (Flask-Caching)
+    #  На сервере — Redis (общий кэш для всех gunicorn-воркеров),
+    #  локально — SimpleCache (если Redis нет).
+    # ============================================================
+    CACHE_TYPE = os.environ.get('CACHE_TYPE', 'RedisCache')
+    CACHE_REDIS_URL = os.environ.get('CACHE_REDIS_URL', 'redis://localhost:6379/1')
+    CACHE_DEFAULT_TIMEOUT = int(os.environ.get('CACHE_DEFAULT_TIMEOUT', 10))
+    CACHE_KEY_PREFIX = 'workspace:'
     # ============================================================
     #  БАЗА ДАННЫХ
     #  Приоритет у DATABASE_URL из окружения (PostgreSQL на сервере).

@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import click
 
 from config import Config
-from extensions import db, mail, FLASK_MAIL_AVAILABLE, cache
+from extensions import db, mail, FLASK_MAIL_AVAILABLE, cache, babel
 from models import User
 from blueprints import register_blueprints
 
@@ -53,12 +53,58 @@ def create_app(config_class=Config):
     
     # --- Инициализация кэша ---
     if cache:
-        app.config.setdefault('CACHE_TYPE', 'SimpleCache')
-        app.config.setdefault('CACHE_DEFAULT_TIMEOUT', 60)
         cache.init_app(app)
 
     if FLASK_MAIL_AVAILABLE and mail is not None:
         mail.init_app(app)
+
+    # --- Инициализация Babel (мультиязычность) ---
+    if babel:
+        from flask import session, request
+
+        app.config.setdefault('BABEL_DEFAULT_LOCALE', 'ru')
+        app.config.setdefault('LANGUAGES', ['ru', 'en','zh'])
+
+        def get_locale():
+            # 1. Выбор пользователя из сессии
+            chosen = session.get('language')
+            if chosen in app.config['LANGUAGES']:
+                return chosen
+            # 2. Язык браузера
+            return (
+                request.accept_languages.best_match(app.config['LANGUAGES'])
+                or app.config['BABEL_DEFAULT_LOCALE']
+            )
+
+        # Инициализация flask_babel
+        try:
+            babel.init_app(app, locale_selector=get_locale)
+        except TypeError:
+            # fallback для flask_babel 2.x (не принимает locale_selector)
+            babel.init_app(app)
+
+        # Экспорт get_locale в контекст Jinja
+        app.jinja_env.globals['get_locale'] = get_locale
+
+        # ---- ПРИНУДИТЕЛЬНАЯ РЕГИСТРАЦИЯ _ В JINJA ----
+        # Гарантирует работу {{ _('...') }} независимо от версии flask_babel
+        from flask_babel import gettext as _gettext, ngettext as _ngettext
+
+        if 'jinja2.ext.i18n' not in app.jinja_env.extensions:
+            app.jinja_env.add_extension('jinja2.ext.i18n')
+
+        app.jinja_env.install_gettext_callables(
+            _gettext, _ngettext, newstyle=True
+        )
+        app.jinja_env.globals['_'] = _gettext
+
+        # Отладка: в логах gunicorn будет видно, что Babel поднялся
+        print(
+            f'✅ BABEL INIT: gettext={app.jinja_env.globals.get("gettext")}, '
+            f'extensions={list(app.jinja_env.extensions.keys())}'
+        )
+    else:
+        print('⚠️ BABEL IS NONE: мультиязычность отключена')
 
     # --- Инициализация Celery ---
     celery_init_app(app)

@@ -69,6 +69,19 @@ except ImportError:
 
 
 # ============================================================
+#  МУЛЬТИЯЗЫЧНОСТЬ (Flask-Babel)
+# ============================================================
+try:
+    from flask_babel import Babel
+    babel = Babel()
+    FLASK_BABEL_AVAILABLE = True
+except ImportError:
+    babel = None
+    FLASK_BABEL_AVAILABLE = False
+    print("⚠️  Flask-Babel не установлен. Мультиязычность отключена.")
+
+
+# ============================================================
 #  ИНИЦИАЛИЗАЦИЯ РАСШИРЕНИЙ
 # ============================================================
 db = SQLAlchemy()

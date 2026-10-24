@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ get_locale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Сервер на техническом обслуживании</title>
+    <title>{{ _('Сервер на техническом обслуживании') }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -161,7 +161,6 @@
 
         .footer strong { color: #5b5bd6; }
 
-        /* Мигающие точки */
         .loading-dots {
             display: inline-flex;
             gap: 4px;
@@ -200,33 +199,32 @@
             </svg>
         </div>
 
-        <h1>Сервер на техническом обслуживании</h1>
+        <h1>{{ _('Сервер на техническом обслуживании') }}</h1>
         <p class="subtitle">
-            Мы улучшаем сервис, чтобы вам было удобнее работать.
-            Скоро всё заработает — пожалуйста, потерпите немного.
+            {{ _('Мы улучшаем сервис, чтобы вам было удобнее работать. Скоро всё заработает — пожалуйста, потерпите немного.') }}
             <span class="loading-dots"><span></span><span></span><span></span></span>
         </p>
 
         <div class="info-block">
-            <h3>💡 Что можно сделать</h3>
+            <h3>💡 {{ _('Что можно сделать') }}</h3>
             <ul>
-                <li>Подождите 5-10 минут и обновите страницу</li>
-                <li>Попробуйте зайти позже, если сейчас не срочно</li>
-                <li>Если нужно срочно — свяжитесь с администратором</li>
+                <li>{{ _('Подождите 5-10 минут и обновите страницу') }}</li>
+                <li>{{ _('Попробуйте зайти позже, если сейчас не срочно') }}</li>
+                <li>{{ _('Если нужно срочно — свяжитесь с администратором') }}</li>
             </ul>
         </div>
 
         <div class="actions">
             <button onclick="location.reload()" class="btn btn-primary">
-                🔄 Обновить страницу
+                🔄 {{ _('Обновить страницу') }}
             </button>
             <a href="/dashboard" class="btn btn-secondary">
-                🏠 На главную
+                🏠 {{ _('На главную') }}
             </a>
         </div>
 
         <div class="footer">
-            Работаем над улучшениями · <strong>Workspace</strong>
+            {{ _('Работаем над улучшениями') }} · <strong>Workspace</strong>
         </div>
 
     </div>

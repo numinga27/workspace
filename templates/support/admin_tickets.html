@@ -3,9 +3,9 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
-        <h2 class="mb-1"><i class="bi bi-inbox-fill"></i> Обращения в поддержку</h2>
+        <h2 class="mb-1"><i class="bi bi-inbox-fill"></i> {{ _('Обращения в поддержку') }}</h2>
         <p class="text-muted mb-0">
-            Всего в очереди: {{ total_unread }} новых
+            {{ _('Всего в очереди:') }} {{ total_unread }} {{ _('новых') }}
         </p>
     </div>
 </div>
@@ -15,15 +15,15 @@
         <div class="btn-group btn-group-sm flex-wrap">
             <a href="{{ url_for('support.admin_tickets', status='open') }}"
                class="btn {% if status_filter == 'open' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
-                Открытые
+                {{ _('Открытые') }}
             </a>
             <a href="{{ url_for('support.admin_tickets', status='closed') }}"
                class="btn {% if status_filter == 'closed' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
-                Закрытые
+                {{ _('Закрытые') }}
             </a>
             <a href="{{ url_for('support.admin_tickets', status='') }}"
                class="btn {% if not status_filter %}btn-primary{% else %}btn-outline-secondary{% endif %}">
-                Все
+                {{ _('Все') }}
             </a>
         </div>
     </div>
@@ -47,9 +47,9 @@
                             {{ t.user.email }}
                         </small>
                         {% if t.status == 'open' %}
-                            <span class="badge bg-success">открыт</span>
+                            <span class="badge bg-success">{{ _('открыт') }}</span>
                         {% else %}
-                            <span class="badge bg-secondary">закрыт</span>
+                            <span class="badge bg-secondary">{{ _('закрыт') }}</span>
                         {% endif %}
                     </div>
 
@@ -70,7 +70,7 @@
                     <div class="small text-muted">
                         <i class="bi bi-clock"></i>
                         {{ t.updated_at.strftime('%d.%m.%Y %H:%M') }}
-                        · {{ t.messages.count() }} сообщ.
+                        · {{ t.messages.count() }} {{ _('сообщ.') }}
                     </div>
                 </div>
 
@@ -88,8 +88,8 @@
     <div class="empty-state-icon">
         <i class="bi bi-inbox"></i>
     </div>
-    <h5>Обращений пока нет</h5>
-    <p>Все тикеты будут появляться здесь</p>
+    <h5>{{ _('Обращений пока нет') }}</h5>
+    <p>{{ _('Все тикеты будут появляться здесь') }}</p>
 </div>
 {% endif %}
 
