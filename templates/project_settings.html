@@ -1,12 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="mb-3">
-    <a href="{{ url_for('projects.view_project', project_id=project.id) }}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left"></i> {{ _('К проекту') }}
-    </a>
-</div>
-
 <div class="row justify-content-center">
     <div class="col-lg-10">
 
@@ -39,7 +33,7 @@
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('team.invite_user', project_id=project.id) }}" id="inviteForm">
-                    <div class="row g-2">
+                    <div class="row g-2 align-items-end">
                         <div class="col-md-6 position-relative">
                             <label class="form-label small">{{ _('Пользователь / Email') }} *</label>
                             <input type="text" name="email" id="inviteUserInput"
@@ -52,12 +46,6 @@
                                  class="list-group position-absolute w-100 shadow-sm"
                                  style="z-index: 1000; max-height: 360px; overflow-y: auto; display: none; top: 100%; left: 0;">
                             </div>
-
-                            <small class="text-muted">
-                                <i class="bi bi-info-circle"></i>
-                                <strong>{{ _('Из списка') }}</strong> — {{ _('если аккаунт уже есть, добавится сразу.') }}
-                                <strong>{{ _('Вручную') }}</strong> — {{ _('если нет, будет создана ссылка-приглашение.') }}
-                            </small>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small">{{ _('Роль в проекте') }}</label>
@@ -78,11 +66,20 @@
                                 </optgroup>
                             </select>
                         </div>
-                        <div class="col-md-3 d-flex align-items-end">
+                        <div class="col-md-3">
                             <button type="submit" class="btn btn-primary w-100">
                                 <i class="bi bi-send"></i> {{ _('Пригласить') }}
                             </button>
                         </div>
+                    </div>
+
+                    {# Подсказка — под всей формой, на всю ширину #}
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>{{ _('Из списка') }}</strong> — {{ _('если аккаунт уже есть, добавится сразу.') }}
+                            <strong>{{ _('Вручную') }}</strong> — {{ _('если нет, будет создана ссылка-приглашение.') }}
+                        </small>
                     </div>
                 </form>
             </div>

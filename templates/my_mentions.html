@@ -16,7 +16,6 @@
         </p>
     </div>
 
-    {# ← Кнопка «Отметить всё прочитанным» — только если есть непрочитанные #}
     {% if total_unread and total_unread.values()|sum > 0 %}
     <form method="POST" action="{{ url_for('chat.my_mentions_mark_all_read') }}" class="d-inline">
         <button type="submit" class="btn btn-outline-primary">
@@ -76,10 +75,9 @@
                 {% for mention in group.mentions %}
                 {% set msg = mention.message %}
                 {% set author = authors.get(msg.user_id) if msg else None %}
-                <li class="list-group-item py-3 {% if not mention.is_read %}bg-info-subtle{% endif %}">
-                    <div class="d-flex align-items-start gap-3">
-                        <div class="mention-avatar-lg
-                            {% if not mention.is_read %}mention-avatar-unread{% endif %}">
+                <li class="list-group-item py-2 px-3 {% if not mention.is_read %}bg-info-subtle{% endif %}">
+                    <div class="d-flex align-items-start gap-2">
+                        <div class="mention-avatar-lg {% if not mention.is_read %}mention-avatar-unread{% endif %}">
                             {% if author %}
                                 {{ author.first_name[0]|upper }}{{ author.last_name[0]|upper }}
                             {% else %}
@@ -102,7 +100,7 @@
                                         <span class="badge bg-warning text-dark" style="font-size: 9px;">{{ _('Супервизор') }}</span>
                                     {% endif %}
                                     {% if not mention.is_read %}
-                                        <span class="badge bg-primary ms-2" style="font-size: 9px;">{{ _('новое') }}</span>
+                                        <span class="badge bg-primary ms-1" style="font-size: 9px;">{{ _('новое') }}</span>
                                     {% endif %}
                                 </div>
                                 <small class="text-muted text-nowrap">
@@ -110,10 +108,15 @@
                                     {{ mention.created_at.strftime('%d.%m.%Y %H:%M') }}
                                 </small>
                             </div>
-                            <div class="mt-2 p-2 rounded"
-                                 style="background: var(--bg-tertiary); white-space: pre-wrap; font-size: 13.5px; word-break: break-word;">
+                            <div class="mt-1 p-2 rounded message-preview"
+                                 style="background: var(--bg-tertiary); word-break: break-word;">
                                 {% if msg %}
-                                    {{ msg.text }}
+                                    <span class="msg-text">{{ msg.text }}</span>
+                                    {% if msg.text|length > 200 %}
+                                    <a href="#" class="show-more-link" onclick="toggleMessage(this); return false;">
+                                        {{ _('Показать полностью') }}
+                                    </a>
+                                    {% endif %}
                                 {% else %}
                                     <span class="text-muted fst-italic">{{ _('Сообщение удалено') }}</span>
                                 {% endif %}
@@ -143,8 +146,8 @@
 
 <style>
 .mention-avatar-lg {
-    width: 40px;
-    height: 40px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     background: linear-gradient(135deg, var(--accent), #8b5cf6);
     color: white;
@@ -152,12 +155,70 @@
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 11px;
     flex-shrink: 0;
 }
 .mention-avatar-unread {
     background: linear-gradient(135deg, #f59e0b, #d97706);
 }
+
+/* Компактный блок сообщения — обрезаем длинные */
+.message-preview {
+    max-width: 100%;
+    max-height: 120px;         /* ограничение высоты */
+    overflow: hidden;
+    position: relative;
+    transition: max-height 0.2s ease;
+}
+
+.message-preview .msg-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;     /* 3 строки */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: pre-wrap;
+    font-size: 12.5px;
+    line-height: 1.4;
+}
+
+.message-preview.expanded {
+    max-height: none;           /* разворачиваем */
+}
+
+.message-preview.expanded .msg-text {
+    display: block;
+    -webkit-line-clamp: unset;
+    overflow: visible;
+}
+
+/* Ссылка «Показать полностью» — под текстом */
+.show-more-link {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 12px;
+    display: inline-block;
+    margin-top: 4px;
+}
+.show-more-link:hover { text-decoration: underline; }
+
+/* На больших экранах — не растягиваем на всю ширину */
+@media (min-width: 1200px) {
+    .message-preview {
+        max-width: 720px;
+    }
+}
 </style>
+
+<script>
+function toggleMessage(link) {
+    const preview = link.closest('.message-preview');
+    if (!preview) return;
+    preview.classList.toggle('expanded');
+    link.textContent = preview.classList.contains('expanded')
+        ? '{{ _("Свернуть") }}'
+        : '{{ _("Показать полностью") }}';
+}
+</script>
 
 {% endblock %}

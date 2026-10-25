@@ -177,7 +177,20 @@ def create_app(config_class=Config):
             except Exception as e:
                 print(f'⚠️ Ошибка support_unread_count: {e}')
         return {'support_unread_count': 0}
-
+    @app.context_processor
+    def inject_sidebar_projects():
+        """Сайдбар на всех страницах: список проектов пользователя.
+        Обычный пользователь видит только свои проекты (is_guest=False),
+        админ/супервизор — все активные.
+        """
+        from flask import session
+        from models import User
+        from utils import get_user_projects
+        if 'user_id' in session:
+            user = db.session.get(User, session['user_id'])
+            if user:
+                return {'projects': get_user_projects(user)}
+        return {'projects': []}
     # ============================================================
     #  СОЗДАНИЕ ТАБЛИЦ И SEED ГЛАВНОГО АДМИНА
     # ============================================================
