@@ -52,8 +52,8 @@
 
                 <div style="max-height: 500px; overflow-y: auto;">
                     {% for m in messages %}
-                    <div class="d-flex mb-3
-                        {% if m.role == 'admin' %}justify-content-end{% endif %}">
+                    <div class="d-flex mb-3 {% if m.role == 'admin' %}justify-content-end{% endif %}"
+                         id="msg-{{ m.id }}">
                         <div class="p-3 rounded"
                              style="max-width: 75%;
                                     {% if m.role == 'admin' %}
@@ -72,10 +72,37 @@
                                     {{ m.author.full_name }}
                                 {% endif %}
                             </div>
-                            <div style="white-space: pre-wrap;">{{ m.text }}</div>
-                            <div class="small text-muted mt-2">
-                                {{ m.created_at.strftime('%d.%m.%Y %H:%M') }}
+                            {% if m.reply_to %}
+                            <div class="reply-quote small text-muted border-start ps-2 mb-1"
+                                 onclick="document.getElementById('msg-{{ m.reply_to.id }}').scrollIntoView({behavior:'smooth'})"
+                                 style="cursor:pointer;">
+                                ↩ {{ m.reply_to.author.full_name }}: {{ m.reply_to.text[:60] }}
                             </div>
+                            {% endif %}
+                            <div style="white-space: pre-wrap;">{{ m.text }}</div>
+                            {% if m.attachments %}
+                            <div class="mt-1 d-flex flex-wrap gap-1">
+                                {% for att in m.attachments %}
+                                    {% set is_image = att.file_type and att.file_type.startswith('image/') or att.original_name|lower|endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp')) %}
+                                    {% if is_image %}
+                                    <a href="{{ url_for('chat.download_attachment', file_id=att.id) }}" target="_blank">
+                                        <img src="{{ url_for('chat.download_attachment', file_id=att.id) }}"
+                                             style="max-height:180px;max-width:280px;border-radius:6px;border:1px solid #dee2e6;cursor:pointer;" alt="">
+                                    </a>
+                                    {% else %}
+                                    <a href="{{ url_for('chat.download_attachment', file_id=att.id) }}"
+                                       class="badge bg-secondary text-decoration-none py-1 px-2">
+                                        📎 {{ att.original_name }}
+                                    </a>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="small text-muted mt-2">{{ m.created_at.strftime('%d.%m.%Y %H:%M') }}</div>
+                            <button type="button" class="btn btn-sm btn-link p-0 small"
+                                    onclick="startReply({{ m.id }}, '{{ (m.author.full_name ~ ': ' ~ m.text[:60])|e }}')">
+                                ↩ {{ _('Ответить') }}
+                            </button>
                         </div>
                     </div>
                     {% endfor %}
@@ -93,14 +120,26 @@
         {% if ticket.status == 'open' or is_admin %}
         <div class="card">
             <div class="card-body">
-                <form method="POST">
+                <form method="POST" enctype="multipart/form-data">
+                    <div id="replyPreview" class="alert alert-secondary py-1 px-2 mb-1 small d-none">
+                        <span id="replyPreviewText"></span>
+                        <button type="button" class="btn-close btn-close-sm float-end"
+                                onclick="clearReply()"></button>
+                        <input type="hidden" name="reply_to_id" id="replyToId" value="">
+                    </div>
                     <div class="mb-2">
                         <label class="form-label">
                             {% if is_admin %}{{ _('Ответ от поддержки') }}{% else %}{{ _('Ваше сообщение') }}{% endif %}
                         </label>
                         <textarea name="text" class="form-control" rows="3"
-                                  placeholder="{{ _('Введите текст...') }}"
-                                  required></textarea>
+                                  placeholder="{{ _('Введите текст...') }}"></textarea>
+                    </div>
+                    <div class="mb-2">
+                        <label class="btn btn-outline-secondary btn-sm mb-0">
+                            <i class="bi bi-paperclip"></i> {{ _('Прикрепить') }}
+                            <input type="file" name="attachments" multiple hidden
+                                   accept="image/*,.pdf,.zip,.doc,.docx,.xls,.xlsx">
+                        </label>
                     </div>
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-send"></i> {{ _('Отправить') }}
@@ -117,5 +156,17 @@
 
     </div>
 </div>
+
+<script>
+function startReply(id, text) {
+    document.getElementById('replyToId').value = id;
+    document.getElementById('replyPreviewText').textContent = text;
+    document.getElementById('replyPreview').classList.remove('d-none');
+}
+function clearReply() {
+    document.getElementById('replyToId').value = '';
+    document.getElementById('replyPreview').classList.add('d-none');
+}
+</script>
 
 {% endblock %}

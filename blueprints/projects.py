@@ -275,8 +275,8 @@ def view_project(project_id):
     members_for_filters = own_team + am_stanko_team
     managers_list = [m for m in members_for_filters if m.is_manager]
 
-    filter_assignee = request.args.get('filter_assignee', '')
-    filter_status = request.args.get('filter_status', '')
+    filter_assignee = request.args.getlist('filter_assignee', '')
+    filter_status = request.args.getlist('filter_status', '')
     filter_due_from = request.args.get('filter_due_from', '')
     filter_due_to = request.args.get('filter_due_to', '')
 
@@ -284,20 +284,27 @@ def view_project(project_id):
     tasks = list(tasks_all)
 
     if filter_assignee:
-        if filter_assignee == 'unassigned':
+        if filter_assignee[0] == 'unassigned':
             tasks = [t for t in tasks if not t.assigned_to]
         else:
             try:
-                target_id = int(filter_assignee)
+                target_id = int(filter_assignee[0])
                 tasks = [t for t in tasks if t.assigned_to == target_id]
-            except ValueError:
+            except (ValueError, IndexError):
                 pass
 
     if filter_status:
-        if filter_status == 'overdue':
+        if 'overdue' in filter_status:
             tasks = [t for t in tasks if t.is_overdue]
         else:
-            tasks = [t for t in tasks if t.status == filter_status]
+            normal_statuses = [s for s in filter_status if s != 'overdue']
+            if normal_statuses:
+                tasks = [t for t in tasks if t.status in normal_statuses]
+            if 'overdue' in filter_status and normal_statuses:
+                # overdue + обычные — объединяем
+                overdue_tasks = [t for t in tasks if t.is_overdue]
+                normal_tasks = [t for t in tasks if t.status in normal_statuses]
+                tasks = list(set(overdue_tasks + normal_tasks))
 
     if filter_due_from:
         try:
@@ -368,8 +375,27 @@ def view_project(project_id):
 
     has_more_messages = offset > 0
 
+    # ─── Непрочитанные сообщения ────────────────────────────────
+    from models import MessageRead
+    user = User.query.get(session['user_id'])
+    read_record = MessageRead.query.filter_by(
+        user_id=user.id, project_id=project.id
+    ).first()
+
+    unread_ids = set()
+    if read_record:
+        for msg in messages:
+            if msg.user_id != user.id and msg.created_at > read_record.last_read_at:
+                unread_ids.add(msg.id)
+    elif messages:
+        # Если запись не найдена — все сообщения непрочитанные
+        unread_ids = {msg.id for msg in messages if msg.user_id != user.id}
+
     folders = Folder.query.filter_by(project_id=project.id, parent_folder_id=None).all()
-    files = File.query.filter_by(project_id=project.id, folder_id=None, task_id=None).all()
+    files = File.query.filter_by(
+        project_id=project.id, folder_id=None, task_id=None,
+        message_id=None, support_message_id=None,
+    ).all()
 
     milestones = Milestone.query.filter_by(project_id=project.id)\
         .order_by(Milestone.order_index).all()
@@ -440,9 +466,10 @@ def view_project(project_id):
                            can_manage=can_manage_project(project_id),
                            overdue_milestones=overdue_milestones,
                            overdue_tasks=overdue_tasks,
-                           project_overdue=project.is_overdue,
-                           project_days_overdue=project.days_overdue,
-                           todo_stats=get_todo_stats(project.id),
+                            project_overdue=project.is_overdue,
+                            project_days_overdue=project.days_overdue,
+                            todo_stats=get_todo_stats(project.id),
+                            unread_ids=unread_ids,
                            mentionable_admins=mentionable_admins,
                            filter_assignee=filter_assignee,
                            filter_status=filter_status,

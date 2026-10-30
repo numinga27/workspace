@@ -563,7 +563,15 @@ def create_app(config_class=Config):
         else:
             click.echo('✅ Проверь уведомление на устройстве.')
 
+    # Хелперы для шаблонов
+    @app.template_filter('endswith')
+    def _endswith(s, suffix):
+        if isinstance(suffix, tuple):
+            return s.lower().endswith(suffix)
+        return s.lower().endswith(suffix)
+
     return app
+
 
 
 # ============================================================

@@ -200,7 +200,11 @@ def notify_new_message(message, mentioned_user_ids=None):
 
     author = message.author
     author_name = f'{author.first_name} {author.last_name}' if author else '—'
-    text_preview = message.text[:120].replace('\n', ' ')
+    if message.reply_to:
+        quoted = message.reply_to.text[:40].replace('\n', ' ')
+        text_preview = f'↩ {quoted}\n{message.text[:120].replace(chr(10), " ")}'
+    else:
+        text_preview = message.text[:120].replace('\n', ' ')
 
     result = []
     seen = set()  # чтобы не дублировать получателей
@@ -284,13 +288,23 @@ def notify_new_support_message(ticket, message, for_admin=True):
             User.is_active.is_(True),
         ).all()
         title = f'🎫 Новое обращение #{ticket.id}'
-        body = f'От: {ticket.user.full_name}\n{message.text[:100]}'
+        if message.reply_to:
+            quoted = message.reply_to.text[:40].replace('\n', ' ')
+            preview = f'↩ {quoted}\n{message.text[:100]}'
+        else:
+            preview = message.text[:100]
+        body = f'От: {ticket.user.full_name}\n{preview}'
         url = f'/support/ticket/{ticket.id}'
         tag = f'support-ticket-{ticket.id}'
     else:
         recipients = [ticket.user] if ticket.user else []
         title = f'💬 Ответ поддержки по обращению #{ticket.id}'
-        body = f'{message.author.full_name}: {message.text[:100]}'
+        if message.reply_to:
+            quoted = message.reply_to.text[:40].replace('\n', ' ')
+            preview = f'↩ {quoted}\n{message.text[:100]}'
+        else:
+            preview = message.text[:100]
+        body = f'{message.author.full_name}: {preview}'
         url = f'/support/ticket/{ticket.id}'
         tag = f'support-ticket-{ticket.id}'
 

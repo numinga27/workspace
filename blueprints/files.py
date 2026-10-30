@@ -87,7 +87,9 @@ def view_folder(folder_id):
 
     user = User.query.get(session['user_id'])
 
-    files_query = File.query.filter_by(folder_id=folder_id)
+    files_query = File.query.filter_by(
+        folder_id=folder_id, message_id=None, support_message_id=None,
+    )
     files = _visible_files(files_query, user)
 
     # Участники проекта — для формы «кому видно»

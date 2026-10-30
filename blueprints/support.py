@@ -140,19 +140,37 @@ def ticket_detail(ticket_id):
 
     if request.method == 'POST':
         text = (request.form.get('text') or '').strip()
-        if not text:
-            flash('Введите сообщение.', 'warning')
+        uploads = [f for f in request.files.getlist('attachments') if f and f.filename]
+
+        if not text and not uploads:
+            flash('Введите сообщение или прикрепите файл.', 'warning')
             return redirect(url_for('support.ticket_detail', ticket_id=ticket.id))
+
+        from services.attachments import save_attachment, MAX_FILES_PER_MESSAGE
+        if len(uploads) > MAX_FILES_PER_MESSAGE:
+            flash(f'Максимум {MAX_FILES_PER_MESSAGE} вложений.', 'warning')
+            return redirect(url_for('support.ticket_detail', ticket_id=ticket.id))
+
+        reply_to_id = request.form.get('reply_to_id', type=int)
+        if reply_to_id:
+            parent = SupportMessage.query.filter_by(
+                id=reply_to_id, ticket_id=ticket.id
+            ).first()
+            if not parent:
+                reply_to_id = None
 
         role = 'admin' if is_admin else 'user'
         msg = SupportMessage(
-            ticket_id=ticket.id,
-            author_id=user.id,
-            role=role,
-            text=text,
-            is_read=False,
+            ticket_id=ticket.id, author_id=user.id, role=role,
+            text=text or '(вложение)', is_read=False,
+            reply_to_id=reply_to_id,
         )
         db.session.add(msg)
+        db.session.flush()
+
+        for up in uploads:
+            save_attachment(up, uploaded_by=user.id,
+                            support_message_id=msg.id)
 
         ticket.updated_at = utcnow()
         if is_admin:
@@ -165,9 +183,8 @@ def ticket_detail(ticket_id):
 
         try:
             push_data_list = notify_new_support_message(ticket, msg, for_admin=not is_admin)
-            if push_data_list:
-                for push_data in push_data_list:
-                    send_push_async.delay(**push_data)
+            for push_data in push_data_list or []:
+                send_push_async.delay(**push_data)
         except Exception as e:
             print(f'⚠️ Ошибка push support (reply): {e}')
 

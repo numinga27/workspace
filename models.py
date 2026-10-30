@@ -329,15 +329,37 @@ class Project(db.Model):
 
     @property
     def completion_percentage(self):
+        """Прогресс проекта = среднее по вехам.
+
+        Каждая веха даёт:
+          - 1.0, если is_completed=True (флаг важнее задач);
+          - доля завершённых задач верхнего уровня этой вехи, иначе;
+          - 0, если задач нет и флаг не стоит.
+
+        Если вех нет — fallback на старую формулу (по задачам верхнего уровня).
+        """
+        milestones = Milestone.query.filter_by(project_id=self.id)\
+            .order_by(Milestone.order_index).all()
+
+        if milestones:
+            total = 0.0
+            for m in milestones:
+                if m.is_completed:
+                    total += 1.0
+                else:
+                    tasks = Task.query.filter_by(
+                        milestone_id=m.id, parent_task_id=None
+                    ).all()
+                    if tasks:
+                        done = sum(1 for t in tasks if t.status == 'completed')
+                        total += done / len(tasks)
+            return min(100, int(total / len(milestones) * 100))
+
         tasks = Task.query.filter_by(project_id=self.id, parent_task_id=None).all()
         if not tasks:
-            milestones = Milestone.query.filter_by(project_id=self.id).all()
-            if not milestones:
-                return 0
-            done = sum(1 for m in milestones if m.is_completed)
-            return int((done / len(milestones)) * 100)
+            return 0
         completed = sum(1 for t in tasks if t.status == 'completed')
-        return int((completed / len(tasks)) * 100)
+        return int(completed / len(tasks) * 100)
 
     @property
     def current_milestone(self):
@@ -452,6 +474,32 @@ class Milestone(db.Model):
             return None
         delta = self.due_date - _utcnow()
         return delta.days if delta.days >= 0 else 0
+
+    @property
+    def progress_percentage(self):
+        """Прогресс вехи: доля завершённых задач верхнего уровня.
+        Если веха is_completed — 100%. Если задач нет — 0%."""
+        if self.is_completed:
+            return 100
+        tasks = Task.query.filter_by(
+            milestone_id=self.id, parent_task_id=None
+        ).all()
+        if not tasks:
+            return 0
+        done = sum(1 for t in tasks if t.status == 'completed')
+        return int(done / len(tasks) * 100)
+
+    @property
+    def tasks_total(self):
+        return Task.query.filter_by(
+            milestone_id=self.id, parent_task_id=None
+        ).count()
+
+    @property
+    def tasks_done(self):
+        return Task.query.filter_by(
+            milestone_id=self.id, parent_task_id=None, status='completed'
+        ).count()
 
 
 # ============================================================
@@ -733,6 +781,19 @@ class Message(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
 
+    # ← НОВОЕ: цитата (reply)
+    reply_to_id = db.Column(
+        db.Integer, db.ForeignKey('message.id', ondelete='SET NULL'),
+        nullable=True, index=True,
+    )
+    reply_to = db.relationship('Message', remote_side=[id], backref='replies')
+
+    # ← НОВОЕ: вложения
+    attachments = db.relationship(
+        'File', backref='message', lazy='selectin',
+        cascade='all, delete-orphan', foreign_keys='File.message_id',
+    )
+
 
 class MessageRead(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -838,16 +899,27 @@ class File(db.Model):
     stored_name = db.Column(db.String(255), nullable=False)
     file_size = db.Column(db.Integer, default=0)
     file_type = db.Column(db.String(100), nullable=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    # project_id теперь nullable (для вложений поддержки вне проекта)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=True)
     folder_id = db.Column(db.Integer, db.ForeignKey('folder.id'), nullable=True)
     task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=True)
     uploaded_at = db.Column(db.DateTime, default=_utcnow)
     uploaded_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-    # ← НОВОЕ: приватный файл
     is_private = db.Column(db.Boolean, default=False, index=True)
 
-    # ← НОВОЕ: список доступов (если приватный)
+    # ← НОВОЕ: вложения сообщений
+    message_id = db.Column(
+        db.Integer,
+        db.ForeignKey('message.id', ondelete='CASCADE'),
+        nullable=True, index=True,
+    )
+    support_message_id = db.Column(
+        db.Integer,
+        db.ForeignKey('support_message.id', ondelete='CASCADE'),
+        nullable=True, index=True,
+    )
+
     access_list = db.relationship(
         'FileAccess',
         backref='file',
@@ -863,6 +935,10 @@ class File(db.Model):
           - загрузивший;
           - admin / supervisor;
           - те, кто в FileAccess.
+
+        ВАЖНО: если self.project_id is None (вложение поддержки),
+        обычная логика проекта не применяется — вызывающий код
+        должен использовать services.attachments.can_view_attachment.
         """
         if not self.is_private:
             return True
@@ -1033,6 +1109,19 @@ class SupportMessage(db.Model):
     text = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=_utcnow, index=True)
     is_read = db.Column(db.Boolean, default=False)
+
+    # ← НОВОЕ: цитата (reply)
+    reply_to_id = db.Column(
+        db.Integer, db.ForeignKey('support_message.id', ondelete='SET NULL'),
+        nullable=True, index=True,
+    )
+    reply_to = db.relationship('SupportMessage', remote_side=[id], backref='replies')
+
+    # ← НОВОЕ: вложения
+    attachments = db.relationship(
+        'File', backref='support_message', lazy='selectin',
+        cascade='all, delete-orphan', foreign_keys='File.support_message_id',
+    )
 
     author = db.relationship('User', foreign_keys=[author_id])     
 

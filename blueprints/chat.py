@@ -1,7 +1,7 @@
 from datetime import datetime
 from flask import (
     Blueprint, redirect, url_for, flash, session,
-    jsonify, request, render_template
+    jsonify, request, render_template, send_from_directory, abort, current_app
 )
 
 from extensions import db
@@ -31,41 +31,90 @@ def send_message(project_id):
         flash('Нет доступа.', 'danger')
         return redirect(url_for('dashboard.dashboard'))
 
-    text = request.form['message'].strip()
+    text = (request.form.get('message') or '').strip()
     user_id = session['user_id']
+    reply_to_id = request.form.get('reply_to_id', type=int)
 
-    if text:
-        message = Message(text=text, user_id=user_id, project_id=project_id)
-        db.session.add(message)
-        db.session.flush()
+    uploads = [f for f in request.files.getlist('attachments') if f and f.filename]
+    if not text and not uploads:
+        flash('Введите сообщение или прикрепите файл.', 'warning')
+        return redirect(url_for('projects.view_project', project_id=project_id) + '#chat')
 
-        mentioned_user_ids = parse_mentions_in_text(text, project_id)
-        mentioned_user_ids.discard(user_id)
+    from services.attachments import save_attachment, MAX_FILES_PER_MESSAGE
+    if len(uploads) > MAX_FILES_PER_MESSAGE:
+        flash(f'Максимум {MAX_FILES_PER_MESSAGE} вложений.', 'warning')
+        return redirect(url_for('projects.view_project', project_id=project_id) + '#chat')
 
-        for uid in mentioned_user_ids:
-            mention = MessageMention(
-                message_id=message.id,
-                user_id=uid,
-                project_id=project_id,
-                is_read=False,
-            )
-            db.session.add(mention)
+    # Цитата должна быть из этого же проекта
+    if reply_to_id:
+        parent = Message.query.filter_by(id=reply_to_id, project_id=project_id).first()
+        if not parent:
+            reply_to_id = None
 
-        db.session.commit()
+    # Текст сообщения: если нет текста — показываем имена файлов
+    display_text = text
+    if not display_text and uploads:
+        names = [f.filename for f in uploads]
+        if len(names) == 1:
+            display_text = '📎 ' + names[0]
+        else:
+            display_text = '📎 ' + ', '.join(names) + ' (' + str(len(names)) + ' вложен.)'
 
-        mark_project_as_read(user_id, project_id)
-        mark_mentions_as_read(user_id, project_id)
+    message = Message(
+        text=display_text or '',
+        user_id=user_id,
+        project_id=project_id,
+        reply_to_id=reply_to_id,
+    )
+    db.session.add(message)
+    db.session.flush()
 
-        # ← В ФОН (Push)
-        try:
-            push_data_list = notify_new_message(message, mentioned_user_ids=mentioned_user_ids)
-            if push_data_list:
-                for push_data in push_data_list:
-                    send_push_async.delay(**push_data)
-        except Exception as e:
-            print(f'⚠️ Ошибка отправки push: {e}')
+    for up in uploads:
+        save_attachment(up, uploaded_by=user_id,
+                        project_id=project_id, message_id=message.id)
+
+    mentioned_user_ids = parse_mentions_in_text(text, project_id) if text else set()
+    mentioned_user_ids.discard(user_id)
+    for uid in mentioned_user_ids:
+        db.session.add(MessageMention(
+            message_id=message.id, user_id=uid,
+            project_id=project_id, is_read=False,
+        ))
+
+    db.session.commit()
+
+    mark_project_as_read(user_id, project_id)
+    mark_mentions_as_read(user_id, project_id)
+
+    try:
+        push_data_list = notify_new_message(message, mentioned_user_ids=mentioned_user_ids)
+        for push_data in push_data_list or []:
+            send_push_async.delay(**push_data)
+    except Exception as e:
+        print(f'⚠️ Ошибка отправки push: {e}')
 
     return redirect(url_for('projects.view_project', project_id=project_id) + '#chat')
+
+
+# ============================================================
+#  СКАЧИВАНИЕ ВЛОЖЕНИЯ
+# ============================================================
+
+@bp.route('/attachment/<int:file_id>/download')
+@login_required
+def download_attachment(file_id):
+    from models import File
+    from services.attachments import can_view_attachment
+
+    f = File.query.get_or_404(file_id)
+    user = db.session.get(User, session['user_id'])
+    if not can_view_attachment(f, user):
+        abort(403)
+    return send_from_directory(
+        current_app.config['UPLOAD_FOLDER'],
+        f.stored_name,
+        download_name=f.original_name,
+    )
 
 
 # ============================================================
