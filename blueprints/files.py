@@ -4,7 +4,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from werkzeug.utils import secure_filename
 
 from extensions import db
-from models import User, Folder, File
+from models import User, Folder, File, FileAccess
 from decorators import login_required
 from utils import (
     check_project_access, can_manage_project, get_user_role_in_project,
@@ -13,6 +13,40 @@ from utils import (
 
 bp = Blueprint('files', __name__)
 
+
+# ============================================================
+#  ХЕЛПЕРЫ
+# ============================================================
+
+def _can_see_file(file, user):
+    """Может ли пользователь видеть файл."""
+    if not user:
+        return False
+    if not file.is_private:
+        return True
+    if file.uploaded_by == user.id:
+        return True
+    if user.is_privileged:
+        return True
+    return FileAccess.query.filter_by(
+        file_id=file.id, user_id=user.id
+    ).first() is not None
+
+
+def _visible_files(query, user):
+    """Фильтрует список файлов: оставляет только те, что видны пользователю."""
+    if user.is_privileged:
+        return query.all()
+    result = []
+    for f in query.all():
+        if _can_see_file(f, user):
+            result.append(f)
+    return result
+
+
+# ============================================================
+#  СОЗДАНИЕ ПАПКИ
+# ============================================================
 
 @bp.route('/project/<int:project_id>/folder/create', methods=['POST'])
 @login_required
@@ -39,6 +73,10 @@ def create_folder(project_id):
     return redirect(request.referrer or url_for('projects.view_project', project_id=project_id))
 
 
+# ============================================================
+#  ПРОСМОТР ПАПКИ
+# ============================================================
+
 @bp.route('/folder/<int:folder_id>')
 @login_required
 def view_folder(folder_id):
@@ -48,10 +86,19 @@ def view_folder(folder_id):
         return redirect(url_for('dashboard.dashboard'))
 
     user = User.query.get(session['user_id'])
+
+    files_query = File.query.filter_by(folder_id=folder_id)
+    files = _visible_files(files_query, user)
+
+    # Участники проекта — для формы «кому видно»
+    from models import ProjectMember
+    members = ProjectMember.query.filter_by(project_id=folder.project_id, is_guest=False).all()
+
     return render_template('folder.html',
                            folder=folder,
                            subfolders=Folder.query.filter_by(parent_folder_id=folder_id).all(),
-                           files=File.query.filter_by(folder_id=folder_id).all(),
+                           files=files,
+                           members=members,
                            user=user,
                            user_role=get_user_role_in_project(folder.project_id),
                            projects=get_user_projects(user))
@@ -79,6 +126,10 @@ def delete_folder(folder_id):
     return redirect(url_for('projects.view_project', project_id=pid))
 
 
+# ============================================================
+#  ЗАГРУЗКА ФАЙЛОВ (МНОЖЕСТВЕННАЯ)
+# ============================================================
+
 @bp.route('/project/<int:project_id>/upload', methods=['POST'])
 @login_required
 def upload_file(project_id):
@@ -86,13 +137,18 @@ def upload_file(project_id):
         flash('Нет доступа.', 'danger')
         return redirect(url_for('dashboard.dashboard'))
 
-    if 'file' not in request.files or request.files['file'].filename == '':
-        flash('Файл не выбран.', 'warning')
+    # ← НОВОЕ: несколько файлов
+    uploaded_files = request.files.getlist('files')
+    uploaded_files = [f for f in uploaded_files if f and f.filename]
+
+    if not uploaded_files:
+        flash('Файлы не выбраны.', 'warning')
         return redirect(request.referrer or url_for('projects.view_project', project_id=project_id))
 
-    file = request.files['file']
     folder_id = request.form.get('folder_id') or None
     task_id = request.form.get('task_id') or None
+    is_private = request.form.get('is_private') == 'on'
+    recipient_ids = request.form.getlist('recipient_ids')
 
     folder_id_int = None
     if folder_id:
@@ -110,20 +166,47 @@ def upload_file(project_id):
             return redirect(url_for('projects.view_project', project_id=project_id))
         task_id_int = task.id
 
-    original_name = secure_filename(file.filename) or 'file'
-    ext = os.path.splitext(original_name)[1].lower()
-    stored_name = f"{uuid.uuid4().hex}{ext}"
-    path = os.path.join(current_app.config['UPLOAD_FOLDER'], stored_name)
-    file.save(path)
+    if is_private and not recipient_ids:
+        flash('Выберите, кому видно приватный файл (минимум одного).', 'warning')
+        return redirect(request.referrer or url_for('projects.view_project', project_id=project_id))
 
-    db.session.add(File(
-        original_name=file.filename, stored_name=stored_name,
-        file_size=os.path.getsize(path), file_type=file.content_type,
-        project_id=project_id, folder_id=folder_id_int, task_id=task_id_int,
-        uploaded_by=session['user_id']
-    ))
+    created = []
+    for file in uploaded_files:
+        original_name = secure_filename(file.filename) or 'file'
+        ext = os.path.splitext(original_name)[1].lower()
+        stored_name = f"{uuid.uuid4().hex}{ext}"
+        path = os.path.join(current_app.config['UPLOAD_FOLDER'], stored_name)
+        file.save(path)
+
+        new_file = File(
+            original_name=file.filename,
+            stored_name=stored_name,
+            file_size=os.path.getsize(path),
+            file_type=file.content_type,
+            project_id=project_id,
+            folder_id=folder_id_int,
+            task_id=task_id_int,
+            uploaded_by=session['user_id'],
+            is_private=is_private,
+        )
+        db.session.add(new_file)
+        db.session.flush()  # чтобы получить new_file.id
+
+        # ← FileAccess для каждого получателя
+        if is_private:
+            for raw_uid in recipient_ids:
+                try:
+                    uid = int(raw_uid)
+                except (TypeError, ValueError):
+                    continue
+                if uid == session['user_id']:
+                    continue  # загрузивший и так видит
+                db.session.add(FileAccess(file_id=new_file.id, user_id=uid))
+
+        created.append(new_file)
+
     db.session.commit()
-    flash(f'Файл "{file.filename}" загружен!', 'success')
+    flash(f'Загружено файлов: {len(created)}.', 'success')
 
     if task_id_int:
         return redirect(url_for('tasks.view_task', task_id=task_id_int))
@@ -132,6 +215,10 @@ def upload_file(project_id):
     return redirect(url_for('projects.view_project', project_id=project_id))
 
 
+# ============================================================
+#  СКАЧИВАНИЕ
+# ============================================================
+
 @bp.route('/file/<int:file_id>/download')
 @login_required
 def download_file(file_id):
@@ -139,8 +226,22 @@ def download_file(file_id):
     if not check_project_access(f.project_id):
         flash('Нет доступа.', 'danger')
         return redirect(url_for('dashboard.dashboard'))
-    return send_from_directory(current_app.config['UPLOAD_FOLDER'], f.stored_name, download_name=f.original_name)
 
+    user = User.query.get(session['user_id'])
+    if not _can_see_file(f, user):
+        flash('У вас нет доступа к этому файлу.', 'danger')
+        return redirect(url_for('projects.view_project', project_id=f.project_id))
+
+    return send_from_directory(
+        current_app.config['UPLOAD_FOLDER'],
+        f.stored_name,
+        download_name=f.original_name,
+    )
+
+
+# ============================================================
+#  УДАЛЕНИЕ
+# ============================================================
 
 @bp.route('/file/<int:file_id>/delete', methods=['POST'])
 @login_required
@@ -157,3 +258,58 @@ def delete_file(file_id):
     db.session.delete(f)
     db.session.commit()
     return redirect(request.referrer or url_for('projects.view_project', project_id=pid))
+
+# ============================================================
+#  РЕДАКТИРОВАНИЕ ДОСТУПА К ФАЙЛУ
+# ============================================================
+
+@bp.route('/file/<int:file_id>/access', methods=['POST'])
+@login_required
+def edit_file_access(file_id):
+    """Изменение приватности и списка получателей файла.
+
+    Доступно:
+      - загрузившему файл;
+      - admin / supervisor;
+      - руководителю/менеджеру проекта (can_manage_project).
+    """
+    f = File.query.get_or_404(file_id)
+    user = User.query.get(session['user_id'])
+
+    if not user:
+        flash('Нет доступа.', 'danger')
+        return redirect(url_for('dashboard.dashboard'))
+
+    # Права: загрузивший, привилегированный, или руководитель проекта
+    if not (
+        f.uploaded_by == user.id
+        or user.is_privileged
+        or can_manage_project(f.project_id)
+    ):
+        flash('Нет прав изменять доступ к этому файлу.', 'danger')
+        return redirect(request.referrer or url_for('projects.view_project', project_id=f.project_id))
+
+    is_private = request.form.get('is_private') == 'on'
+    recipient_ids = request.form.getlist('recipient_ids')
+
+    # Обновляем флаг
+    f.is_private = is_private
+
+    # Удаляем старые доступы
+    FileAccess.query.filter_by(file_id=f.id).delete(synchronize_session=False)
+
+    # Если приватный — добавляем новые
+    if is_private:
+        for raw_uid in recipient_ids:
+            try:
+                uid = int(raw_uid)
+            except (TypeError, ValueError):
+                continue
+            if uid == f.uploaded_by:
+                continue  # загрузивший и так видит
+            db.session.add(FileAccess(file_id=f.id, user_id=uid))
+
+    db.session.commit()
+
+    flash('Доступ к файлу обновлён.', 'success')
+    return redirect(request.referrer or url_for('projects.view_project', project_id=f.project_id))

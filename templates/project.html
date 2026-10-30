@@ -132,30 +132,34 @@
 {% if project_overdue %}
 <div class="alert alert-danger py-2 px-3 mb-2 small">
     <i class="bi bi-exclamation-octagon-fill"></i>
-    <strong>{{ _('Проект просрочен!') }}</strong>
-    {{ _('Плановое окончание') }} {{ project.end_date.strftime('%d.%m.%Y') }} ({{ project_days_overdue }} {{ _('дн. назад') }}).
+    <div>
+        <strong>{{ _('Проект просрочен!') }}</strong>
+        {{ _('Плановое окончание') }} {{ project.end_date.strftime('%d.%m.%Y') }} ({{ project_days_overdue }} {{ _('дн. назад') }}).
+    </div>
 </div>
 {% endif %}
 
 {% if overdue_milestones %}
 <div class="alert alert-warning py-2 px-3 mb-2 small">
     <i class="bi bi-exclamation-triangle-fill"></i>
-    <strong>{{ _('Просрочено вех:') }} {{ overdue_milestones|length }}</strong>
-    <button class="btn btn-sm btn-link text-decoration-none p-0 ms-2"
-            type="button" data-bs-toggle="collapse"
-            data-bs-target="#overdueMilestonesList">
-        {{ _('Показать') }} <i class="bi bi-chevron-down collapse-icon"></i>
-    </button>
-    <div class="collapse mt-1" id="overdueMilestonesList">
-        <ul class="mb-0 mt-1 ps-3">
-            {% for m in overdue_milestones %}
-            <li>
-                <strong>{{ m.name }}</strong> —
-                {{ m.due_date.strftime('%d.%m.%Y') }},
-                {{ _('просрочено на') }} <span class="badge bg-danger">{{ m.days_overdue }} {{ _('дн.') }}</span>
-            </li>
-            {% endfor %}
-        </ul>
+    <div>
+        <strong>{{ _('Просрочено вех:') }} {{ overdue_milestones|length }}</strong>
+        <button class="btn btn-sm btn-link text-decoration-none p-0 ms-2"
+                type="button" data-bs-toggle="collapse"
+                data-bs-target="#overdueMilestonesList">
+            {{ _('Показать') }} <i class="bi bi-chevron-down collapse-icon"></i>
+        </button>
+        <div class="collapse mt-1" id="overdueMilestonesList">
+            <ul class="mb-0 mt-1 ps-3">
+                {% for m in overdue_milestones %}
+                <li>
+                    <strong>{{ m.name }}</strong> —
+                    {{ m.due_date.strftime('%d.%m.%Y') }},
+                    {{ _('просрочено на') }} <span class="badge bg-danger">{{ m.days_overdue }} {{ _('дн.') }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
 </div>
 {% endif %}
@@ -163,25 +167,27 @@
 {% if overdue_tasks %}
 <div class="alert alert-warning py-2 px-3 mb-2 small">
     <i class="bi bi-clock-history"></i>
-    <strong>{{ _('Просрочено задач:') }} {{ overdue_tasks|length }}</strong>
-    <button class="btn btn-sm btn-link text-decoration-none p-0 ms-2"
-            type="button" data-bs-toggle="collapse"
-            data-bs-target="#overdueTasksList">
-        {{ _('Показать') }} <i class="bi bi-chevron-down collapse-icon"></i>
-    </button>
-    <div class="collapse mt-1" id="overdueTasksList">
-        <ul class="mb-0 mt-1 ps-3">
-            {% for t in overdue_tasks[:10] %}
-            <li>
-                <a href="{{ url_for('tasks.view_task', task_id=t.id) }}">{{ t.title }}</a>
-                — {{ _('просрочено на') }} <span class="badge bg-danger">{{ t.days_overdue }} {{ _('дн.') }}</span>
-                {% if t.assignee %}<span class="text-muted">({{ t.assignee.first_name }} {{ t.assignee.last_name }})</span>{% endif %}
-            </li>
-            {% endfor %}
-            {% if overdue_tasks|length > 10 %}
-            <li class="text-muted">{{ _('…и ещё') }} {{ overdue_tasks|length - 10 }}</li>
-            {% endif %}
-        </ul>
+    <div>
+        <strong>{{ _('Просрочено задач:') }} {{ overdue_tasks|length }}</strong>
+        <button class="btn btn-sm btn-link text-decoration-none p-0 ms-2"
+                type="button" data-bs-toggle="collapse"
+                data-bs-target="#overdueTasksList">
+            {{ _('Показать') }} <i class="bi bi-chevron-down collapse-icon"></i>
+        </button>
+        <div class="collapse mt-1" id="overdueTasksList">
+            <ul class="mb-0 mt-1 ps-3">
+                {% for t in overdue_tasks[:10] %}
+                <li>
+                    <a href="{{ url_for('tasks.view_task', task_id=t.id) }}">{{ t.title }}</a>
+                    — {{ _('просрочено на') }} <span class="badge bg-danger">{{ t.days_overdue }} {{ _('дн.') }}</span>
+                    {% if t.assignee %}<span class="text-muted">({{ t.assignee.first_name }} {{ t.assignee.last_name }})</span>{% endif %}
+                </li>
+                {% endfor %}
+                {% if overdue_tasks|length > 10 %}
+                <li class="text-muted">{{ _('…и ещё') }} {{ overdue_tasks|length - 10 }}</li>
+                {% endif %}
+            </ul>
+        </div>
     </div>
 </div>
 {% endif %}
@@ -619,7 +625,7 @@
                                     {% else %}
                                     <div class="alert alert-warning small mb-0">
                                         <i class="bi bi-exclamation-triangle-fill"></i>
-                                        {{ _('В проекте нет руководителей или менеджеров.') }}
+                                        <div>{{ _('В проекте нет руководителей или менеджеров.') }}</div>
                                     </div>
                                     {% endif %}
                                 </div>
@@ -1334,9 +1340,7 @@
 
                         <div id="calendar"></div>
 
-                        {# ============================================================ #}
-                        {# СПИСОК СОБЫТИЙ ПРОЕКТА (под сеткой календаря)                #}
-                        {# ============================================================ #}
+                        {# Список событий под сеткой календаря #}
                         {% if events %}
                         <h5 class="mt-4 mb-3">
                             <i class="bi bi-calendar-event"></i>
@@ -1383,14 +1387,16 @@
                         {% else %}
                         <div class="alert alert-secondary text-center mt-4">
                             <i class="bi bi-calendar-x" style="font-size: 32px; display: block; margin-bottom: 8px; opacity: 0.5;"></i>
-                            {{ _('Событий пока нет') }}
-                            {% if can_manage %}
-                            <br>
-                            <button type="button" class="btn btn-primary btn-sm mt-2"
-                                    data-bs-toggle="modal" data-bs-target="#createEventModal">
-                                <i class="bi bi-plus-lg"></i> {{ _('Создать первое событие') }}
-                            </button>
-                            {% endif %}
+                            <div>
+                                {{ _('Событий пока нет') }}
+                                {% if can_manage %}
+                                <br>
+                                <button type="button" class="btn btn-primary btn-sm mt-2"
+                                        data-bs-toggle="modal" data-bs-target="#createEventModal">
+                                    <i class="bi bi-plus-lg"></i> {{ _('Создать первое событие') }}
+                                </button>
+                                {% endif %}
+                            </div>
                         </div>
                         {% endif %}
                     </div>
@@ -1410,7 +1416,9 @@
                             <i class="bi bi-chevron-down collapse-icon"></i>
                         </button>
                         <div class="collapse" id="fileActionsForm">
-                            <form method="POST" action="{{ url_for('files.create_folder', project_id=project.id) }}" class="row g-2 mb-2">
+
+                            {# Создать папку #}
+                            <form method="POST" action="{{ url_for('files.create_folder', project_id=project.id) }}" class="row g-2 mb-3">
                                 <div class="col-md-8">
                                     <input type="text" class="form-control" name="name" placeholder="{{ _('Название папки') }}" required>
                                 </div>
@@ -1420,13 +1428,51 @@
                                     </button>
                                 </div>
                             </form>
-                            <form method="POST" action="{{ url_for('files.upload_file', project_id=project.id) }}"
-                                  enctype="multipart/form-data" class="row g-2">
-                                <div class="col-md-8">
-                                    <input type="file" class="form-control" name="file" required>
+
+                            {# Загрузить файлы (множественно) #}
+                            <form method="POST"
+                                  action="{{ url_for('files.upload_file', project_id=project.id) }}"
+                                  enctype="multipart/form-data"
+                                  class="row g-2">
+                                <div class="col-12">
+                                    <label class="form-label small">
+                                        {{ _('Файлы (можно несколько)') }}
+                                    </label>
+                                    <input type="file" class="form-control" name="files" multiple required>
+                                    <small class="text-muted">
+                                        <i class="bi bi-info-circle"></i>
+                                        {{ _('Выберите один или несколько файлов (Ctrl/⌘+клик)') }}
+                                    </small>
                                 </div>
-                                <div class="col-md-4">
-                                    <button type="submit" class="btn btn-primary w-100">
+
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="is_private"
+                                               id="isPrivateCheck" onchange="togglePrivate()">
+                                        <label class="form-check-label" for="isPrivateCheck">
+                                            <i class="bi bi-lock-fill"></i>
+                                            {{ _('Приватный файл — видят только выбранные') }}
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="col-12" id="privateRecipients" style="display:none;">
+                                    <label class="form-label small">{{ _('Кому видно (кроме вас и админов)') }}</label>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% for m in members_for_filters %}
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" name="recipient_ids"
+                                                   value="{{ m.user.id }}" id="rec{{ m.user.id }}">
+                                            <label class="form-check-label small" for="rec{{ m.user.id }}">
+                                                {{ m.user.first_name }} {{ m.user.last_name }}
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">
                                         <i class="bi bi-upload"></i> {{ _('Загрузить') }}
                                     </button>
                                 </div>
@@ -1456,23 +1502,36 @@
                 {% endfor %}
 
                 {% for file in files %}
+                {% set can_see = (not file.is_private) or (file.uploaded_by == user.id) or user.is_privileged or (file.access_list|selectattr('user_id', 'equalto', user.id)|list|length > 0) %}
+                {% if can_see %}
                 <div class="card mb-2">
                     <div class="card-body py-2 d-flex justify-content-between align-items-center">
-                        <div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            {% if file.is_private %}
+                            <i class="bi bi-lock-fill text-warning" title="{{ _('Приватный файл') }}"></i>
+                            {% endif %}
                             <i class="bi bi-file-earmark"></i>
                             <a href="{{ url_for('files.download_file', file_id=file.id) }}" class="text-decoration-none">
                                 {{ file.original_name }}
                             </a>
                             <small class="text-muted">({{ (file.file_size / 1024)|round(1) }} KB)</small>
                         </div>
-                        <form method="POST" action="{{ url_for('files.delete_file', file_id=file.id) }}">
-                            <button type="submit" class="btn btn-sm btn-outline-secondary"
-                                    style="width: 32px; height: 32px; padding: 0;">
-                                <i class="bi bi-trash-fill text-danger"></i>
+                        <div class="d-flex gap-1">
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                    data-bs-toggle="modal" data-bs-target="#accessFileModal{{ file.id }}"
+                                    title="{{ _('Настроить доступ') }}">
+                                <i class="bi bi-shield-lock{% if file.is_private %}-fill text-warning{% endif %}"></i>
                             </button>
-                        </form>
+                            <form method="POST" action="{{ url_for('files.delete_file', file_id=file.id) }}">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                        style="width: 32px; height: 32px; padding: 0;">
+                                    <i class="bi bi-trash-fill text-danger"></i>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
+                {% endif %}
                 {% endfor %}
 
                 {% if not folders and not files %}
@@ -1685,10 +1744,71 @@
     </div>
 </div>
 
-
 <!-- ============================================================ -->
 <!-- МОДАЛЬНЫЕ ОКНА -->
 <!-- ============================================================ -->
+
+{# Модалки для настройки доступа к файлам #}
+{% for file in files %}
+{% set can_see = (not file.is_private) or (file.uploaded_by == user.id) or user.is_privileged or (file.access_list|selectattr('user_id', 'equalto', user.id)|list|length > 0) %}
+{% if can_see %}
+<div class="modal fade" id="accessFileModal{{ file.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('files.edit_file_access', file_id=file.id) }}">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-shield-lock"></i> {{ _('Доступ к файлу') }}
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted mb-3">
+                        <i class="bi bi-file-earmark"></i>
+                        {{ file.original_name }}
+                    </p>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="is_private"
+                               id="isPrivateAccess{{ file.id }}"
+                               {% if file.is_private %}checked{% endif %}
+                               onchange="toggleAccessPrivate({{ file.id }})">
+                        <label class="form-check-label" for="isPrivateAccess{{ file.id }}">
+                            <i class="bi bi-lock-fill"></i>
+                            {{ _('Приватный файл — видят только выбранные') }}
+                        </label>
+                    </div>
+
+                    <div id="accessRecipients{{ file.id }}"
+                         {% if not file.is_private %}style="display:none;"{% endif %}>
+                        <label class="form-label small">{{ _('Кому видно (кроме вас и админов)') }}</label>
+                        <div class="d-flex flex-wrap gap-2" style="max-height: 240px; overflow-y: auto;">
+                            {% set allowed_ids = file.access_list|map(attribute='user_id')|list %}
+                            {% for m in members_for_filters %}
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="recipient_ids"
+                                       value="{{ m.user.id }}" id="accessRec{{ file.id }}_{{ m.user.id }}"
+                                       {% if m.user.id in allowed_ids %}checked{% endif %}>
+                                <label class="form-check-label small" for="accessRec{{ file.id }}_{{ m.user.id }}">
+                                    {{ m.user.first_name }} {{ m.user.last_name }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Отмена') }}</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> {{ _('Сохранить') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
 
 {% if can_manage %}
 <div class="modal fade" id="deleteProjectModal" tabindex="-1" aria-hidden="true">
@@ -2103,7 +2223,6 @@ function initCalendar() {
         eventsSet: function() {
             restoreLegendFiltersProject();
             applyLegendFiltersProject(true);
-            // ← принудительный рендер после загрузки событий
             setTimeout(() => {
                 if (currentCalendar && currentCalendar.view) {
                     currentCalendar.render();
@@ -2111,7 +2230,7 @@ function initCalendar() {
             }, 50);
         }
     });
-    calendar.render();
+    currentCalendar.render();
     calendarInitialized = true;
 }
 
@@ -2315,6 +2434,24 @@ function toggleTimeFields() {
 function updateColorSelection(radio) {
     document.querySelectorAll('.color-dot').forEach(dot => dot.classList.remove('selected'));
     radio.parentElement.querySelector('.color-dot').classList.add('selected');
+}
+
+// ← Показать/скрыть выбор получателей для приватного файла (при загрузке)
+function togglePrivate() {
+    const check = document.getElementById('isPrivateCheck');
+    const rec = document.getElementById('privateRecipients');
+    if (check && rec) {
+        rec.style.display = check.checked ? 'block' : 'none';
+    }
+}
+
+// ← Показать/скрыть выбор получателей в модалке настройки доступа
+function toggleAccessPrivate(fileId) {
+    const check = document.getElementById('isPrivateAccess' + fileId);
+    const rec = document.getElementById('accessRecipients' + fileId);
+    if (check && rec) {
+        rec.style.display = check.checked ? 'block' : 'none';
+    }
 }
 
 (function() {

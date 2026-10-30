@@ -159,7 +159,7 @@ class Customer(db.Model):
     name = db.Column(db.String(200), nullable=False)
     inn = db.Column(db.String(20), nullable=True)
     contact_person = db.Column(db.String(100), nullable=True)
-    phone = db.Column(db.String(30), nullable=True)
+    phone = db.Column(db.String(50), nullable=True)
     email = db.Column(db.String(100), nullable=True)
     address = db.Column(db.String(300), nullable=True)
     created_at = db.Column(db.DateTime, default=_utcnow)
@@ -181,7 +181,7 @@ class Supplier(db.Model):
     name = db.Column(db.String(200), nullable=False)
     inn = db.Column(db.String(20), nullable=True)
     contact_person = db.Column(db.String(100), nullable=True)
-    phone = db.Column(db.String(30), nullable=True)
+    phone = db.Column(db.String(50), nullable=True)
     email = db.Column(db.String(100), nullable=True)
     address = db.Column(db.String(300), nullable=True)
     supplier_type = db.Column(db.String(20), default='supplier')
@@ -224,7 +224,7 @@ class ContactPerson(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     full_name = db.Column(db.String(150), nullable=False)
     position = db.Column(db.String(100), nullable=True)
-    phone = db.Column(db.String(30), nullable=True)
+    phone = db.Column(db.String(50), nullable=True)
     email = db.Column(db.String(100), nullable=True)
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=True)
     supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=True)
@@ -264,7 +264,7 @@ class Company(db.Model):
     name = db.Column(db.String(200), nullable=False, unique=True, index=True)
     inn = db.Column(db.String(20), nullable=True)
     address = db.Column(db.String(300), nullable=True)
-    phone = db.Column(db.String(30), nullable=True)
+    phone = db.Column(db.String(50), nullable=True)
     email = db.Column(db.String(100), nullable=True)
     color = db.Column(db.String(20), default='#6366f1')
     is_active = db.Column(db.Boolean, default=True)
@@ -844,6 +844,72 @@ class File(db.Model):
     uploaded_at = db.Column(db.DateTime, default=_utcnow)
     uploaded_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
+    # ← НОВОЕ: приватный файл
+    is_private = db.Column(db.Boolean, default=False, index=True)
+
+    # ← НОВОЕ: список доступов (если приватный)
+    access_list = db.relationship(
+        'FileAccess',
+        backref='file',
+        lazy=True,
+        cascade='all, delete-orphan',
+    )
+
+    def is_visible_to(self, user):
+        """Может ли пользователь видеть файл.
+
+        Видят:
+          - все, если файл не приватный;
+          - загрузивший;
+          - admin / supervisor;
+          - те, кто в FileAccess.
+        """
+        if not self.is_private:
+            return True
+        if not user:
+            return False
+        if user.id == self.uploaded_by:
+            return True
+        if getattr(user, 'is_privileged', False):
+            return True
+        return any(a.user_id == user.id for a in self.access_list)
+
+
+class FileAccess(db.Model):
+    """Кому разрешён доступ к приватному файлу.
+
+    Если File.is_private = False — таблица не используется.
+    Если True — видят только:
+      - uploaded_by
+      - admin / supervisor
+      - те, кто в FileAccess
+    """
+    __tablename__ = 'file_access'
+
+    id = db.Column(db.Integer, primary_key=True)
+    file_id = db.Column(
+        db.Integer,
+        db.ForeignKey('file.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    granted_at = db.Column(db.DateTime, default=_utcnow)
+
+    user = db.relationship('User', backref='file_accesses')
+
+    __table_args__ = (
+        db.UniqueConstraint('file_id', 'user_id', name='unique_file_user_access'),
+    )
+
+    def __repr__(self):
+        return f'<FileAccess file={self.file_id} user={self.user_id}>'
+
 
 # ============================================================
 #  ПРИГЛАШЕНИЕ
@@ -1143,4 +1209,4 @@ class EventRecipient(db.Model):
     )
 
     def __repr__(self):
-        return f'<EventRecipient event={self.event_id} user={self.user_id}>'    
+        return f'<EventRecipient event={self.event_id} user={self.user_id}>'

@@ -1,3 +1,4 @@
+import re
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 
 from extensions import db
@@ -6,6 +7,69 @@ from decorators import login_required
 from utils import get_user_projects, get_available_customers, is_privileged
 
 bp = Blueprint('customers', __name__)
+
+
+# ============================================================
+#  ВАЛИДАЦИЯ
+# ============================================================
+
+def _validate_customer_form(form):
+    """Валидация полей заказчика. Возвращает (data, errors).
+
+    data — dict с очищенными полями.
+    errors — list[str] — сообщения для flash.
+    """
+    data = {}
+    errors = []
+
+    # Название
+    name = (form.get('name') or '').strip()
+    if not name:
+        errors.append('Наименование обязательно.')
+    elif len(name) > 200:
+        errors.append('Наименование слишком длинное (макс. 200 символов).')
+    data['name'] = name
+
+    # ИНН — 10 или 12 цифр, либо пусто
+    inn = (form.get('inn') or '').strip()
+    if inn and not re.fullmatch(r'\d{10}|\d{12}', inn):
+        errors.append('ИНН должен содержать 10 или 12 цифр.')
+    data['inn'] = inn or None
+
+    # Контактное лицо — до 100
+    contact_person = (form.get('contact_person') or '').strip()
+    if len(contact_person) > 100:
+        errors.append('Контактное лицо слишком длинное (макс. 100 символов).')
+    data['contact_person'] = contact_person or None
+
+    # Телефон — до 50, разрешены цифры, +, -, (), пробел, точка, буквы (доб.)
+    phone = (form.get('phone') or '').strip()
+    if phone:
+        if len(phone) > 50:
+            errors.append('Телефон слишком длинный (макс. 50 символов).')
+        elif not re.fullmatch(r'[0-9+\-() .A-Za-zА-Яа-я]+', phone):
+            errors.append(
+                'Телефон содержит недопустимые символы. '
+                'Разрешены: цифры, +, -, (), пробел, точка.'
+            )
+    data['phone'] = phone or None
+
+    # Email — до 100, базовая проверка @
+    email = (form.get('email') or '').strip()
+    if email:
+        if len(email) > 100:
+            errors.append('Email слишком длинный (макс. 100 символов).')
+        elif '@' not in email or '.' not in email.split('@')[-1]:
+            errors.append('Email некорректный.')
+    data['email'] = email or None
+
+    # Адрес — до 300
+    address = (form.get('address') or '').strip()
+    if len(address) > 300:
+        errors.append('Адрес слишком длинный (макс. 300 символов).')
+    data['address'] = address or None
+
+    return data, errors
 
 
 # ============================================================
@@ -49,29 +113,42 @@ def create_customer():
     user = User.query.get(session['user_id'])
 
     if request.method == 'POST':
-        name = (request.form.get('name') or '').strip()
+        # ← Валидация
+        data, errors = _validate_customer_form(request.form)
+
+        if errors:
+            for e in errors:
+                flash(e, 'danger')
+            return render_template('create_customer.html',
+                                   user=user,
+                                   projects=get_user_projects(user),
+                                   form_data=request.form)  # ← сохраняем введённое
 
         # ← Проверка на дубликат по имени (регистронезависимо)
         existing = Customer.query.filter(
-            db.func.lower(Customer.name) == name.lower()
+            db.func.lower(Customer.name) == data['name'].lower()
         ).first()
 
         if existing:
             flash(f'Заказчик «{existing.name}» уже есть в базе. Измените название.', 'danger')
             return render_template('create_customer.html',
                                    user=user,
-                                   projects=get_user_projects(user))
+                                   projects=get_user_projects(user),
+                                   form_data=request.form)  # ← сохраняем введённое
 
-        customer = Customer(
-            name=name,
-            inn=request.form.get('inn'),
-            contact_person=request.form.get('contact_person'),
-            phone=request.form.get('phone'),
-            email=request.form.get('email'),
-            address=request.form.get('address'),
-        )
+        customer = Customer(**data)
         db.session.add(customer)
-        db.session.commit()
+
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f'⚠️ Ошибка сохранения заказчика: {e}')
+            flash('Не удалось сохранить заказчика. Проверьте данные и попробуйте ещё раз.', 'danger')
+            return render_template('create_customer.html',
+                                   user=user,
+                                   projects=get_user_projects(user),
+                                   form_data=request.form)
 
         # ← Логируем создание
         _log('create_customer', customer)
@@ -83,7 +160,8 @@ def create_customer():
 
     return render_template('create_customer.html',
                            user=user,
-                           projects=get_user_projects(user))
+                           projects=get_user_projects(user),
+                           form_data=request.form)  # ← пустая форма (request.form = пусто на GET)
 
 
 # ============================================================
@@ -114,11 +192,21 @@ def edit_customer(customer_id):
         return redirect(url_for('customers.customers_list'))
 
     if request.method == 'POST':
-        new_name = (request.form.get('name') or '').strip()
+        # ← Валидация
+        data, errors = _validate_customer_form(request.form)
+
+        if errors:
+            for e in errors:
+                flash(e, 'danger')
+            return render_template('edit_customer.html',
+                                   customer=customer,
+                                   user=user,
+                                   projects=get_user_projects(user),
+                                   form_data=request.form)
 
         # ← Проверка на дубликат (исключая текущего)
         existing = Customer.query.filter(
-            db.func.lower(Customer.name) == new_name.lower(),
+            db.func.lower(Customer.name) == data['name'].lower(),
             Customer.id != customer.id,
         ).first()
 
@@ -127,23 +215,31 @@ def edit_customer(customer_id):
             return render_template('edit_customer.html',
                                    customer=customer,
                                    user=user,
-                                   projects=get_user_projects(user))
+                                   projects=get_user_projects(user),
+                                   form_data=request.form)
 
         # Запоминаем старое имя для логов
         old_name = customer.name
 
-        customer.name = new_name
-        customer.inn = request.form.get('inn')
-        customer.contact_person = request.form.get('contact_person')
-        customer.phone = request.form.get('phone')
-        customer.email = request.form.get('email')
-        customer.address = request.form.get('address')
-        db.session.commit()
+        for key, value in data.items():
+            setattr(customer, key, value)
+
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f'⚠️ Ошибка сохранения заказчика: {e}')
+            flash('Не удалось сохранить заказчика. Проверьте данные и попробуйте ещё раз.', 'danger')
+            return render_template('edit_customer.html',
+                                   customer=customer,
+                                   user=user,
+                                   projects=get_user_projects(user),
+                                   form_data=request.form)
 
         # ← Логируем изменение
         details = None
-        if old_name != new_name:
-            details = f'Переименован: «{old_name}» → «{new_name}»'
+        if old_name != data['name']:
+            details = f'Переименован: «{old_name}» → «{data["name"]}»'
         _log('edit_customer', customer, details=details)
 
         flash('Заказчик обновлён!', 'success')
@@ -152,7 +248,8 @@ def edit_customer(customer_id):
     return render_template('edit_customer.html',
                            customer=customer,
                            user=user,
-                           projects=get_user_projects(user))
+                           projects=get_user_projects(user),
+                           form_data=request.form)  # ← пустая форма на GET
 
 
 # ============================================================
@@ -247,8 +344,14 @@ def delete_customer(customer_id):
     name = customer.name
     _log('delete_customer', customer, details=f'Удалён заказчик «{name}»')
 
-    db.session.delete(customer)
-    db.session.commit()
+    try:
+        db.session.delete(customer)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f'⚠️ Ошибка удаления заказчика: {e}')
+        flash('Не удалось удалить заказчика. Попробуйте ещё раз.', 'danger')
+        return redirect(url_for('customers.view_customer', customer_id=customer_id))
 
     flash(f'Заказчик «{name}» удалён.', 'success')
     return redirect(url_for('customers.customers_list'))

@@ -273,14 +273,19 @@ def view_task(task_id):
             flash('У вас нет доступа к этой задаче.', 'danger')
             return redirect(url_for('tasks.my_tasks'))
 
+        # ← Фильтруем файлы для гостя (видит только те, к которым есть доступ)
+        all_files = File.query.filter_by(task_id=task.id).all()
+        files = [f for f in all_files if f.is_visible_to(user)]
+
         return render_template('task_detail.html',
                                task=task,
                                project=task.project,
-                               files=File.query.filter_by(task_id=task.id).all(),
+                               files=files,
                                subtasks=[],
                                all_users=[],
                                milestones=[],
                                contact_persons=[],
+                               members=[],           # ← гость не выбирает получателей
                                user=user,
                                user_role='guest',
                                now=utcnow(),
@@ -295,12 +300,20 @@ def view_task(task_id):
 
     user_role = get_user_role_in_project(task.project_id)
 
-    files = File.query.filter_by(task_id=task.id).all()
+    # ← Фильтруем файлы (видит только те, к которым есть доступ)
+    all_files = File.query.filter_by(task_id=task.id).all()
+    files = [f for f in all_files if f.is_visible_to(user)]
+
     subtasks = Task.query.filter_by(parent_task_id=task.id)\
         .options(joinedload(Task.assignee))\
         .all()
     all_users = User.query.filter(User.role != 'admin').all()
     milestones = Milestone.query.filter_by(project_id=task.project_id).all()
+
+    # ← Участники проекта (для выбора получателей приватного файла)
+    members = ProjectMember.query.filter_by(
+        project_id=task.project_id, is_guest=False
+    ).all()
 
     task_stats = calculate_task_stats(task)
 
@@ -321,6 +334,7 @@ def view_task(task_id):
                            all_users=all_users,
                            milestones=milestones,
                            contact_persons=contact_persons,
+                           members=members,       # ← для формы приватного файла
                            user=user,
                            user_role=user_role,
                            now=utcnow(),
@@ -624,7 +638,6 @@ def admin_assign_task(project_id):
 
         # ← В ФОН (Email)
         if plain_password:
-            # send_guest_credentials пока синхронная, но мы можем обернуть её в фон
             send_email_async.delay(
                 recipient_email=guest_user.email,
                 subject=f'Доступ к проекту «{project.name}»',

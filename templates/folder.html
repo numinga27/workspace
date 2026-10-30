@@ -2,48 +2,84 @@
 {% block content %}
 <div class="mb-3">
     <a href="{{ url_for('projects.view_project', project_id=folder.project_id) }}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left"></i> Назад к проекту
+        <i class="bi bi-arrow-left"></i> {{ _('Назад к проекту') }}
     </a>
 </div>
 
 <div class="row">
     <div class="col-md-8">
         <h2><i class="bi bi-folder-fill text-warning"></i> {{ folder.name }}</h2>
-        
+
         <!-- Форма создания подпапки -->
         <div class="card mb-3">
             <div class="card-header bg-light">
-                <i class="bi bi-folder-plus"></i> Создать подпапку
+                <i class="bi bi-folder-plus"></i> {{ _('Создать подпапку') }}
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('files.create_folder', project_id=folder.project_id) }}" class="row g-2">
                     <input type="hidden" name="parent_id" value="{{ folder.id }}">
                     <div class="col-md-8">
-                        <input type="text" class="form-control" name="name" placeholder="Название папки" required>
+                        <input type="text" class="form-control" name="name" placeholder="{{ _('Название папки') }}" required>
                     </div>
                     <div class="col-md-4">
                         <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-folder-plus"></i> Создать
+                            <i class="bi bi-folder-plus"></i> {{ _('Создать') }}
                         </button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- Форма загрузки файла в папку -->
+        <!-- Форма загрузки файлов в папку -->
         <div class="card mb-3">
             <div class="card-header bg-light">
-                <i class="bi bi-cloud-upload"></i> Загрузить файл в папку
+                <i class="bi bi-cloud-upload"></i> {{ _('Загрузить файлы в папку') }}
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ url_for('files.upload_file', project_id=folder.project_id) }}" enctype="multipart/form-data" class="row g-2">
+                <form method="POST"
+                      action="{{ url_for('files.upload_file', project_id=folder.project_id) }}"
+                      enctype="multipart/form-data"
+                      class="row g-2">
                     <input type="hidden" name="folder_id" value="{{ folder.id }}">
-                    <div class="col-md-8">
-                        <input type="file" class="form-control" name="file" required>
+
+                    <div class="col-12">
+                        <label class="form-label small">{{ _('Файлы (можно несколько)') }}</label>
+                        <input type="file" class="form-control" name="files" multiple required>
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            {{ _('Выберите один или несколько файлов (Ctrl/⌘+клик)') }}
+                        </small>
                     </div>
-                    <div class="col-md-4">
-                        <button type="submit" class="btn btn-success w-100">
-                            <i class="bi bi-cloud-upload"></i> Загрузить
+
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="is_private"
+                                   id="isPrivateCheck" onchange="togglePrivate()">
+                            <label class="form-check-label" for="isPrivateCheck">
+                                <i class="bi bi-lock-fill"></i>
+                                {{ _('Приватный файл — видят только выбранные') }}
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-12" id="privateRecipients" style="display:none;">
+                        <label class="form-label small">{{ _('Кому видно (кроме вас и админов)') }}</label>
+                        <div class="d-flex flex-wrap gap-2" style="max-height: 240px; overflow-y: auto;">
+                            {% for m in members %}
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="recipient_ids"
+                                       value="{{ m.user.id }}" id="rec{{ m.user.id }}">
+                                <label class="form-check-label small" for="rec{{ m.user.id }}">
+                                    {{ m.user.first_name }} {{ m.user.last_name }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-cloud-upload"></i> {{ _('Загрузить') }}
                         </button>
                     </div>
                 </form>
@@ -52,7 +88,7 @@
 
         <!-- Подпапки -->
         {% if subfolders %}
-        <h6><i class="bi bi-folder"></i> Подпапки</h6>
+        <h6><i class="bi bi-folder"></i> {{ _('Подпапки') }}</h6>
         <div class="list-group mb-3">
             {% for subfolder in subfolders %}
             <div class="list-group-item d-flex justify-content-between align-items-center">
@@ -64,7 +100,7 @@
                         <i class="bi bi-file"></i> {{ subfolder.files|length }}
                     </span>
                     <form method="POST" action="{{ url_for('files.delete_folder', folder_id=subfolder.id) }}" class="d-inline">
-                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить папку и всё её содержимое?')">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('{{ _('Удалить папку и всё её содержимое?') }}')">
                             <i class="bi bi-trash"></i>
                         </button>
                     </form>
@@ -76,60 +112,156 @@
 
         <!-- Файлы в папке -->
         {% if files %}
-        <h6><i class="bi bi-file"></i> Файлы</h6>
+        <h6><i class="bi bi-file"></i> {{ _('Файлы') }}</h6>
         <div class="list-group">
             {% for file in files %}
-            <div class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                    <i class="bi bi-file-earmark"></i>
-                    <a href="{{ url_for('files.download_file', file_id=file.id) }}" class="text-decoration-none">
-                        {{ file.original_name }}
-                    </a>
-                    <small class="text-muted ms-2">
-                        ({{ (file.file_size / 1024)|round(1) }} KB)
-                    </small>
-                    <br>
-                    <small class="text-muted">
-                        Загрузил: {{ file.uploader.first_name }} {{ file.uploader.last_name }}
-                    </small>
-                </div>
-                <div>
-                    <a href="{{ url_for('files.download_file', file_id=file.id) }}" class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-download"></i>
-                    </a>
-                    <form method="POST" action="{{ url_for('files.delete_file', file_id=file.id) }}" class="d-inline">
-                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить файл?')">
-                            <i class="bi bi-trash"></i>
+            {% set can_see = (not file.is_private) or (file.uploaded_by == user.id) or user.is_privileged or (file.access_list|selectattr('user_id', 'equalto', user.id)|list|length > 0) %}
+            {% if can_see %}
+            <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div>
+                        {% if file.is_private %}
+                        <i class="bi bi-lock-fill text-warning" title="{{ _('Приватный файл') }}"></i>
+                        {% endif %}
+                        <i class="bi bi-file-earmark"></i>
+                        <a href="{{ url_for('files.download_file', file_id=file.id) }}" class="text-decoration-none">
+                            {{ file.original_name }}
+                        </a>
+                        <small class="text-muted ms-2">
+                            ({{ (file.file_size / 1024)|round(1) }} KB)
+                        </small>
+                        <br>
+                        <small class="text-muted">
+                            {{ _('Загрузил:') }} {{ file.uploader.first_name }} {{ file.uploader.last_name }}
+                        </small>
+                    </div>
+                    <div class="d-flex gap-1">
+                        <a href="{{ url_for('files.download_file', file_id=file.id) }}" class="btn btn-sm btn-outline-primary" title="{{ _('Скачать') }}">
+                            <i class="bi bi-download"></i>
+                        </a>
+                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                                data-bs-toggle="modal" data-bs-target="#accessFileModal{{ file.id }}"
+                                title="{{ _('Настроить доступ') }}">
+                            <i class="bi bi-shield-lock{% if file.is_private %}-fill text-warning{% endif %}"></i>
                         </button>
-                    </form>
+                        <form method="POST" action="{{ url_for('files.delete_file', file_id=file.id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('{{ _('Удалить файл?') }}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
+            {% endif %}
             {% endfor %}
         </div>
         {% endif %}
 
         {% if not subfolders and not files %}
-        <div class="alert alert-secondary">Папка пуста.</div>
+        <div class="alert alert-secondary">{{ _('Папка пуста.') }}</div>
         {% endif %}
     </div>
 
     <div class="col-md-4">
         <div class="card">
             <div class="card-header bg-light">
-                <i class="bi bi-info-circle"></i> Информация
+                <i class="bi bi-info-circle"></i> {{ _('Информация') }}
             </div>
             <div class="card-body">
-                <p><strong>Папка:</strong> {{ folder.name }}</p>
-                <p><strong>Создана:</strong> {{ folder.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
-                <p><strong>Создатель:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+                <p><strong>{{ _('Папка:') }}</strong> {{ folder.name }}</p>
+                <p><strong>{{ _('Создана:') }}</strong> {{ folder.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                <p><strong>{{ _('Создатель:') }}</strong> {{ user.first_name }} {{ user.last_name }}</p>
                 <hr>
-                <form method="POST" action="{{ url_for('files.delete_folder', folder_id=folder.id) }}" onsubmit="return confirm('Удалить папку и всё её содержимое?')">
+                <form method="POST" action="{{ url_for('files.delete_folder', folder_id=folder.id) }}"
+                      onsubmit="return confirm('{{ _('Удалить папку и всё её содержимое?') }}')">
                     <button type="submit" class="btn btn-danger w-100">
-                        <i class="bi bi-trash"></i> Удалить папку
+                        <i class="bi bi-trash"></i> {{ _('Удалить папку') }}
                     </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<!-- ============================================================ -->
+<!-- МОДАЛКИ: ДОСТУП К ФАЙЛАМ                                       -->
+<!-- ============================================================ -->
+{% for file in files %}
+{% set can_see = (not file.is_private) or (file.uploaded_by == user.id) or user.is_privileged or (file.access_list|selectattr('user_id', 'equalto', user.id)|list|length > 0) %}
+{% if can_see %}
+<div class="modal fade" id="accessFileModal{{ file.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('files.edit_file_access', file_id=file.id) }}">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-shield-lock"></i> {{ _('Доступ к файлу') }}
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted mb-3">
+                        <i class="bi bi-file-earmark"></i>
+                        {{ file.original_name }}
+                    </p>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="is_private"
+                               id="isPrivateAccess{{ file.id }}"
+                               {% if file.is_private %}checked{% endif %}
+                               onchange="toggleAccessPrivate({{ file.id }})">
+                        <label class="form-check-label" for="isPrivateAccess{{ file.id }}">
+                            <i class="bi bi-lock-fill"></i>
+                            {{ _('Приватный файл — видят только выбранные') }}
+                        </label>
+                    </div>
+
+                    <div id="accessRecipients{{ file.id }}"
+                         {% if not file.is_private %}style="display:none;"{% endif %}>
+                        <label class="form-label small">{{ _('Кому видно (кроме вас и админов)') }}</label>
+                        <div class="d-flex flex-wrap gap-2" style="max-height: 240px; overflow-y: auto;">
+                            {% set allowed_ids = file.access_list|map(attribute='user_id')|list %}
+                            {% for m in members %}
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="recipient_ids"
+                                       value="{{ m.user.id }}" id="accessRec{{ file.id }}_{{ m.user.id }}"
+                                       {% if m.user.id in allowed_ids %}checked{% endif %}>
+                                <label class="form-check-label small" for="accessRec{{ file.id }}_{{ m.user.id }}">
+                                    {{ m.user.first_name }} {{ m.user.last_name }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Отмена') }}</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> {{ _('Сохранить') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+<script>
+function togglePrivate() {
+    const check = document.getElementById('isPrivateCheck');
+    const rec = document.getElementById('privateRecipients');
+    if (check && rec) {
+        rec.style.display = check.checked ? 'block' : 'none';
+    }
+}
+
+function toggleAccessPrivate(fileId) {
+    const check = document.getElementById('isPrivateAccess' + fileId);
+    const rec = document.getElementById('accessRecipients' + fileId);
+    if (check && rec) {
+        rec.style.display = check.checked ? 'block' : 'none';
+    }
+}
+</script>
 {% endblock %}

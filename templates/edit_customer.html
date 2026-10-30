@@ -17,25 +17,28 @@
                     <div class="mb-3">
                         <label class="form-label">{{ _('Наименование организации') }} *</label>
                         <input type="text" name="name" class="form-control"
-                               value="{{ customer.name or '' }}"
-                               placeholder="{{ _('ООО «Ромашка»') }}" required autofocus>
+                               value="{{ form_data.get('name') or (customer.name or '') }}"
+                               placeholder="{{ _('ООО «Ромашка»') }}"
+                               maxlength="200" required autofocus>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">{{ _('ИНН') }}</label>
                             <input type="text" name="inn" class="form-control"
-                                   value="{{ customer.inn or '' }}"
+                                   value="{{ form_data.get('inn') or (customer.inn or '') }}"
                                    placeholder="{{ _('10 или 12 цифр') }}"
                                    pattern="[0-9]{10,12}"
+                                   maxlength="12"
                                    title="{{ _('ИНН должен содержать 10 или 12 цифр') }}">
                             <small class="text-muted">{{ _('10 цифр — юрлицо, 12 — ИП') }}</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">{{ _('Контактное лицо') }}</label>
                             <input type="text" name="contact_person" class="form-control"
-                                   value="{{ customer.contact_person or '' }}"
-                                   placeholder="{{ _('Иванов Иван Иванович') }}">
+                                   value="{{ form_data.get('contact_person') or (customer.contact_person or '') }}"
+                                   placeholder="{{ _('Иванов Иван Иванович') }}"
+                                   maxlength="100">
                         </div>
                     </div>
 
@@ -43,33 +46,41 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label">{{ _('Телефон') }}</label>
                             <input type="tel" name="phone" class="form-control"
-                                   value="{{ customer.phone or '' }}"
-                                   placeholder="+7 (___) ___-__-__">
+                                   value="{{ form_data.get('phone') or (customer.phone or '') }}"
+                                   placeholder="+7 (___) ___-__-__ ({{ _('доб.') }} ...)"
+                                   maxlength="50">
+                            <small class="text-muted">
+                                {{ _('Можно указать добавочный: (доб. 75-35)') }}
+                            </small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Email</label>
                             <input type="email" name="email" class="form-control"
-                                   value="{{ customer.email or '' }}"
-                                   placeholder="info@example.com">
+                                   value="{{ form_data.get('email') or (customer.email or '') }}"
+                                   placeholder="info@example.com"
+                                   maxlength="100">
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">{{ _('Адрес') }}</label>
                         <input type="text" name="address" class="form-control"
-                               value="{{ customer.address or '' }}"
-                               placeholder="{{ _('г. Москва, ул. Примерная, д. 1') }}">
+                               value="{{ form_data.get('address') or (customer.address or '') }}"
+                               placeholder="{{ _('г. Москва, ул. Примерная, д. 1') }}"
+                               maxlength="300">
                     </div>
 
                     <!-- Информация о правах -->
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle"></i>
-                        <strong>{{ _('Кто видит заказчика:') }}</strong>
-                        <ul class="mb-0 mt-1 small">
-                            <li>{{ _('Вы и все участники ваших проектов') }}</li>
-                            <li>{{ _('Если заказчик ещё не привязан ни к одному проекту — его видят все пользователи') }}</li>
-                            <li>{{ _('Глобальный администратор видит всех заказчиков') }}</li>
-                        </ul>
+                        <div>
+                            <strong>{{ _('Кто видит заказчика:') }}</strong>
+                            <ul class="mb-0 mt-1 small">
+                                <li>{{ _('Вы и все участники ваших проектов') }}</li>
+                                <li>{{ _('Если заказчик ещё не привязан ни к одному проекту — его видят все пользователи') }}</li>
+                                <li>{{ _('Глобальный администратор видит всех заказчиков') }}</li>
+                            </ul>
+                        </div>
                     </div>
 
                     <!-- Кнопки -->
@@ -89,16 +100,18 @@
         {% if customer.projects %}
         <div class="alert alert-secondary mt-3">
             <i class="bi bi-folder-fill"></i>
-            <strong>{{ _('Привязанные проекты') }} ({{ customer.projects|length }}):</strong>
-            <ul class="mb-0 mt-1 small">
-                {% for p in customer.projects %}
-                <li>
-                    <a href="{{ url_for('projects.view_project', project_id=p.id) }}">
-                        {{ p.name }}
-                    </a>
-                </li>
-                {% endfor %}
-            </ul>
+            <div>
+                <strong>{{ _('Привязанные проекты') }} ({{ customer.projects|length }}):</strong>
+                <ul class="mb-0 mt-1 small">
+                    {% for p in customer.projects %}
+                    <li>
+                        <a href="{{ url_for('projects.view_project', project_id=p.id) }}">
+                            {{ p.name }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
         {% endif %}
     </div>

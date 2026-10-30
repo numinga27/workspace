@@ -3,7 +3,6 @@
 
 {% set is_guest = is_guest_view|default(false) %}
 
-{# ← Определяем тип постановки через поля модели #}
 {% set task_from_privileged = task.is_from_privileged %}
 {% set task_from_admin = task.is_from_admin %}
 {% set task_from_supervisor = task.is_from_supervisor %}
@@ -24,15 +23,15 @@
 {% if is_guest %}
 <div class="alert alert-info mb-3">
     <i class="bi bi-info-circle"></i>
-    <strong>{{ _('Вы — гость проекта.') }}</strong>
-    {{ _('Вам доступна только эта задача. Здесь вы можете менять статус, оставить комментарий и видеть дедлайн.') }}
+    <div>
+        <strong>{{ _('Вы — гость проекта.') }}</strong>
+        {{ _('Вам доступна только эта задача. Здесь вы можете менять статус, оставить комментарий и видеть дедлайн.') }}
+    </div>
 </div>
 {% endif %}
 
 <div class="row">
-    <!-- ============================================================ -->
     <!-- ЛЕВАЯ КОЛОНКА -->
-    <!-- ============================================================ -->
     <div class="col-md-8">
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -58,7 +57,6 @@
                 {% endif %}
             </div>
 
-            {# ← Баннер «от админа/супервизора» #}
             {% if task_from_privileged %}
             <div class="px-3 pt-3">
                 <div class="d-flex align-items-center gap-2 p-2 rounded"
@@ -362,9 +360,7 @@
         {% endif %}
     </div>
 
-    <!-- ============================================================ -->
     <!-- ПРАВАЯ КОЛОНКА -->
-    <!-- ============================================================ -->
     <div class="col-md-4">
         <div class="card mb-3">
             <div class="card-header">
@@ -420,28 +416,61 @@
             </div>
         </div>
 
+        <!-- ФАЙЛЫ ЗАДАЧИ -->
         <div class="card mb-3">
             <div class="card-header">
                 <i class="bi bi-paperclip"></i> {{ _('Файлы задачи') }} ({{ files|length }})
             </div>
             <div class="card-body">
                 {% if not is_guest %}
-                <form method="POST" action="{{ url_for('files.upload_file', project_id=task.project_id) }}"
-                      enctype="multipart/form-data" class="mb-3">
+                <form method="POST"
+                      action="{{ url_for('files.upload_file', project_id=task.project_id) }}"
+                      enctype="multipart/form-data"
+                      class="mb-3">
                     <input type="hidden" name="task_id" value="{{ task.id }}">
-                    <div class="input-group input-group-sm">
-                        <input type="file" class="form-control" name="file" required>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-upload"></i>
-                        </button>
+
+                    <div class="mb-2">
+                        <label class="form-label small">{{ _('Файлы (можно несколько)') }}</label>
+                        <input type="file" class="form-control form-control-sm" name="files" multiple required>
                     </div>
+
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" name="is_private"
+                               id="isPrivateTaskCheck" onchange="togglePrivateTask()">
+                        <label class="form-check-label small" for="isPrivateTaskCheck">
+                            <i class="bi bi-lock-fill"></i>
+                            {{ _('Приватный файл — видят только выбранные') }}
+                        </label>
+                    </div>
+
+                    <div id="privateTaskRecipients" style="display:none;" class="mb-2">
+                        <label class="form-label small">{{ _('Кому видно (кроме вас и админов)') }}</label>
+                        <div class="d-flex flex-wrap gap-2" style="max-height: 200px; overflow-y: auto;">
+                            {% for m in members|default([]) %}
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="recipient_ids"
+                                       value="{{ m.user.id }}" id="taskRec{{ m.user.id }}">
+                                <label class="form-check-label small" for="taskRec{{ m.user.id }}">
+                                    {{ m.user.first_name }} {{ m.user.last_name }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-upload"></i> {{ _('Загрузить') }}
+                    </button>
                 </form>
                 {% endif %}
 
                 {% for file in files %}
                 <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded"
                      style="background: var(--bg-tertiary);">
-                    <div class="text-truncate" style="max-width: 200px;">
+                    <div class="text-truncate" style="max-width: 180px;">
+                        {% if file.is_private %}
+                        <i class="bi bi-lock-fill text-warning" title="{{ _('Приватный файл') }}"></i>
+                        {% endif %}
                         <i class="bi bi-file-earmark"></i>
                         <a href="{{ url_for('files.download_file', file_id=file.id) }}"
                            class="text-decoration-none small" title="{{ file.original_name }}">
@@ -449,12 +478,20 @@
                         </a>
                     </div>
                     {% if not is_guest %}
-                    <form method="POST" action="{{ url_for('files.delete_file', file_id=file.id) }}">
-                        <button type="submit" class="btn btn-sm btn-outline-secondary p-0 px-1"
-                                onclick="return confirm('{{ _('Удалить файл?') }}')">
-                            <i class="bi bi-trash-fill text-danger" style="font-size: 12px;"></i>
+                    <div class="d-flex gap-1">
+                        <button type="button" class="btn btn-sm btn-outline-secondary p-0 px-1"
+                                data-bs-toggle="modal" data-bs-target="#accessFileModal{{ file.id }}"
+                                title="{{ _('Настроить доступ') }}">
+                            <i class="bi bi-shield-lock{% if file.is_private %}-fill text-warning{% endif %}"
+                               style="font-size: 12px;"></i>
                         </button>
-                    </form>
+                        <form method="POST" action="{{ url_for('files.delete_file', file_id=file.id) }}">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary p-0 px-1"
+                                    onclick="return confirm('{{ _('Удалить файл?') }}')">
+                                <i class="bi bi-trash-fill text-danger" style="font-size: 12px;"></i>
+                            </button>
+                        </form>
+                    </div>
                     {% endif %}
                 </div>
                 {% else %}
@@ -528,7 +565,6 @@
                     <strong>{{ _('ID задачи:') }}</strong> #{{ task.id }}
                 </p>
 
-                {# ← НОВОЕ: постановщик (от администратора/супервизора) #}
                 {% if task_from_privileged %}
                     {% set poster = task.supervisor or task.task_creator %}
                     {% if poster %}
@@ -558,9 +594,7 @@
     </div>
 </div>
 
-<!-- ============================================================ -->
-<!-- МОДАЛКА РЕДАКТИРОВАНИЯ ЗАДАЧИ -->
-<!-- ============================================================ -->
+<!-- МОДАЛКА РЕДАКТИРОВАНИЯ -->
 {% if not is_guest and (can_manage or task.assigned_to == user.id) %}
 <div class="modal fade" id="editTaskModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -578,19 +612,16 @@
                         <input type="text" name="title" class="form-control"
                                value="{{ task.title }}" required>
                     </div>
-
                     <div class="mb-3">
                         <label class="form-label">{{ _('Описание') }}</label>
                         <textarea name="description" class="form-control"
                                   rows="3">{{ task.description or '' }}</textarea>
                     </div>
-
                     <div class="row g-2">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">{{ _('Исполнитель') }}</label>
                             <select name="assigned_to" class="form-select">
                                 <option value="">{{ _('— Не назначен —') }}</option>
-
                                 <optgroup label="{{ _('Команда') }}">
                                     {% for u in all_users %}
                                     <option value="user:{{ u.id }}"
@@ -599,7 +630,6 @@
                                     </option>
                                     {% endfor %}
                                 </optgroup>
-
                                 {% if project.customer and project.customer.contacts %}
                                 <optgroup label="{{ _('Заказчик:') }} {{ project.customer.name }}">
                                     {% for c in project.customer.contacts %}
@@ -610,7 +640,6 @@
                                     {% endfor %}
                                 </optgroup>
                                 {% endif %}
-
                                 {% if project.supplier and project.supplier.contacts %}
                                 <optgroup label="{{ _('Поставщик:') }} {{ project.supplier.name }}">
                                     {% for c in project.supplier.contacts %}
@@ -623,13 +652,11 @@
                                 {% endif %}
                             </select>
                         </div>
-
                         <div class="col-md-6 mb-3">
                             <label class="form-label">{{ _('Дедлайн') }}</label>
                             <input type="date" name="due_date" class="form-control"
                                    value="{{ task.due_date.strftime('%Y-%m-%d') if task.due_date else '' }}">
                         </div>
-
                         <div class="col-md-6 mb-3">
                             <label class="form-label">{{ _('Статус') }}</label>
                             <select name="status" class="form-select">
@@ -638,7 +665,6 @@
                                 <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>✅ {{ _('Завершена') }}</option>
                             </select>
                         </div>
-
                         <div class="col-md-6 mb-3">
                             <label class="form-label">{{ _('Веха') }}</label>
                             <select name="milestone_id" class="form-select">
@@ -664,5 +690,79 @@
     </div>
 </div>
 {% endif %}
+
+<!-- МОДАЛКИ ДОСТУПА К ФАЙЛАМ ЗАДАЧИ -->
+{% for file in files %}
+{% if not is_guest %}
+<div class="modal fade" id="accessFileModal{{ file.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('files.edit_file_access', file_id=file.id) }}">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-shield-lock"></i> {{ _('Доступ к файлу') }}
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted mb-3">
+                        <i class="bi bi-file-earmark"></i> {{ file.original_name }}
+                    </p>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="is_private"
+                               id="isPrivateAccess{{ file.id }}"
+                               {% if file.is_private %}checked{% endif %}
+                               onchange="toggleAccessPrivateTask({{ file.id }})">
+                        <label class="form-check-label" for="isPrivateAccess{{ file.id }}">
+                            <i class="bi bi-lock-fill"></i>
+                            {{ _('Приватный файл — видят только выбранные') }}
+                        </label>
+                    </div>
+
+                    <div id="accessRecipientsTask{{ file.id }}"
+                         {% if not file.is_private %}style="display:none;"{% endif %}>
+                        <label class="form-label small">{{ _('Кому видно (кроме вас и админов)') }}</label>
+                        <div class="d-flex flex-wrap gap-2" style="max-height: 240px; overflow-y: auto;">
+                            {% set allowed_ids = file.access_list|map(attribute='user_id')|list %}
+                            {% for m in members|default([]) %}
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="recipient_ids"
+                                       value="{{ m.user.id }}" id="accessRecTask{{ file.id }}_{{ m.user.id }}"
+                                       {% if m.user.id in allowed_ids %}checked{% endif %}>
+                                <label class="form-check-label small" for="accessRecTask{{ file.id }}_{{ m.user.id }}">
+                                    {{ m.user.first_name }} {{ m.user.last_name }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Отмена') }}</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> {{ _('Сохранить') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+<script>
+function togglePrivateTask() {
+    const check = document.getElementById('isPrivateTaskCheck');
+    const rec = document.getElementById('privateTaskRecipients');
+    if (check && rec) rec.style.display = check.checked ? 'block' : 'none';
+}
+
+function toggleAccessPrivateTask(fileId) {
+    const check = document.getElementById('isPrivateAccess' + fileId);
+    const rec = document.getElementById('accessRecipientsTask' + fileId);
+    if (check && rec) rec.style.display = check.checked ? 'block' : 'none';
+}
+</script>
 
 {% endblock %}

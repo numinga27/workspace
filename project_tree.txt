@@ -1,6 +1,7 @@
 .
 ├── app.py
 ├── app_old_backup.py
+├── babel.cfg
 ├── blueprints
 │   ├── __init__.py
 │   ├── admin.py
@@ -31,6 +32,7 @@
 ├── extensions.py
 ├── fix_urls.sh
 ├── fix_urls_pdf.sh
+├── messages.pot
 ├── models.py
 ├── project_tree.txt
 ├── requirements.txt
@@ -103,10 +105,15 @@
 │   └── user_all_tasks.html
 ├── test_crud.py
 ├── test_project.py
+├── translations
+│   ├── en
+│   │   └── LC_MESSAGES
+│   └── zh
+│       └── LC_MESSAGES
 ├── uploads
 │   └── 5ceed3e95a364a078cec79f97e6afc1f.log
 ├── utils.py
 ├── workspace.tar.gz
 └── wsgi.py
 
-14 directories, 96 files
+19 directories, 98 files
