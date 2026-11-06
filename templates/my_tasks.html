@@ -23,42 +23,54 @@
 </div>
 
 <!-- Статистика -->
-<div class="row g-3 mb-4">
-    <div class="col-md-3 col-6">
-        <div class="stat-card">
-            <div class="stat-icon" style="background: #e0e7ff; color: #4f46e5;">
-                <i class="bi bi-list-task"></i>
+<div class="row g-2 mb-3">
+    <div class="col-md-6 col-lg-3">
+        <a href="{{ url_for('tasks.my_tasks', task_filter='active', project=filter_project, status=filter_status) if filter_task != 'active' else url_for('tasks.my_tasks', project=filter_project, status=filter_status) }}"
+           class="text-decoration-none" style="display:block;">
+            <div class="stat-card {% if filter_task == 'active' %}border-primary{% endif %}">
+                <div class="stat-icon" style="background: #e0e7ff; color: #4f46e5;">
+                    <i class="bi bi-list-task"></i>
+                </div>
+                <div class="stat-number">{{ active|length }}</div>
+                <div class="stat-label">{{ _('Активных') }}</div>
             </div>
-            <div class="stat-number">{{ active|length }}</div>
-            <div class="stat-label">{{ _('Активных') }}</div>
-        </div>
+        </a>
     </div>
-    <div class="col-md-3 col-6">
-        <div class="stat-card {% if urgent %}border-warning{% endif %}">
-            <div class="stat-icon" style="background: #fef3c7; color: #f59e0b;">
-                <i class="bi bi-clock-history"></i>
+    <div class="col-md-6 col-lg-3">
+        <a href="{{ url_for('tasks.my_tasks', task_filter='urgent', project=filter_project, status=filter_status) if filter_task != 'urgent' else url_for('tasks.my_tasks', project=filter_project, status=filter_status) }}"
+           class="text-decoration-none" style="display:block;">
+            <div class="stat-card {% if filter_task == 'urgent' %}border-warning{% endif %} {% if urgent %}border-warning{% endif %}">
+                <div class="stat-icon" style="background: #fef3c7; color: #f59e0b;">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div class="stat-number">{{ urgent|length }}</div>
+                <div class="stat-label">{{ _('Срочных') }}</div>
             </div>
-            <div class="stat-number">{{ urgent|length }}</div>
-            <div class="stat-label">{{ _('Срочных') }}</div>
-        </div>
+        </a>
     </div>
-    <div class="col-md-3 col-6">
-        <div class="stat-card {% if overdue %}border-danger{% endif %}">
-            <div class="stat-icon" style="background: #fee2e2; color: #dc2626;">
-                <i class="bi bi-exclamation-triangle-fill"></i>
+    <div class="col-md-6 col-lg-3">
+        <a href="{{ url_for('tasks.my_tasks', task_filter='overdue', project=filter_project, status=filter_status) if filter_task != 'overdue' else url_for('tasks.my_tasks', project=filter_project, status=filter_status) }}"
+           class="text-decoration-none" style="display:block;">
+            <div class="stat-card {% if filter_task == 'overdue' %}border-danger{% endif %} {% if overdue %}border-danger{% endif %}">
+                <div class="stat-icon" style="background: #fee2e2; color: #dc2626;">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+                <div class="stat-number text-danger">{{ overdue|length }}</div>
+                <div class="stat-label">{{ _('Просрочено') }}</div>
             </div>
-            <div class="stat-number text-danger">{{ overdue|length }}</div>
-            <div class="stat-label">{{ _('Просрочено') }}</div>
-        </div>
+        </a>
     </div>
-    <div class="col-md-3 col-6">
-        <div class="stat-card">
-            <div class="stat-icon" style="background: #d1fae5; color: #10b981;">
-                <i class="bi bi-check-circle-fill"></i>
+    <div class="col-md-6 col-lg-3">
+        <a href="{{ url_for('tasks.my_tasks', status='completed', project=filter_project) if filter_status != 'completed' else url_for('tasks.my_tasks', project=filter_project) }}"
+           class="text-decoration-none" style="display:block;">
+            <div class="stat-card {% if filter_status == 'completed' %}border-success{% endif %}">
+                <div class="stat-icon" style="background: #d1fae5; color: #10b981;">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div class="stat-number">{{ completed|length }}</div>
+                <div class="stat-label">{{ _('Завершено') }}</div>
             </div>
-            <div class="stat-number">{{ completed|length }}</div>
-            <div class="stat-label">{{ _('Завершено') }}</div>
-        </div>
+        </a>
     </div>
 </div>
 

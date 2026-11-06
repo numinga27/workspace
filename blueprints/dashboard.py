@@ -40,6 +40,10 @@ def dashboard():
 
     filtered = projects
 
+    # По умолчанию скрываем завершенные и отменённые проекты
+    if not filter_status:
+        filtered = [p for p in filtered if p.status not in ('completed', 'cancelled')]
+
     if filter_company:
         if filter_company == '__no_company__':
             filtered = [p for p in filtered if not p.company_name]
@@ -105,6 +109,9 @@ def dashboard():
             if 0 <= days_left <= 3:
                 urgent_tasks.append(t)
 
+    # Пользователи для выбора при отправке уведомления
+    users_for_notification = User.query.order_by(User.first_name, User.last_name).all()
+
     return render_template('dashboard.html',
                            projects=filtered,
                            all_projects=projects,
@@ -122,7 +129,8 @@ def dashboard():
                            unread_todo_ids=unread_todo_ids,
                            my_active_tasks=my_active_tasks,
                            urgent_tasks=urgent_tasks,
-                           now=now)
+                           now=now,
+                           users_for_notification=users_for_notification)
 
 
 # ============================================================

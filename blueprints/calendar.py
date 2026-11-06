@@ -62,12 +62,19 @@ def my_calendar():
     ).options(joinedload(Event.project), joinedload(Event.creator))\
      .order_by(Event.start_time).all()
 
+    # Наборы project_id, которыми может управлять пользователь
+    manage_project_ids = set()
+    for p in projects:
+        if can_manage_project(p.id):
+            manage_project_ids.add(p.id)
+
     return render_template('my_calendar.html',
                            user=user,
                            personal_events=personal_events,
                            project_events=project_events,
                            recipient_events=recipient_events,
                            projects=projects,
+                           manage_project_ids=manage_project_ids,
                            now=utcnow())
 
 
@@ -317,14 +324,26 @@ def create_event(project_id):
         flash('Укажите дату события.', 'warning')
         return redirect(url_for('projects.view_project', project_id=project_id) + '#calendar')
 
+    # Универсальный парсинг даты/времени
+    def parse_dt(s):
+        for fmt in ('%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M', '%Y-%m-%d'):
+            try:
+                return datetime.strptime(s, fmt)
+            except ValueError:
+                continue
+        return None
+
+    start_time = parse_dt(start_str)
+    if not start_time:
+        flash('Неверный формат даты.', 'danger')
+        return redirect(url_for('projects.view_project', project_id=project_id) + '#calendar')
+
     if all_day:
-        start_time = datetime.strptime(start_str, '%Y-%m-%d')
         end_time = None
     else:
-        start_time = datetime.strptime(start_str, '%Y-%m-%dT%H:%M')
         end_time = None
         if end_str:
-            end_time = datetime.strptime(end_str, '%Y-%m-%dT%H:%M')
+            end_time = parse_dt(end_str)
 
     # Создаём событие
     event = Event(
@@ -422,6 +441,7 @@ def events_json(project_id):
             'textColor': '#ffffff',
             'extendedProps': {
                 'type': 'project_event',
+                'event_id': e.id,
                 'description': e.description or '',
                 'creator': f"{e.creator.first_name} {e.creator.last_name}" if e.creator else ''
             }
@@ -539,6 +559,100 @@ def events_json(project_id):
         })
 
     return jsonify(events)
+
+
+# ============================================================
+#  РЕДАКТИРОВАНИЕ СОБЫТИЯ
+# ============================================================
+
+@bp.route('/event/<int:event_id>/edit', methods=['GET'])
+@login_required
+def edit_event_get(event_id):
+    """Вернуть JSON для редактирования события."""
+    e = Event.query.get_or_404(event_id)
+    user = User.query.get(session['user_id'])
+
+    if e.event_type == 'personal':
+        if e.owner_id != user.id:
+            return jsonify({'error': 'Нет прав.'}), 403
+    else:
+        if not can_manage_project(e.project_id) and e.created_by != user.id:
+            return jsonify({'error': 'Нет прав.'}), 403
+
+    return jsonify({
+        'id': e.id,
+        'title': e.title,
+        'description': e.description or '',
+        'start_time': e.start_time.strftime('%Y-%m-%dT%H:%M') if not e.all_day else e.start_time.strftime('%Y-%m-%d'),
+        'all_day': e.all_day,
+        'color': e.color,
+        'event_type': e.event_type,
+        'project_id': e.project_id,
+    })
+
+
+@bp.route('/event/<int:event_id>/edit', methods=['POST'])
+@login_required
+def edit_event_post(event_id):
+    """Сохранить изменения события."""
+    e = Event.query.get_or_404(event_id)
+    user = User.query.get(session['user_id'])
+
+    if e.event_type == 'personal':
+        if e.owner_id != user.id:
+            flash('Нет прав.', 'danger')
+            return redirect(url_for('calendar.my_calendar'))
+    else:
+        if is_project_guest(user.id, e.project_id):
+            flash('Гости не могут редактировать события.', 'danger')
+            return redirect(url_for('tasks.my_tasks'))
+        if not can_manage_project(e.project_id) and e.created_by != user.id:
+            flash('Нет прав.', 'danger')
+            return redirect(url_for('projects.view_project', project_id=e.project_id))
+
+    title = request.form.get('title', '').strip()
+    description = request.form.get('description', '').strip()
+    start_str = request.form.get('start_time')
+    all_day = request.form.get('all_day') == 'on'
+    color = request.form.get('color', 'blue')
+
+    if not title:
+        flash('Введите название события.', 'warning')
+        return redirect(url_for('calendar.my_calendar'))
+
+    if not start_str:
+        flash('Укажите дату события.', 'warning')
+        return redirect(url_for('calendar.my_calendar'))
+
+    def parse_dt(s):
+        for fmt in ('%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M', '%Y-%m-%d'):
+            try:
+                return datetime.strptime(s, fmt)
+            except ValueError:
+                continue
+        return None
+
+    start_time = parse_dt(start_str)
+    if not start_time:
+        flash('Неверный формат даты.', 'danger')
+        return redirect(url_for('calendar.my_calendar'))
+
+    e.title = title
+    e.description = description
+    e.start_time = start_time
+    e.all_day = all_day
+    e.color = color
+    db.session.commit()
+
+    _log('edit_event', e, target_type='event',
+         details=f'Редактировано: {title}')
+
+    flash('Событие обновлено.', 'success')
+
+    if e.event_type == 'personal':
+        return redirect(url_for('calendar.my_calendar'))
+    else:
+        return redirect(url_for('projects.view_project', project_id=e.project_id) + '?_tab=calendar')
 
 
 # ============================================================

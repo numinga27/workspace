@@ -201,8 +201,10 @@ def notify_new_message(message, mentioned_user_ids=None):
     author = message.author
     author_name = f'{author.first_name} {author.last_name}' if author else '—'
     if message.reply_to:
-        quoted = message.reply_to.text[:40].replace('\n', ' ')
-        text_preview = f'↩ {quoted}\n{message.text[:120].replace(chr(10), " ")}'
+        reply_author = message.reply_to.author
+        reply_author_name = f'{reply_author.first_name}' if reply_author else '—'
+        quoted = message.reply_to.text[:30].replace('\n', ' ')
+        text_preview = f'↩ {reply_author_name}: "{quoted}"\n{message.text[:100].replace(chr(10), " ")}'
     else:
         text_preview = message.text[:120].replace('\n', ' ')
 
@@ -225,8 +227,14 @@ def notify_new_message(message, mentioned_user_ids=None):
             body = text_preview
             tag = f'mention-{message.id}'
         else:
-            title = f'💬 {author_name}'
-            body = f'{message.project.name}\n{text_preview}'
+            if message.reply_to:
+                reply_author = message.reply_to.author
+                reply_author_name = f'{reply_author.first_name}' if reply_author else '—'
+                title = f'↩ Ответ {author_name}'
+                body = f'{message.project.name}\n↩ {reply_author_name}: "{quoted}"\n{message.text[:80].replace(chr(10), " ")}'
+            else:
+                title = f'💬 {author_name}'
+                body = f'{message.project.name}\n{text_preview}'
             tag = f'msg-{message.id}'
 
         result.append({

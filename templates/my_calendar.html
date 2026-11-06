@@ -68,8 +68,8 @@
 </div>
 
 <!-- Статистика по типам -->
-<div class="row g-3 mb-4">
-    <div class="col-md-3 col-6">
+<div class="row g-2 mb-3">
+    <div class="col-md-6 col-lg-2">
         <div class="stat-card">
             <div class="stat-icon" style="background: #f3e8ff; color: #8b5cf6;">
                 <i class="bi bi-person-fill"></i>
@@ -78,7 +78,7 @@
             <div class="stat-label">{{ _('Личных событий') }}</div>
         </div>
     </div>
-    <div class="col-md-3 col-6">
+    <div class="col-md-6 col-lg-2">
         <div class="stat-card">
             <div class="stat-icon" style="background: #e0e7ff; color: #5b5bd6;">
                 <i class="bi bi-folder-fill"></i>
@@ -87,7 +87,7 @@
             <div class="stat-label">{{ _('Событий проектов') }}</div>
         </div>
     </div>
-    <div class="col-md-3 col-6">
+    <div class="col-md-6 col-lg-2">
         <div class="stat-card">
             <div class="stat-icon" style="background: #fef3c7; color: #f59e0b;">
                 <i class="bi bi-list-task"></i>
@@ -96,7 +96,7 @@
             <div class="stat-label">{{ _('Моих задач') }}</div>
         </div>
     </div>
-    <div class="col-md-3 col-6">
+    <div class="col-md-6 col-lg-2">
         <div class="stat-card">
             <div class="stat-icon" style="background: #cffafe; color: #0891b2;">
                 <i class="bi bi-check2-square"></i>
@@ -132,13 +132,24 @@
                 {% endif %}
             </div>
         </div>
-        <form method="POST" action="{{ url_for('calendar.delete_event', event_id=e.id) }}">
-            <button type="submit" class="btn btn-outline-secondary btn-sm"
-                    style="width: 32px; height: 32px; padding: 0;"
-                    onclick="return confirm('{{ _('Удалить событие?') }}')">
-                <i class="bi bi-trash-fill text-danger"></i>
+        <div class="d-flex gap-1">
+            <button type="button"
+                    class="btn-event-edit"
+                    data-event-id="{{ e.id }}"
+                    data-event-type="personal"
+                    style="width: 36px; height: 36px; display: inline-flex; justify-content: center; align-items: center; background: #5b5bd6; border: none; border-radius: 8px; box-shadow: 0 2px 6px rgba(91,91,214,0.3); cursor: pointer;"
+                    title="{{ _('Редактировать событие') }}">
+                <i class="bi bi-pencil" style="color: #fff; font-size: 16px; line-height: 1;"></i>
             </button>
-        </form>
+            <form method="POST" action="{{ url_for('calendar.delete_event', event_id=e.id) }}" class="m-0">
+                <button type="submit"
+                        style="width: 36px; height: 36px; display: inline-flex; justify-content: center; align-items: center; background: #fee2e2; border: none; border-radius: 8px; cursor: pointer;"
+                        onclick="return confirm('{{ _('Удалить событие?') }}')"
+                        title="{{ _('Удалить событие') }}">
+                    <i class="bi bi-trash-fill" style="color: #dc2626; font-size: 16px; line-height: 1;"></i>
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 {% endfor %}
@@ -151,6 +162,7 @@
     {{ _('События моих проектов') }} ({{ project_events|length }})
 </h5>
 {% for e in project_events %}
+{% set can_edit = (e.created_by == user.id) or (e.project and e.project.id in manage_project_ids) %}
 <div class="card mb-2 {% if e.start_time < now %}opacity-50{% endif %}">
     <div class="card-body py-2 d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center gap-3">
@@ -178,6 +190,30 @@
                 {% endif %}
             </div>
         </div>
+        {% if can_edit %}
+        <div class="d-flex gap-1 flex-shrink-0">
+            <button type="button"
+                    class="btn-event-edit"
+                    data-event-id="{{ e.id }}"
+                    data-event-type="project_event"
+                    style="width: 36px; height: 36px; display: inline-flex; justify-content: center; align-items: center; background: #5b5bd6; border: none; border-radius: 8px; box-shadow: 0 2px 6px rgba(91,91,214,0.3); cursor: pointer;"
+                    title="{{ _('Редактировать событие') }}">
+                <i class="bi bi-pencil" style="color: #fff; font-size: 16px; line-height: 1;"></i>
+            </button>
+            <form method="POST" action="{{ url_for('calendar.delete_event', event_id=e.id) }}" class="m-0">
+                <button type="submit"
+                        style="width: 36px; height: 36px; display: inline-flex; justify-content: center; align-items: center; background: #fee2e2; border: none; border-radius: 8px; cursor: pointer;"
+                        onclick="return confirm('{{ _('Удалить событие?') }}')"
+                        title="{{ _('Удалить событие') }}">
+                    <i class="bi bi-trash-fill" style="color: #dc2626; font-size: 16px; line-height: 1;"></i>
+                </button>
+            </form>
+        </div>
+        {% else %}
+        <div class="d-flex gap-1 flex-shrink-0">
+            <small class="text-muted" style="font-size: 11px;">{{ _('только просмотр') }}</small>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endfor %}
@@ -291,9 +327,201 @@
 </div>
 
 <!-- ============================================================ -->
+<!-- РЕДАКТИРОВАНИЕ СОБЫТИЯ -->
+<!-- ============================================================ -->
+<div class="modal fade" id="editEventModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-pencil-square"></i> Редактировать событие
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="editEventForm">
+                <input type="hidden" id="editEventId" name="event_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Название *</label>
+                        <input type="text" id="editEventTitle" name="title" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Описание</label>
+                        <textarea id="editEventDesc" name="description" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="editEventAllDay"
+                               onchange="toggleEditTimeFields()">
+                        <label class="form-check-label" for="editEventAllDay">Весь день</label>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Начало *</label>
+                            <input type="datetime-local" id="editEventTimeField" name="start_time"
+                                   class="form-control" style="display: none;">
+                            <input type="date" id="editEventDateField" name="start_time"
+                                   class="form-control" style="display: none;">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Цвет</label>
+                        <div class="d-flex gap-2">
+                            {% for color, hex in [('purple', '#8b5cf6'), ('blue', '#5b5bd6'), ('green', '#16a34a'), ('red', '#dc2626'), ('orange', '#f59e0b'), ('teal', '#0891b2')] %}
+                            <label style="cursor: pointer;">
+                                <input type="radio" name="color" value="{{ color }}"
+                                       {% if color == 'purple' %}checked{% endif %}
+                                       style="display: none;"
+                                       onchange="updateEditColorSelection(this)">
+                                <span class="color-dot {% if color == 'purple' %}selected{% endif %}"
+                                      style="background: {{ hex }};"></span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-info">
+                        <i class="bi bi-check-circle"></i> Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- МОДАЛКИ РЕДАКТИРОВАНИЯ СОБЫТИЙ (MY CALENDAR) -->
+<!-- ============================================================ -->
+{% for e in personal_events %}
+<div class="modal fade" id="editPersonalEventModal{{ e.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('calendar.edit_event_post', event_id=e.id) }}">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-pencil"></i> {{ _('Редактировать событие') }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Название') }} *</label>
+                        <input type="text" name="title" class="form-control" value="{{ e.title }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Описание') }}</label>
+                        <textarea name="description" class="form-control" rows="2">{{ e.description or '' }}</textarea>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="all_day"
+                               {% if e.all_day %}checked{% endif %}>
+                        <label class="form-check-label" for="">{{ _('Весь день') }}</label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Дата и время начала') }} *</label>
+                        {% if e.all_day %}
+                        <input type="date" name="start_time" class="form-control" value="{{ e.start_time.strftime('%Y-%m-%d') }}" required>
+                        {% else %}
+                        <input type="datetime-local" name="start_time" class="form-control"
+                               value="{{ e.start_time.strftime('%Y-%m-%dT%H:%M') }}" required>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Цвет') }}</label>
+                        <div class="d-flex gap-2">
+                            {% for color, hex in [('blue', '#5b5bd6'), ('green', '#16a34a'), ('red', '#dc2626'), ('orange', '#f59e0b'), ('purple', '#8b5cf6'), ('teal', '#0891b2')] %}
+                            <label style="cursor: pointer;">
+                                <input type="radio" name="color" value="{{ color }}"
+                                       {% if e.color == color %}checked{% endif %} style="display: none;">
+                                <span class="color-dot {% if e.color == color %}selected{% endif %}" style="background: {{ hex }};"></span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Отмена') }}</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> {{ _('Сохранить') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% for e in project_events %}
+<div class="modal fade" id="editProjectEventModal{{ e.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('calendar.edit_event_post', event_id=e.id) }}">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-pencil"></i> {{ _('Редактировать событие') }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Название') }} *</label>
+                        <input type="text" name="title" class="form-control" value="{{ e.title }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Описание') }}</label>
+                        <textarea name="description" class="form-control" rows="2">{{ e.description or '' }}</textarea>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="all_day"
+                               {% if e.all_day %}checked{% endif %}>
+                        <label class="form-check-label" for="">{{ _('Весь день') }}</label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Дата и время начала') }} *</label>
+                        {% if e.all_day %}
+                        <input type="date" name="start_time" class="form-control" value="{{ e.start_time.strftime('%Y-%m-%d') }}" required>
+                        {% else %}
+                        <input type="datetime-local" name="start_time" class="form-control"
+                               value="{{ e.start_time.strftime('%Y-%m-%dT%H:%M') }}" required>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ _('Цвет') }}</label>
+                        <div class="d-flex gap-2">
+                            {% for color, hex in [('blue', '#5b5bd6'), ('green', '#16a34a'), ('red', '#dc2626'), ('orange', '#f59e0b'), ('purple', '#8b5cf6'), ('teal', '#0891b2')] %}
+                            <label style="cursor: pointer;">
+                                <input type="radio" name="color" value="{{ color }}"
+                                       {% if e.color == color %}checked{% endif %} style="display: none;">
+                                <span class="color-dot {% if e.color == color %}selected{% endif %}" style="background: {{ hex }};"></span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Отмена') }}</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> {{ _('Сохранить') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- ============================================================ -->
 <!-- SCRIPTS -->
 <!-- ============================================================ -->
 <script>
+// ============================================================
+//  ДЕЛЕГИРОВАНИЕ КЛИКОВ НА КНОПКИ ✏️ — вешаем СРАЗУ
+// ============================================================
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.btn-event-edit');
+    if (btn) {
+        const eventId = btn.dataset.eventId;
+        const eventType = btn.dataset.eventType || 'personal';
+        if (typeof openEditEventModal === 'function') openEditEventModal(eventId, eventType);
+    }
+});
+
 let myCalendar = null;
 let mySelectedDateStr = null;
 let __prevFilterState = null;
@@ -302,7 +530,17 @@ let __prevFilterState = null;
 // ISO-НОМЕР НЕДЕЛИ
 // ============================================================
 function getISOWeek(date) {
-    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    let d;
+    if (date instanceof Date) {
+        d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    } else if (date && date.year && date.month) {
+        d = new Date(Date.UTC(date.year, date.month - 1, date.day));
+    } else if (typeof date === 'string') {
+        d = new Date(date);
+    } else {
+        return 1;
+    }
+    if (isNaN(d.getTime())) return 1;
     const dayNum = d.getUTCDay() || 7;
     d.setUTCDate(d.getUTCDate() + 4 - dayNum);
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
@@ -477,6 +715,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             const props = info.event.extendedProps;
+            const eventType = props.type;
+
+            // Личные события — открываем редактирование
+            if (eventType === 'personal') {
+                const eventId = info.event.id.replace('personal-', '');
+                openEditEventModal(eventId, 'personal');
+                return;
+            }
+
+            // События проектов — редактирование если есть права
+            if (eventType === 'project_event') {
+                const eventId = info.event.id.replace('event-', '');
+                openEditEventModal(eventId, 'project');
+                return;
+            }
+
+            // Остальные — показываем инфо
             let msg = info.event.title;
             if (props.description) msg += '\n\n' + props.description;
             if (props.project) msg += '\n\n{{ _("Проект:") }} ' + props.project;
@@ -739,6 +994,89 @@ function toggleMyTimeFields() {
 
 function updateMyColorSelection(radio) {
     document.querySelectorAll('#createPersonalEventModal .color-dot').forEach(dot => dot.classList.remove('selected'));
+    radio.parentElement.querySelector('.color-dot').classList.add('selected');
+}
+
+// ============================================================
+// РЕДАКТИРОВАНИЕ СОБЫТИЯ
+// ============================================================
+function openEditEventModal(eventId, eventType) {
+    fetch('/event/' + eventId + '/edit')
+        .then(r => {
+            if (r.status === 403) {
+                alert('Нет прав на редактирование.');
+                return null;
+            }
+            return r.json();
+        })
+        .then(data => {
+            if (!data || data.error) {
+                alert('Нет прав на редактирование.');
+                return;
+            }
+            document.getElementById('editEventId').value = data.id;
+            document.getElementById('editEventTitle').value = data.title;
+            document.getElementById('editEventDesc').value = data.description;
+            document.getElementById('editEventAllDay').checked = data.all_day;
+
+            // Устанавливаем выбранный цвет
+            document.querySelectorAll('#editEventModal input[name="color"]').forEach(radio => {
+                radio.checked = (radio.value === data.color);
+            });
+            updateEditColorSelectionForColor(data.color);
+
+            const timeField = document.getElementById('editEventTimeField');
+            const dateField = document.getElementById('editEventDateField');
+            if (data.all_day) {
+                timeField.style.display = 'none';
+                timeField.required = false;
+                dateField.style.display = 'block';
+                dateField.required = true;
+                dateField.value = data.start_time;
+            } else {
+                timeField.style.display = 'block';
+                timeField.required = true;
+                dateField.style.display = 'none';
+                dateField.required = false;
+                timeField.value = data.start_time;
+            }
+
+            new bootstrap.Modal(document.getElementById('editEventModal')).show();
+        })
+        .catch(err => {
+            console.error('Error loading event:', err);
+            alert('Ошибка загрузки события.');
+        });
+}
+
+function updateEditColorSelectionForColor(colorValue) {
+    document.querySelectorAll('#editEventModal .color-dot').forEach(dot => dot.classList.remove('selected'));
+    const radio = document.querySelector('#editEventModal input[name="color"][value="' + colorValue + '"]');
+    if (radio) {
+        radio.checked = true;
+        radio.parentElement.querySelector('.color-dot').classList.add('selected');
+    }
+}
+
+function toggleEditTimeFields() {
+    const checked = document.getElementById('editEventAllDay').checked;
+    const dateField = document.getElementById('editEventDateField');
+    const timeField = document.getElementById('editEventTimeField');
+    if (checked) {
+        dateField.style.display = 'block';
+        dateField.required = true;
+        timeField.style.display = 'none';
+        timeField.required = false;
+    } else {
+        dateField.style.display = 'none';
+        dateField.required = false;
+        timeField.style.display = 'block';
+        timeField.required = true;
+    }
+}
+
+function updateEditColorSelection(radio) {
+    document.querySelectorAll('#editEventModal .color-dot').forEach(dot => dot.classList.remove('selected'));
     radio.parentElement.querySelector('.color-dot').classList.add('selected');
 }
 </script>

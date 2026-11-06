@@ -1,0 +1,30 @@
+{
+  "name": "workspace-app",
+  "version": "1.0.1",
+  "private": true,
+  "description": "Workspace — управление проектами (native wrapper)",
+  "scripts": {
+    "start": "npx cap run android",
+    "ios": "npx cap run ios",
+    "android": "npx cap run android",
+    "open:android": "npx cap open android",
+    "open:ios": "npx cap open ios",
+    "sync": "npx cap sync"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/app": "^6.0.0",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/haptics": "^6.0.0",
+    "@capacitor/ios": "^8.6.0",
+    "@capacitor/keyboard": "^6.0.1",
+    "@capacitor/preferences": "^6.0.2",
+    "@capacitor/push-notifications": "^6.0.2",
+    "@capacitor/status-bar": "^6.0.0",
+    "@capawesome/capacitor-badge": "^7.0.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0",
+    "typescript": "^7.0.2"
+  }
+}

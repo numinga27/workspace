@@ -275,12 +275,22 @@ def view_project(project_id):
     members_for_filters = own_team + am_stanko_team
     managers_list = [m for m in members_for_filters if m.is_manager]
 
-    filter_assignee = request.args.getlist('filter_assignee', '')
-    filter_status = request.args.getlist('filter_status', '')
+    filter_assignee = request.args.getlist('filter_assignee')
+    filter_status = request.args.getlist('filter_status')
     filter_due_from = request.args.get('filter_due_from', '')
     filter_due_to = request.args.get('filter_due_to', '')
 
-    tasks_all = Task.query.filter_by(project_id=project.id, parent_task_id=None).all()
+    # ─── Пагинация задач ────────────────────────────────────────
+    TASKS_PER_PAGE = 30
+    task_page = request.args.get('task_page', 1, type=int)
+
+    # Eager loading пользователей для задач (selectin через модель)
+    tasks_all = (
+        Task.query
+        .filter_by(project_id=project.id, parent_task_id=None)
+        .order_by(Task.created_at.desc())
+        .all()
+    )
     tasks = list(tasks_all)
 
     if filter_assignee:
@@ -325,8 +335,17 @@ def view_project(project_id):
     todo_filter_due_from = request.args.get('todo_filter_due_from', '')
     todo_filter_due_to = request.args.get('todo_filter_due_to', '')
 
-    todos_all = Todo.query.filter_by(project_id=project.id)\
-        .order_by(Todo.is_done, Todo.created_at.desc()).all()
+    # ─── Пагинация To-Do ────────────────────────────────────────
+    TODOS_PER_PAGE = 30
+    todo_page = request.args.get('todo_page', 1, type=int)
+
+    # Eager loading пользователей для to-do (selectin через модель)
+    todos_all = (
+        Todo.query
+        .filter_by(project_id=project.id)
+        .order_by(Todo.is_done, Todo.created_at.desc())
+        .all()
+    )
     todos = list(todos_all)
 
     if todo_filter_assignee:
@@ -369,9 +388,16 @@ def view_project(project_id):
     total_messages = Message.query.filter_by(project_id=project.id).count()
     offset = max(0, total_messages - chat_page * CHAT_PER_PAGE)
     limit = CHAT_PER_PAGE
-    messages = Message.query.filter_by(project_id=project.id)\
-        .order_by(Message.created_at.asc())\
-        .offset(offset).limit(limit).all()
+
+    # Eager loading авторов сообщений (selectin через модель)
+    messages = (
+        Message.query
+        .filter_by(project_id=project.id)
+        .order_by(Message.created_at.asc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
 
     has_more_messages = offset > 0
 
@@ -390,6 +416,9 @@ def view_project(project_id):
     elif messages:
         # Если запись не найдена — все сообщения непрочитанные
         unread_ids = {msg.id for msg in messages if msg.user_id != user.id}
+
+    # Передаём в шаблон как список, отсортированный по времени
+    unread_ids_sorted = sorted(unread_ids, key=lambda mid: next(m.created_at for m in messages if m.id == mid))
 
     folders = Folder.query.filter_by(project_id=project.id, parent_folder_id=None).all()
     files = File.query.filter_by(
@@ -448,6 +477,9 @@ def view_project(project_id):
                            contact_persons=contact_persons,
                            tasks=tasks,
                            tasks_all=tasks_all,
+                           task_page=task_page,
+                           tasks_per_page=TASKS_PER_PAGE,
+                           total_tasks=len(tasks_all),
                            messages=messages,
                            total_messages=total_messages,
                            chat_page=chat_page,
@@ -459,17 +491,21 @@ def view_project(project_id):
                            user_role=get_user_role_in_project(project_id),
                            milestones=milestones,
                            todos=todos,
+                           todo_page=todo_page,
+                           todos_per_page=TODOS_PER_PAGE,
+                           total_todos=len(todos_all),
                            reports=reports,
-                           events=events,
-                           now=utcnow(),
-                           projects=get_user_projects(user),
-                           can_manage=can_manage_project(project_id),
+                            events=events,
+                            now=utcnow(),
+                            projects=get_user_projects(user),
+                            can_manage=can_manage_project(project_id),
+                            can_edit_event_ids=list(e.id for e in events if can_manage_project(project_id) or e.created_by == user.id),
                            overdue_milestones=overdue_milestones,
                            overdue_tasks=overdue_tasks,
                             project_overdue=project.is_overdue,
                             project_days_overdue=project.days_overdue,
                             todo_stats=get_todo_stats(project.id),
-                            unread_ids=unread_ids,
+                             unread_ids=unread_ids_sorted,
                            mentionable_admins=mentionable_admins,
                            filter_assignee=filter_assignee,
                            filter_status=filter_status,

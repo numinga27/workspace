@@ -1,0 +1,29 @@
+{
+  "appId": "com.workspace.app",
+  "appName": "Workspace",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https",
+    "url": "https://workspace.your-domain.com",
+    "cleartext": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1000,
+      "backgroundColor": "#6366f1",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP"
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#6366f1"
+    }
+  },
+  "android": {
+    "scheme": "workspace",
+    "package": "com.workspace.app"
+  },
+  "ios": {
+    "scheme": "workspace"
+  }
+}

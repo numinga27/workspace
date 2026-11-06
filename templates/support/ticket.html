@@ -11,6 +11,7 @@
 
 <div class="row justify-content-center">
     <div class="col-lg-10">
+        <input type="hidden" id="ticketId" value="{{ ticket.id }}">
 
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -79,11 +80,17 @@
                                 ↩ {{ m.reply_to.author.full_name }}: {{ m.reply_to.text[:60] }}
                             </div>
                             {% endif %}
-                            <div style="white-space: pre-wrap;">{{ m.text }}</div>
+                            <div class="message-text-container" data-msg-id="{{ m.id }}" data-original-text="{{ m.text|replace('"', '&quot;') }}" style="white-space: pre-wrap;">
+                                {{ m.text }}
+                                {% if m.updated_at and m.updated_at > m.created_at %}
+                                <span class="edited-badge small text-muted ms-1">({{ _('ред.') }})</span>
+                                {% endif %}
+                            </div>
                             {% if m.attachments %}
                             <div class="mt-1 d-flex flex-wrap gap-1">
                                 {% for att in m.attachments %}
-                                    {% set is_image = att.file_type and att.file_type.startswith('image/') or att.original_name|lower|endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp')) %}
+                                    {% set ext = att.original_name.rsplit('.', 1)[-1]|lower if '.' in att.original_name else '' %}
+                                    {% set is_image = (att.file_type and 'image' in att.file_type) or (ext in ('png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp')) %}
                                     {% if is_image %}
                                     <a href="{{ url_for('chat.download_attachment', file_id=att.id) }}" target="_blank">
                                         <img src="{{ url_for('chat.download_attachment', file_id=att.id) }}"
@@ -99,10 +106,22 @@
                             </div>
                             {% endif %}
                             <div class="small text-muted mt-2">{{ m.created_at.strftime('%d.%m.%Y %H:%M') }}</div>
-                            <button type="button" class="btn btn-sm btn-link p-0 small"
-                                    onclick="startReply({{ m.id }}, '{{ (m.author.full_name ~ ': ' ~ m.text[:60])|e }}')">
-                                ↩ {{ _('Ответить') }}
-                            </button>
+                            <div class="msg-actions small mt-1">
+                                <button type="button" class="btn btn-sm btn-link p-0"
+                                        onclick="startReply({{ m.id }}, '{{ (m.author.full_name ~ ': ' ~ m.text[:60])|e }}')">
+                                    ↩ {{ _('Ответить') }}
+                                </button>
+                                {% if m.author_id == user.id %}
+                                <button type="button" class="btn btn-sm btn-link p-0 ms-2 edit-btn"
+                                        data-msg-id="{{ m.id }}">
+                                    ✏️ {{ _('Изменить') }}
+                                </button>
+                                <button type="button" class="btn btn-sm btn-link p-0 ms-1 delete-btn"
+                                        data-msg-id="{{ m.id }}" data-ticket-id="{{ ticket.id }}">
+                                    🗑️ {{ _('Удалить') }}
+                                </button>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                     {% endfor %}
@@ -167,6 +186,102 @@ function clearReply() {
     document.getElementById('replyToId').value = '';
     document.getElementById('replyPreview').classList.add('d-none');
 }
+
+// ─── Edit / Delete messages (event delegation) ───────────────────
+document.addEventListener('click', function(e) {
+    const editBtn = e.target.closest('.edit-btn');
+    if (editBtn) {
+        const msgId = parseInt(editBtn.dataset.msgId);
+        startEdit(msgId);
+        return;
+    }
+    const delBtn = e.target.closest('.delete-btn');
+    if (delBtn) {
+        const msgId = parseInt(delBtn.dataset.msgId);
+        const ticketId = parseInt(delBtn.dataset.ticketId);
+        deleteMessage(msgId, ticketId);
+    }
+});
+
+function startEdit(msgId) {
+    const container = document.querySelector(`.message-text-container[data-msg-id="${msgId}"]`);
+    if (!container) return;
+    const currentText = container.textContent.replace(/\s*\(ред\.\)\s*$/, '').trim();
+    
+    container.innerHTML = `
+        <form onsubmit="saveEdit(event, ${msgId})" style="margin:0;">
+            <textarea class="form-control form-control-sm" rows="3" name="text" style="resize:vertical;">${currentText.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
+            <div class="d-flex gap-1 mt-1">
+                <button type="submit" class="btn btn-sm btn-primary">{{ _('Сохранить') }}</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="cancelEdit(${msgId})">{{ _('Отмена') }}</button>
+            </div>
+        </form>
+    `;
+    container.querySelector('textarea').focus();
+}
+
+function saveEdit(event, msgId) {
+    event.preventDefault();
+    const container = document.querySelector(`.message-text-container[data-msg-id="${msgId}"]`);
+    if (!container) return;
+    const form = container.querySelector('form');
+    const text = form.querySelector('textarea').value.trim();
+    if (!text) return;
+    
+    const formData = new FormData();
+    formData.append('text', text);
+    
+    fetch(`/support/message/${msgId}/edit`, {
+        method: 'POST',
+        body: formData,
+        headers: {'X-Requested-With': 'XMLHttpRequest'}
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            container.innerHTML = `<div style="white-space: pre-wrap;">${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div><span class="edited-badge small text-muted ms-1">(ред.)</span>`;
+        }
+    });
+}
+
+function cancelEdit(msgId) {
+    const container = document.querySelector(`.message-text-container[data-msg-id="${msgId}"]`);
+    if (!container) return;
+    const text = container.dataset.originalText || '';
+    container.innerHTML = `<div style="white-space: pre-wrap;">${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`;
+}
+
+function deleteMessage(msgId, ticketId) {
+    if (!confirm('{{ _('Удалить сообщение?') }}')) return;
+    
+    const formData = new FormData();
+    fetch(`/support/message/${msgId}/delete`, {
+        method: 'POST',
+        body: formData,
+        headers: {'X-Requested-With': 'XMLHttpRequest'}
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            const msgEl = document.getElementById('msg-' + msgId);
+            if (msgEl) msgEl.remove();
+        }
+    });
+}
 </script>
+
+<style>
+.msg-actions {
+    display: flex;
+    align-items: center;
+}
+.msg-actions .btn {
+    font-size: 11px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+.msg-actions .btn:hover {
+    opacity: 1;
+}
+.edited-badge {
+    font-style: italic;
+}
+</style>
 
 {% endblock %}

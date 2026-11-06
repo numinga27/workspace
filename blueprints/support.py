@@ -269,3 +269,54 @@ def unread_count():
     ).scalar() or 0
 
     return jsonify({'count': int(count)})
+
+
+# ============================================================
+#  РЕДАКТИРОВАНИЕ/УДАЛЕНИЕ СООБЩЕНИЙ ТИКЕТА
+# ============================================================
+
+@bp.route('/message/<int:msg_id>/edit', methods=['POST'])
+@login_required
+def edit_ticket_message(msg_id):
+    """Редактировать сообщение в тикете."""
+    user = User.query.get(session['user_id'])
+    msg = SupportMessage.query.get_or_404(msg_id)
+    ticket = SupportTicket.query.get(msg.ticket_id)
+
+    if not ticket or (ticket.user_id != user.id and not _is_admin(user)):
+        return jsonify({'error': 'Нет доступа.'}), 403
+
+    text = (request.form.get('text') or '').strip()
+    if not text:
+        return jsonify({'error': 'Сообщение не может быть пустым.'}), 400
+
+    msg.text = text
+    msg.updated_at = utcnow()
+    db.session.commit()
+
+    if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'success': True, 'text': text})
+
+    flash('Сообщение обновлено.', 'success')
+    return redirect(url_for('support.ticket_detail', ticket_id=ticket.id))
+
+
+@bp.route('/message/<int:msg_id>/delete', methods=['POST'])
+@login_required
+def delete_ticket_message(msg_id):
+    """Удалить сообщение в тикете."""
+    user = User.query.get(session['user_id'])
+    msg = SupportMessage.query.get_or_404(msg_id)
+    ticket = SupportTicket.query.get(msg.ticket_id)
+
+    if not ticket or (ticket.user_id != user.id and not _is_admin(user)):
+        return jsonify({'error': 'Нет доступа.'}), 403
+
+    db.session.delete(msg)
+    db.session.commit()
+
+    if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'success': True})
+
+    flash('Сообщение удалено.', 'success')
+    return redirect(url_for('support.ticket_detail', ticket_id=ticket.id))

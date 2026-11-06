@@ -242,6 +242,31 @@ def download_file(file_id):
 
 
 # ============================================================
+#  ПРЕВЬЮ ФАЙЛА (iframe)
+# ============================================================
+
+@bp.route('/file/<int:file_id>/preview')
+@login_required
+def preview_file(file_id):
+    f = File.query.get_or_404(file_id)
+    if not check_project_access(f.project_id):
+        flash('Нет доступа.', 'danger')
+        return redirect(url_for('dashboard.dashboard'))
+
+    user = User.query.get(session['user_id'])
+    if not _can_see_file(f, user):
+        flash('У вас нет доступа к этому файлу.', 'danger')
+        return redirect(url_for('projects.view_project', project_id=f.project_id))
+
+    return send_from_directory(
+        current_app.config['UPLOAD_FOLDER'],
+        f.stored_name,
+        download_name=f.original_name,
+        as_attachment=False,  # inline — для iframe
+    )
+
+
+# ============================================================
 #  УДАЛЕНИЕ
 # ============================================================
 

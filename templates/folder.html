@@ -117,6 +117,8 @@
             {% for file in files %}
             {% set can_see = (not file.is_private) or (file.uploaded_by == user.id) or user.is_privileged or (file.access_list|selectattr('user_id', 'equalto', user.id)|list|length > 0) %}
             {% if can_see %}
+            {% set ext = file.original_name.rsplit('.', 1)[-1]|lower if '.' in file.original_name else '' %}
+            {% set is_previewable = ext in ('pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'mp4', 'webm', 'ogg', 'mp3', 'wav') %}
             <div class="list-group-item">
                 <div class="d-flex justify-content-between align-items-start gap-2">
                     <div>
@@ -124,9 +126,15 @@
                         <i class="bi bi-lock-fill text-warning" title="{{ _('Приватный файл') }}"></i>
                         {% endif %}
                         <i class="bi bi-file-earmark"></i>
+                        {% if is_previewable %}
+                        <a href="javascript:void(0)" onclick="openFilePreview({{ file.id }}, '{{ file.original_name|replace("'", "\\'") }}')" class="text-decoration-none">
+                            {{ file.original_name }}
+                        </a>
+                        {% else %}
                         <a href="{{ url_for('files.download_file', file_id=file.id) }}" class="text-decoration-none">
                             {{ file.original_name }}
                         </a>
+                        {% endif %}
                         <small class="text-muted ms-2">
                             ({{ (file.file_size / 1024)|round(1) }} KB)
                         </small>
@@ -136,6 +144,11 @@
                         </small>
                     </div>
                     <div class="d-flex gap-1">
+                        {% if is_previewable %}
+                        <a href="javascript:void(0)" onclick="openFilePreview({{ file.id }}, '{{ file.original_name|replace("'", "\\'") }}')" class="btn btn-sm btn-outline-info" title="{{ _('Просмотр') }}">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% endif %}
                         <a href="{{ url_for('files.download_file', file_id=file.id) }}" class="btn btn-sm btn-outline-primary" title="{{ _('Скачать') }}">
                             <i class="bi bi-download"></i>
                         </a>
@@ -263,5 +276,49 @@ function toggleAccessPrivate(fileId) {
         rec.style.display = check.checked ? 'block' : 'none';
     }
 }
+
+// ─── File preview ──────────────────────────────────────────────
+function openFilePreview(fileId, fileName) {
+    const modalEl = document.getElementById('filePreviewModal');
+    const iframe = document.getElementById('filePreviewIframe');
+    const title = document.getElementById('filePreviewTitle');
+    
+    iframe.src = '{{ url_for("files.preview_file", file_id=0) }}'.replace('0', fileId);
+    title.textContent = fileName;
+    
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+}
+
+document.addEventListener('hidden.bs.modal', function(e) {
+    if (e.target.id === 'filePreviewModal') {
+        document.getElementById('filePreviewIframe').src = '';
+    }
+});
 </script>
+
+<!-- File Preview Modal -->
+<div class="modal fade" id="filePreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-file-earmark"></i>
+                    <span id="filePreviewTitle"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body p-0">
+                <iframe id="filePreviewIframe" style="width: 100%; height: 70vh; border: none;"></iframe>
+            </div>
+            <div class="modal-footer">
+                <a id="filePreviewDownload" href="#" class="btn btn-primary" target="_blank">
+                    <i class="bi bi-download"></i> {{ _('Скачать') }}
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Закрыть') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

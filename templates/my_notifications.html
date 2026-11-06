@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="mb-1">🔔 Мои уведомления</h2>
+        <p class="text-muted mb-0">
+            Все уведомления по проектам, задачам и чатам
+            {% if total_unread > 0 %}
+                · <span class="badge bg-primary">{{ total_unread }} новых</span>
+            {% endif %}
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        {% if total_unread > 0 %}
+        <form method="POST" action="{{ url_for('chat.my_notifications_mark_all_read') }}">
+            <button type="submit" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-check-all"></i> Прочитать все
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Вкладки -->
+<ul class="nav nav-tabs mb-4" id="notificationTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="received-tab" data-bs-toggle="tab" data-bs-target="#received" type="button" role="tab" aria-controls="received" aria-selected="true">
+            <i class="bi bi-inbox-fill"></i> Полученные
+            {% if total_unread > 0 %}
+            <span class="badge bg-primary ms-1">{{ total_unread }}</span>
+            {% endif %}
+        </button>
+    </li>
+    {% if can_manage %}
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="sent-tab" data-bs-toggle="tab" data-bs-target="#sent" type="button" role="tab" aria-controls="sent" aria-selected="false">
+            <i class="bi bi-send-fill"></i> Отправленные
+            <span class="badge bg-secondary ms-1">{{ sent_notifications|length }}</span>
+        </button>
+    </li>
+    {% endif %}
+</ul>
+
+<div class="tab-content" id="notificationTabsContent">
+    <!-- Полученные -->
+    <div class="tab-pane fade show active" id="received" role="tabpanel" aria-labelledby="received-tab">
+
+{% for pid, data in grouped_projects %}
+<div class="card mb-3">
+    <div class="card-header py-2 d-flex justify-content-between align-items-center"
+         style="background: var(--bg-tertiary);">
+        <span>
+            {% if data.project %}
+                <i class="bi bi-folder2"></i> {{ data.project.name }}
+            {% else %}
+                <i class="bi bi-globe"></i> Общие
+            {% endif %}
+        </span>
+        {% if data.unread_count > 0 %}
+        <span class="badge bg-primary">{{ data.unread_count }}</span>
+        {% endif %}
+    </div>
+    <div class="list-group list-group-flush">
+        {% for n in data.notifications %}
+        <div class="list-group-item list-group-item-action {% if not n.is_read %}border-start border-primary border-3{% endif %}"
+             style="{% if not n.is_read %}background: var(--bg-tertiary);{% endif %}">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+                <div class="flex-grow-1" style="min-width: 0;">
+                    <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                        {% if n.type == 'chat' %}
+                        <i class="bi bi-chat-dots-fill text-primary"></i>
+                        {% elif n.type == 'task' %}
+                        <i class="bi bi-list-task text-warning"></i>
+                        {% elif n.type == 'event' %}
+                        <i class="bi bi-calendar-event text-info"></i>
+                        {% elif n.type == 'admin' %}
+                        <i class="bi bi-shield-fill text-danger"></i>
+                        {% elif n.type == 'system' %}
+                        <i class="bi bi-gear-fill text-secondary"></i>
+                        {% elif n.type == 'mention' %}
+                        <i class="bi bi-at-circle text-success"></i>
+                        {% endif %}
+                        <strong class="small">{{ n.title }}</strong>
+                        {% if n.from_user %}
+                        <span class="small text-muted">· {{ n.from_user.first_name }} {{ n.from_user.last_name }}</span>
+                        {% endif %}
+                    </div>
+                    {% if n.body %}
+                    <p class="mb-0 small text-muted" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                        {{ n.body }}
+                    </p>
+                    {% endif %}
+                </div>
+                <div class="text-nowrap d-flex flex-column align-items-end gap-1">
+                    <div class="text-muted" style="font-size: 11px;">
+                        {{ n.created_at.strftime('%d.%m.%Y %H:%M') if n.created_at else '' }}
+                    </div>
+                    {% if user_role == 'admin' %}
+                    <div class="d-flex gap-1 flex-shrink-0">
+                        <button type="button" class="btn btn-sm btn-outline-info py-0 px-2"
+                                onclick="showReaders({{ n.id }}, '{{ n.title|replace("'", "\\'") }}', '{{ n.body|replace("'", "\\'") }}', '{{ n.type }}')"
+                                title="Кто прочитал">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2"
+                                onclick="editNotification({{ n.id }})"
+                                title="Редактировать">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2"
+                                onclick="deleteNotification({{ n.id }}, this)"
+                                title="Удалить">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+
+{% if not grouped_projects %}
+<div class="text-center py-5 text-muted">
+    <i class="bi bi-bell-slash" style="font-size: 48px; opacity: 0.3; display: block; margin-bottom: 12px;"></i>
+    <p class="mb-0">Уведомлений пока нет</p>
+</div>
+{% endif %}
+
+    </div>
+
+    <!-- Отправленные -->
+    {% if can_manage %}
+    <div class="tab-pane fade" id="sent" role="tabpanel" aria-labelledby="sent-tab">
+        {% for n in sent_notifications %}
+        <div class="card mb-2">
+            <div class="list-group-item list-group-item-action">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div class="flex-grow-1" style="min-width: 0;">
+                        <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                            {% if n.type == 'chat' %}
+                            <i class="bi bi-chat-dots-fill text-primary"></i>
+                            {% elif n.type == 'task' %}
+                            <i class="bi bi-list-task text-warning"></i>
+                            {% elif n.type == 'event' %}
+                            <i class="bi bi-calendar-event text-info"></i>
+                            {% elif n.type == 'admin' %}
+                            <i class="bi bi-shield-fill text-danger"></i>
+                            {% elif n.type == 'system' %}
+                            <i class="bi bi-gear-fill text-secondary"></i>
+                            {% elif n.type == 'mention' %}
+                            <i class="bi bi-at-circle text-success"></i>
+                            {% endif %}
+                            <strong class="small">{{ n.title }}</strong>
+                        </div>
+                        {% if n.body %}
+                        <p class="mb-0 small text-muted" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            {{ n.body }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    <div class="text-nowrap d-flex flex-column align-items-end gap-1">
+                        <div class="text-muted" style="font-size: 11px;">
+                            {{ n.created_at.strftime('%d.%m.%Y %H:%M') if n.created_at else '' }}
+                        </div>
+                        <div class="d-flex gap-1 flex-shrink-0">
+                            <button type="button" class="btn btn-sm btn-outline-info py-0 px-2"
+                                    onclick="showReaders({{ n.id }}, '{{ n.title|replace("'", "\\'") }}', '{{ n.body|replace("'", "\\'") }}', '{{ n.type }}')"
+                                    title="Кто прочитал">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2"
+                                    onclick="editNotification({{ n.id }})"
+                                    title="Редактировать">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2"
+                                    onclick="deleteNotification({{ n.id }}, this)"
+                                    title="Удалить">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if not sent_notifications %}
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-send-slash" style="font-size: 48px; opacity: 0.3; display: block; margin-bottom: 12px;"></i>
+            <p class="mb-0">Отправленных уведомлений пока нет</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Модалка редактирования -->
+<div class="modal fade" id="editNotifyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">✏️ Редактировать уведомление</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editNotifyForm">
+                <div class="modal-body">
+                    <input type="hidden" id="editNotifyId">
+                    <div class="mb-3">
+                        <label class="form-label small">Тип</label>
+                        <select id="editNotifyType" class="form-select form-select-sm">
+                            <option value="admin">📢 Административное</option>
+                            <option value="system">⚙️ Системное</option>
+                            <option value="chat">💬 Чат</option>
+                            <option value="task">📋 Задача</option>
+                            <option value="event">📅 Событие</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Заголовок *</label>
+                        <input type="text" id="editNotifyTitle" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Текст</label>
+                        <textarea id="editNotifyBody" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Ссылка</label>
+                        <input type="text" id="editNotifyUrl" class="form-control form-control-sm" value="/my-notifications">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-circle"></i> Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модалка кто прочитал -->
+<div class="modal fade" id="readersModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">👁️ Кто прочитал</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="readersBody">
+                <div class="text-center py-3"><i class="bi bi-hourglass-split"></i> Загрузка...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Поддержка вкладок по URL hash
+document.addEventListener('DOMContentLoaded', function() {
+    const params = new URLSearchParams(window.location.search);
+    const hash = window.location.hash.replace('#', '');
+    if (hash === 'sent') {
+        const tabLink = document.querySelector('#sent-tab');
+        if (tabLink && typeof bootstrap !== 'undefined') new bootstrap.Tab(tabLink).show();
+    }
+    // Обновляем hash при переключении вкладок
+    document.querySelectorAll('#notificationTabs button[data-bs-toggle="tab"]').forEach(function(btn) {
+        btn.addEventListener('shown.bs.tab', function(e) {
+            const target = e.target.getAttribute('data-bs-target');
+            const tabId = target.replace('#', '');
+            history.replaceState(null, '', '#' + tabId);
+        });
+    });
+});
+
+function deleteNotification(id, btn) {
+    if (!confirm('Удалить это уведомление?')) return;
+    fetch('/notification/' + id + '/delete', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                // Удаляем всю карточку (поднимаемся до card или card-header)
+                var item = btn.closest('.list-group-item') || btn.closest('.card');
+                var card = item ? item.closest('.card') : null;
+                if (card) {
+                    card.remove();
+                } else {
+                    item.remove();
+                }
+            }
+        });
+}
+
+function editNotification(id) {
+    fetch('/notification/' + id + '/edit')
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('editNotifyId').value = data.id;
+            document.getElementById('editNotifyTitle').value = data.title;
+            document.getElementById('editNotifyBody').value = data.body;
+            document.getElementById('editNotifyType').value = data.type;
+            document.getElementById('editNotifyUrl').value = data.url;
+            new bootstrap.Modal(document.getElementById('editNotifyModal')).show();
+        });
+}
+
+document.getElementById('editNotifyForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const id = document.getElementById('editNotifyId').value;
+    const formData = new FormData();
+    formData.append('title', document.getElementById('editNotifyTitle').value);
+    formData.append('body', document.getElementById('editNotifyBody').value);
+    formData.append('type', document.getElementById('editNotifyType').value);
+    formData.append('url', document.getElementById('editNotifyUrl').value);
+
+    fetch('/notification/' + id + '/edit', {
+        method: 'POST',
+        body: formData,
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+});
+
+function showReaders(nid, title, body, type) {
+    document.getElementById('readersBody').innerHTML = '<div class="text-center py-3"><i class="bi bi-hourglass-split"></i> Загрузка...</div>';
+    new bootstrap.Modal(document.getElementById('readersModal')).show();
+
+    fetch('/notification/' + nid + '/readers')
+        .then(r => r.json())
+        .then(data => {
+            let html = '<p class="small text-muted mb-3"><strong>' + title + '</strong><br>';
+            html += 'Отправлено: ' + data.total_sent + ' · Прочитано: ' + data.read_count + ' · Не прочитано: ' + data.unread_count + '</p>';
+
+            if (data.readers && data.readers.length > 0) {
+                html += '<h6 class="small fw-bold text-success mb-2"><i class="bi bi-check-circle"></i> Прочитали:</h6>';
+                html += '<ul class="list-group list-group-flush mb-3">';
+                data.readers.forEach(function(r) {
+                    html += '<li class="list-group-item py-1 px-0 small">';
+                    html += '<i class="bi bi-person-check text-success"></i> ' + r.name + ' <span class="text-muted">(' + r.role + ')</span>';
+                    if (r.read_at) {
+                        const d = new Date(r.read_at);
+                        html += ' · <span class="text-muted">' + d.toLocaleString('ru-RU', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) + '</span>';
+                    }
+                    html += '</li>';
+                });
+                html += '</ul>';
+            }
+
+            if (data.unread_count > 0) {
+                html += '<h6 class="small fw-bold text-muted mb-2"><i class="bi bi-person-x"></i> Не прочитали (' + data.unread_count + '):</h6>';
+                html += '<div class="small text-muted">Пользователи ID: ' + data.unread_user_ids.slice(0, 20).join(', ') + (data.unread_user_ids.length > 20 ? ' ...' : '') + '</div>';
+            }
+
+            if (data.readers.length === 0 && data.unread_count === 0) {
+                html += '<p class="text-muted">Нет данных</p>';
+            }
+
+            document.getElementById('readersBody').innerHTML = html;
+        });
+}
+</script>
+{% endblock %}

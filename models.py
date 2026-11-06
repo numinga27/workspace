@@ -113,16 +113,16 @@ class User(db.Model):
         'Project', backref='creator', lazy=True, foreign_keys='Project.created_by'
     )
     assigned_tasks = db.relationship(
-        'Task', backref='assignee', lazy=True, foreign_keys='Task.assigned_to'
+        'Task', backref='assignee', lazy='selectin', foreign_keys='Task.assigned_to'
     )
     created_tasks = db.relationship(
-        'Task', backref='task_creator', lazy=True, foreign_keys='Task.created_by'
+        'Task', backref='task_creator', lazy='selectin', foreign_keys='Task.created_by'
     )
     supervisor_tasks = db.relationship(
-        'Task', backref='supervisor', lazy=True, foreign_keys='Task.supervisor_id'
+        'Task', backref='supervisor', lazy='selectin', foreign_keys='Task.supervisor_id'
     )
-    messages = db.relationship('Message', backref='author', lazy=True)
-    uploaded_files = db.relationship('File', backref='uploader', lazy=True)
+    messages = db.relationship('Message', backref='author', lazy='selectin')
+    uploaded_files = db.relationship('File', backref='uploader', lazy='selectin')
     invitations_sent = db.relationship(
         'Invitation', backref='inviter', lazy=True, foreign_keys='Invitation.invited_by'
     )
@@ -130,12 +130,12 @@ class User(db.Model):
         'Milestone', backref='milestone_creator', lazy=True, foreign_keys='Milestone.created_by'
     )
     todos_assigned = db.relationship(
-        'Todo', backref='todo_assignee', lazy=True, foreign_keys='Todo.assigned_to'
+        'Todo', backref='todo_assignee', lazy='selectin', foreign_keys='Todo.assigned_to'
     )
     todos_created = db.relationship(
-        'Todo', backref='todo_creator', lazy=True, foreign_keys='Todo.created_by'
+        'Todo', backref='todo_creator', lazy='selectin', foreign_keys='Todo.created_by'
     )
-    reports = db.relationship('Report', backref='report_author', lazy=True)
+    reports = db.relationship('Report', backref='report_author', lazy='selectin')
     contact_profile = db.relationship(
         'ContactPerson', backref='user', uselist=False,
         foreign_keys='ContactPerson.user_id'
@@ -329,32 +329,41 @@ class Project(db.Model):
 
     @property
     def completion_percentage(self):
-        """Прогресс проекта = среднее по вехам.
+        """Прогресс = доля завершённых вех + доля задач текущей вехи, нормированная на вес вехи.
 
-        Каждая веха даёт:
-          - 1.0, если is_completed=True (флаг важнее задач);
-          - доля завершённых задач верхнего уровня этой вехи, иначе;
-          - 0, если задач нет и флаг не стоит.
-
-        Если вех нет — fallback на старую формулу (по задачам верхнего уровня).
+        Пример: 4 вехи, 1 завершена = 25% от вех.
+        В текущей вехе 4 задачи, 1 завершена = 25% от 25% = 6.25%.
+        Итого: 25% + 6.25% = 31%.
         """
         milestones = Milestone.query.filter_by(project_id=self.id)\
             .order_by(Milestone.order_index).all()
 
         if milestones:
-            total = 0.0
-            for m in milestones:
-                if m.is_completed:
-                    total += 1.0
-                else:
+            total_m = len(milestones)
+            completed_m = sum(1 for m in milestones if m.is_completed)
+
+            # Доля завершённых вех
+            progress = (completed_m / total_m) * 100
+
+            # Если есть незавершённая веха — добавляем прогресс задач текущей вехи
+            if completed_m < total_m:
+                current = None
+                for m in milestones:
+                    if not m.is_completed:
+                        current = m
+                        break
+                if current:
                     tasks = Task.query.filter_by(
-                        milestone_id=m.id, parent_task_id=None
+                        milestone_id=current.id, parent_task_id=None
                     ).all()
                     if tasks:
                         done = sum(1 for t in tasks if t.status == 'completed')
-                        total += done / len(tasks)
-            return min(100, int(total / len(milestones) * 100))
+                        # Нормировка: доля задач * вес одной вехи
+                        progress += (done / len(tasks)) * (100 / total_m)
 
+            return min(100, int(progress))
+
+        # Fallback: нет вех — считаем по задачам
         tasks = Task.query.filter_by(project_id=self.id, parent_task_id=None).all()
         if not tasks:
             return 0
@@ -778,6 +787,7 @@ class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=_utcnow)
+    updated_at = db.Column(db.DateTime, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
 
@@ -988,6 +998,46 @@ class FileAccess(db.Model):
 
 
 # ============================================================
+#  УВЕДОМЛЕНИЯ (внутри системы)
+# ============================================================
+
+class Notification(db.Model):
+    """Уведомления пользователя — задачи, события, чат, админ."""
+    __tablename__ = 'notification'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    # Тип: 'task', 'event', 'chat', 'admin', 'mention'
+    type = db.Column(db.String(30), nullable=False, default='chat')
+    title = db.Column(db.String(255), nullable=False)
+    body = db.Column(db.Text, nullable=True)
+    # Ссылка куда перейти
+    url = db.Column(db.String(500), nullable=True)
+    # Связь с сущностью
+    related_type = db.Column(db.String(50), nullable=True)  # 'task', 'message', 'event'
+    related_id = db.Column(db.Integer, nullable=True)
+    # Проект (если применимо)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=True)
+    # От кого
+    from_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
+    is_read = db.Column(db.Boolean, default=False, index=True)
+    created_at = db.Column(db.DateTime, default=_utcnow, index=True)
+
+    user = db.relationship('User', backref='notifications', foreign_keys=[user_id])
+    project = db.relationship('Project', backref='notifications')
+    from_user = db.relationship('User', foreign_keys=[from_user_id])
+
+    def __repr__(self):
+        return f'<Notification #{self.id} user={self.user_id} type={self.type} read={self.is_read}>'
+
+
+# ============================================================
 #  ПРИГЛАШЕНИЕ
 # ============================================================
 
@@ -1108,6 +1158,7 @@ class SupportMessage(db.Model):
     role = db.Column(db.String(20), default='user', index=True)
     text = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=_utcnow, index=True)
+    updated_at = db.Column(db.DateTime, nullable=True)
     is_read = db.Column(db.Boolean, default=False)
 
     # ← НОВОЕ: цитата (reply)

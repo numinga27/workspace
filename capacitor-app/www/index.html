@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#6366f1">
+    <title>Workspace</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+        .loading {
+            position: fixed;
+            inset: 0;
+            background: #6366f1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.3s;
+        }
+        .loading.hidden { opacity: 0; pointer-events: none; }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        .loading p { color: #fff; margin-top: 16px; font-size: 14px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+    <script type="module" src="/src/index.js"></script>
+</head>
+<body>
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Загрузка...</p>
+    </div>
+    <iframe id="app" src="" allow="camera; microphone; clipboard-write"></iframe>
+    <script>
+        const iframe = document.getElementById('app');
+        const loading = document.getElementById('loading');
+        
+        // Загружаем приложение
+        iframe.onload = () => {
+            setTimeout(() => loading.classList.add('hidden'), 500);
+        };
+        
+        // Отслеживаем навигацию для бэйджа
+        let lastBadge = 0;
+        function checkBadge() {
+            // Пытаемся получить счётчик непрочитанных из localStorage
+            try {
+                const unread = parseInt(localStorage.getItem('workspace_unread') || '0');
+                if (unread !== lastBadge) {
+                    lastBadge = unread;
+                    if (window.Capacitor && window.Capacitor.Plugins.Badge) {
+                        window.Capacitor.Plugins.Badge.setBadge({ badge: unread });
+                    }
+                }
+            } catch(e) {}
+        }
+        
+        // Обновляем бейдж каждые 5 секунд
+        setInterval(checkBadge, 5000);
+        
+        // Слушаем сообщения от iframe
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'update-badge') {
+                localStorage.setItem('workspace_unread', String(event.data.count));
+                checkBadge();
+            }
+        });
+    </script>
+</body>
+</html>

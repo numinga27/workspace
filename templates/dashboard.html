@@ -72,6 +72,89 @@
 {% endif %}
 
 <!-- ============================================================ -->
+<!-- Отправить уведомление (только админ/супервизор) -->
+<!-- ============================================================ -->
+{% if user.role in ['admin', 'supervisor'] %}
+<div class="card mb-4 notify-card" style="border-left: 4px solid {% if user.role == 'admin' %}#dc2626{% else %}#f59e0b{% endif %};">
+    <button class="card-header py-2 d-flex justify-content-between align-items-center w-100" style="background: {% if user.role == 'admin' %}#fef2f2{% else %}#fffbeb{% endif %}; border: none; cursor: pointer; padding: 0.5rem 1rem;" onclick="toggleNotifyForm()">
+        <span style="color: {% if user.role == 'admin' %}#991b1b{% else %}#92400e{% endif %};">
+            <i class="bi bi-bell-fill"></i>
+            <strong>{{ _('Отправить уведомление') }}</strong>
+        </span>
+        <i class="bi bi-chevron-down" id="notifyFormChevron" style="font-size: 14px;"></i>
+    </button>
+    <div id="notifyFormBody" style="display: none;">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.admin_send_notification') }}">
+                <div class="mb-3">
+                    <label class="form-label small">{{ _('Тип') }}</label>
+                    <select name="type" class="form-select form-select-sm">
+                        <option value="admin">📢 Административное</option>
+                        <option value="system">⚙️ Системное</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">{{ _('Заголовок') }} *</label>
+                    <input type="text" name="title" class="form-control form-control-sm" placeholder="{{ _('Например: Планёрка в 15:00') }}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">{{ _('Текст') }}</label>
+                    <textarea name="body" class="form-control" rows="2" placeholder="{{ _('Текст уведомления...') }}"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">{{ _('Кому') }}</label>
+                    <select name="target" class="form-select form-select-sm">
+                        <option value="all">{{ _('Всем пользователям') }}</option>
+                        {% for u in users_for_notification %}
+                        <option value="{{ u.id }}">{{ u.first_name }} {{ u.last_name }} ({{ u.role_display }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">{{ _('Перейти по ссылке') }}</label>
+                    <select name="url" class="form-select form-select-sm">
+                        <option value="/my-notifications">🔔 Мои уведомления</option>
+                        <option value="/my-tasks">📋 Мои задачи</option>
+                        <option value="/my-calendar">📅 Мой календарь</option>
+                        <option value="/">{{ _('Дашборд') }}</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="bi bi-send-fill"></i> {{ _('Отправить') }}
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+@media (max-width: 768px) {
+    .notify-card .card-header { padding: 0.5rem !important; }
+    .notify-card .card-body { padding: 0.75rem !important; }
+    .notify-card .form-label { font-size: 12px !important; }
+    .notify-card .form-control,
+    .notify-card .form-select { font-size: 14px !important; }
+}
+</style>
+
+<script>
+function toggleNotifyForm() {
+    const body = document.getElementById('notifyFormBody');
+    const chevron = document.getElementById('notifyFormChevron');
+    if (body.style.display === 'none') {
+        body.style.display = '';
+        chevron.classList.remove('bi-chevron-down');
+        chevron.classList.add('bi-chevron-up');
+    } else {
+        body.style.display = 'none';
+        chevron.classList.remove('bi-chevron-up');
+        chevron.classList.add('bi-chevron-down');
+    }
+}
+</script>
+
+<!-- ============================================================ -->
 <!-- Компактная статистика -->
 <!-- ============================================================ -->
 <div class="compact-stats">
@@ -179,14 +262,14 @@
             </div>
 
             <!-- Статус -->
-            <div class="col-md-1">
+            <div class="col-md-2">
                 <label class="form-label">{{ _('Статус') }}</label>
                 <select name="status" class="form-select">
                     <option value="">{{ _('Все') }}</option>
-                    <option value="active" {% if filter_status == 'active' %}selected{% endif %}>🟢</option>
-                    <option value="paused" {% if filter_status == 'paused' %}selected{% endif %}>⏸️</option>
-                    <option value="completed" {% if filter_status == 'completed' %}selected{% endif %}>✅</option>
-                    <option value="cancelled" {% if filter_status == 'cancelled' %}selected{% endif %}>❌</option>
+                    <option value="active" {% if filter_status == 'active' %}selected{% endif %}>🟢 Активный</option>
+                    <option value="paused" {% if filter_status == 'paused' %}selected{% endif %}>⏸️ На паузе</option>
+                    <option value="completed" {% if filter_status == 'completed' %}selected{% endif %}>✅ Завершён</option>
+                    <option value="cancelled" {% if filter_status == 'cancelled' %}selected{% endif %}>❌ Отменён</option>
                 </select>
             </div>
 

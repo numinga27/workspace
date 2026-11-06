@@ -3,30 +3,9 @@ from datetime import datetime, timezone
 import click
 
 from config import Config
-from extensions import db, mail, FLASK_MAIL_AVAILABLE, cache, babel
+from extensions import db, mail, FLASK_MAIL_AVAILABLE, cache, babel, celery_init_app
 from models import User
 from blueprints import register_blueprints
-
-
-# ============================================================
-#  ИНИЦИАЛИЗАЦИЯ CELERY
-# ============================================================
-
-def celery_init_app(app):
-    """Создает и настраивает Celery, привязанный к Flask-приложению."""
-    from celery import Celery, Task
-
-    class FlaskTask(Task):
-        """Задача, которая выполняется в контексте Flask-приложения."""
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return self.run(*args, **kwargs)
-
-    celery_app = Celery(app.name, task_cls=FlaskTask)
-    celery_app.config_from_object(app.config["CELERY"])
-    celery_app.set_default()
-    app.extensions["celery"] = celery_app
-    return celery_app
 
 
 # ============================================================
@@ -177,6 +156,17 @@ def create_app(config_class=Config):
             except Exception as e:
                 print(f'⚠️ Ошибка support_unread_count: {e}')
         return {'support_unread_count': 0}
+
+    @app.context_processor
+    def inject_unread_notifications():
+        from flask import session
+        from utils import get_unread_notifications_count
+        if 'user_id' in session:
+            try:
+                return {'unread_notifications_count': get_unread_notifications_count(session['user_id'])}
+            except Exception as e:
+                print(f'⚠️ Ошибка get_unread_notifications: {e}')
+        return {'unread_notifications_count': 0}
     @app.context_processor
     def inject_sidebar_projects():
         """Сайдбар на всех страницах: список проектов пользователя.

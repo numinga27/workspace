@@ -150,6 +150,15 @@
                 {% endif %}
             </a>
 
+            <a href="{{ url_for('chat.my_notifications') }}"
+               class="nav-item {% if request.endpoint == 'chat.my_notifications' %}active{% endif %}">
+                <i class="bi bi-bell-fill"></i>
+                <span>{{ _('Мои уведомления') }}</span>
+                {% if unread_notifications_count and unread_notifications_count > 0 %}
+                    <span class="nav-badge-new">{{ unread_notifications_count }}</span>
+                {% endif %}
+            </a>
+
             <a href="{{ url_for('chat.my_mentions') }}"
                class="nav-item {% if request.endpoint == 'chat.my_mentions' %}active{% endif %}">
                 <i class="bi bi-at"></i>
@@ -954,6 +963,115 @@
                 }
             });
         }
+    </script>
+
+    <!-- ============================================================ -->
+    <!--  ГЛОБАЛЬНЫЙ ПОИСК (Ctrl/⌘K)                                  -->
+    <!-- ============================================================ -->
+    <script>
+    (function() {
+        const input = document.getElementById('globalSearchInput');
+        const results = document.getElementById('globalSearchResults');
+        if (!input || !results) return;
+
+        let debounceTimer = null;
+        let activeIndex = -1;
+
+        function showResults(data) {
+            if (!data || data.length === 0) {
+                results.innerHTML = '<div class="global-search-empty">Ничего не найдено</div>';
+                results.classList.add('show');
+                return;
+            }
+
+            let html = '';
+            data.forEach(function(item) {
+                html += '<a class="global-search-item" href="' + item.url + '">'
+                    + '<i class="bi bi-' + item.icon + ' gs-icon"></i>'
+                    + '<div class="gs-content">'
+                    + '<div class="gs-title">' + item.title + '</div>'
+                    + '<div class="gs-subtitle">' + item.subtitle + '</div>'
+                    + '</div></a>';
+            });
+            results.innerHTML = html;
+            results.classList.add('show');
+        }
+
+        function closeResults() {
+            results.classList.remove('show');
+            results.innerHTML = '';
+            activeIndex = -1;
+        }
+
+        input.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const q = input.value.trim();
+            if (q.length < 2) {
+                closeResults();
+                return;
+            }
+            debounceTimer = setTimeout(function() {
+                fetch('/api/search?q=' + encodeURIComponent(q))
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) { showResults(data); })
+                    .catch(function() { closeResults(); });
+            }, 250);
+        });
+
+        input.addEventListener('focus', function() {
+            if (results.innerHTML.trim()) {
+                results.classList.add('show');
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.global-search-wrap')) {
+                closeResults();
+            }
+        });
+
+        input.addEventListener('keydown', function(e) {
+            const items = results.querySelectorAll('.global-search-item');
+            if (e.key === 'Escape') {
+                closeResults();
+                input.blur();
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeIndex = Math.min(activeIndex + 1, items.length - 1);
+                items.forEach(function(el, i) {
+                    el.classList.toggle('active', i === activeIndex);
+                });
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeIndex = Math.max(activeIndex - 1, -1);
+                items.forEach(function(el, i) {
+                    el.classList.toggle('active', i === activeIndex);
+                });
+            } else if (e.key === 'Enter' && activeIndex >= 0 && items[activeIndex]) {
+                e.preventDefault();
+                items[activeIndex].click();
+            }
+        });
+
+        // ⌘K / Ctrl+K shortcut
+        document.addEventListener('keydown', function(e) {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                if (document.activeElement === input) {
+                    input.blur();
+                } else {
+                    input.focus();
+                    input.select();
+                }
+            }
+            // ESC closes search and clears
+            if (e.key === 'Escape' && document.activeElement === input) {
+                input.value = '';
+                closeResults();
+                input.blur();
+            }
+        });
+    })();
     </script>
 </body>
 </html>

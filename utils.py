@@ -609,6 +609,17 @@ def get_unread_mentions_count(user_id):
     ).count()
 
 
+@memoize(timeout=60)
+def get_unread_notifications_count(user_id):
+    """Общее количество непрочитанных уведомлений пользователя."""
+    from models import Notification
+    if not user_id:
+        return 0
+    return Notification.query.filter_by(
+        user_id=user_id, is_read=False
+    ).count()
+
+
 def get_unread_mentions_by_project(user_id):
     """Словарь {project_id: count} непрочитанных упоминаний.
 

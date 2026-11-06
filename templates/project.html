@@ -496,68 +496,87 @@
             <!-- ЗАДАЧИ -->
             <div class="tab-pane fade show active" id="tasks" role="tabpanel">
 
-                <div class="card mb-3">
-                    <div class="card-body py-2">
-                        <form method="GET" action="{{ url_for('projects.view_project', project_id=project.id) }}" class="row g-2 align-items-end">
-                            <input type="hidden" name="_tab" value="tasks">
-                            <div class="col-md-3">
-                                <label class="form-label small mb-1">{{ _('Исполнитель') }}</label>
-                                <select name="filter_assignee" class="form-select form-select-sm">
-                                    <option value="">{{ _('Все') }}</option>
-                                    <option value="unassigned" {% if filter_assignee == 'unassigned' %}selected{% endif %}>{{ _('— Не назначен —') }}</option>
-                                    {% for m in members_for_filters %}
-                                    <option value="{{ m.user.id }}" {% if filter_assignee == m.user.id|string %}selected{% endif %}>
-                                        {{ m.user.first_name }} {{ m.user.last_name }}
-                                        {% if m.is_am_stanko %} · {{ m.role_display }}{% endif %}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label small mb-1">{{ _('Статус') }}</label>
-                                <div class="d-flex flex-column gap-1">
-                                    <div class="form-check form-check-inline mb-0">
-                                        <input class="form-check-input" type="checkbox" name="filter_status" value="new" id="fs_new"
-                                               {% if 'new' in filter_status %}checked{% endif %}>
-                                        <label class="form-check-label small" for="fs_new">🆕 {{ _('Новая') }}</label>
-                                    </div>
-                                    <div class="form-check form-check-inline mb-0">
-                                        <input class="form-check-input" type="checkbox" name="filter_status" value="in_progress" id="fs_in_progress"
-                                               {% if 'in_progress' in filter_status %}checked{% endif %}>
-                                        <label class="form-check-label small" for="fs_in_progress">🔄 {{ _('В работе') }}</label>
-                                    </div>
-                                    <div class="form-check form-check-inline mb-0">
-                                        <input class="form-check-input" type="checkbox" name="filter_status" value="completed" id="fs_completed"
-                                               {% if 'completed' in filter_status %}checked{% endif %}>
-                                        <label class="form-check-label small" for="fs_completed">✅ {{ _('Завершена') }}</label>
-                                    </div>
-                                    <div class="form-check form-check-inline mb-0">
-                                        <input class="form-check-input" type="checkbox" name="filter_status" value="overdue" id="fs_overdue"
-                                               {% if 'overdue' in filter_status %}checked{% endif %}>
-                                        <label class="form-check-label small" for="fs_overdue">⚠️ {{ _('Просрочена') }}</label>
+                <!-- Кнопка фильтр -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleFilter()" id="filterToggleBtn">
+                            <i class="bi bi-funnel"></i> {{ _('Фильтр') }}
+                        </button>
+                        <a href="{{ url_for('projects.view_project', project_id=project.id) }}?filter_status=completed&_tab=tasks"
+                           class="btn btn-sm btn-outline-success" title="{{ _('Показать только завершённые задачи') }}">
+                            <i class="bi bi-check-circle"></i> {{ _('Завершённые') }}
+                        </a>
+                        {% if filter_assignee or filter_status or filter_due_from or filter_due_to %}
+                        <span class="badge bg-primary">{{ _('Фильтр активен') }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Форма фильтра (скрыта по умолчанию) -->
+                <div id="filterForm" style="display: none;">
+                    <div class="card mb-3">
+                        <div class="card-body py-3">
+                            <form method="GET" action="{{ url_for('projects.view_project', project_id=project.id) }}" class="row g-2 align-items-end" id="taskFilterForm">
+                                <input type="hidden" name="_tab" value="tasks">
+                                <div class="col-md-3">
+                                    <label class="form-label small mb-1">{{ _('Исполнитель') }}</label>
+                                    <select name="filter_assignee" class="form-select form-select-sm">
+                                        <option value="">{{ _('Все') }}</option>
+                                        <option value="unassigned" {% if filter_assignee == 'unassigned' %}selected{% endif %}>{{ _('— Не назначен —') }}</option>
+                                        {% for m in members_for_filters %}
+                                        <option value="{{ m.user.id }}" {% if filter_assignee == m.user.id|string %}selected{% endif %}>
+                                            {{ m.user.first_name }} {{ m.user.last_name }}
+                                            {% if m.is_am_stanko %} · {{ m.role_display }}{% endif %}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label small mb-1">{{ _('Статус') }}</label>
+                                    <div class="d-flex flex-column gap-1">
+                                        <div class="form-check form-check-inline mb-0">
+                                            <input class="form-check-input" type="checkbox" name="filter_status" value="new" id="fs_new"
+                                                   {% if 'new' in filter_status %}checked{% endif %}>
+                                            <label class="form-check-label small" for="fs_new">🆕 {{ _('Новая') }}</label>
+                                        </div>
+                                        <div class="form-check form-check-inline mb-0">
+                                            <input class="form-check-input" type="checkbox" name="filter_status" value="in_progress" id="fs_in_progress"
+                                                   {% if 'in_progress' in filter_status %}checked{% endif %}>
+                                            <label class="form-check-label small" for="fs_in_progress">🔄 {{ _('В работе') }}</label>
+                                        </div>
+                                        <div class="form-check form-check-inline mb-0">
+                                            <input class="form-check-input" type="checkbox" name="filter_status" value="completed" id="fs_completed"
+                                                   {% if 'completed' in filter_status %}checked{% endif %}>
+                                            <label class="form-check-label small" for="fs_completed">✅ {{ _('Завершена') }}</label>
+                                        </div>
+                                        <div class="form-check form-check-inline mb-0">
+                                            <input class="form-check-input" type="checkbox" name="filter_status" value="overdue" id="fs_overdue"
+                                                   {% if 'overdue' in filter_status %}checked{% endif %}>
+                                            <label class="form-check-label small" for="fs_overdue">⚠️ {{ _('Просрочена') }}</label>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label small mb-1">{{ _('Дедлайн с') }}</label>
-                                <input type="date" name="filter_due_from" class="form-control form-control-sm" value="{{ filter_due_from or '' }}">
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label small mb-1">{{ _('по') }}</label>
-                                <input type="date" name="filter_due_to" class="form-control form-control-sm" value="{{ filter_due_to or '' }}">
-                            </div>
-                            <div class="col-md-3 d-flex gap-1">
-                                <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
-                                    <i class="bi bi-funnel"></i> {{ _('Применить') }}
-                                </button>
-                                {% if filter_assignee or filter_status or filter_due_from or filter_due_to %}
-                                <a href="{{ url_for('projects.view_project', project_id=project.id) }}?_tab=tasks"
-                                   class="btn btn-outline-secondary btn-sm" title="{{ _('Сбросить') }}">
-                                    <i class="bi bi-x-lg"></i>
-                                </a>
-                                {% endif %}
-                            </div>
-                        </form>
+                                <div class="col-md-2">
+                                    <label class="form-label small mb-1">{{ _('Дедлайн с') }}</label>
+                                    <input type="date" name="filter_due_from" class="form-control form-control-sm" value="{{ filter_due_from or '' }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label small mb-1">{{ _('по') }}</label>
+                                    <input type="date" name="filter_due_to" class="form-control form-control-sm" value="{{ filter_due_to or '' }}">
+                                </div>
+                                <div class="col-md-3 d-flex gap-1">
+                                    <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                                        <i class="bi bi-funnel"></i> {{ _('Применить') }}
+                                    </button>
+                                    {% if filter_assignee or filter_status or filter_due_from or filter_due_to %}
+                                    <a href="{{ url_for('projects.view_project', project_id=project.id) }}?_tab=tasks"
+                                       class="btn btn-outline-secondary btn-sm" title="{{ _('Сбросить') }}">
+                                        <i class="bi bi-x-lg"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
 
@@ -1379,7 +1398,7 @@
                         </h5>
 
                         {% for e in events %}
-                        <div class="card mb-2 {% if e.start_time < now %}opacity-75{% endif %}">
+                        <div class="card mb-2">
                             <div class="card-body py-2 d-flex justify-content-between align-items-center gap-2">
                                 <div class="d-flex align-items-center gap-3 flex-grow-1" style="min-width: 0;">
                                     <div style="width: 4px; height: 40px; border-radius: 2px; background: {{ e.color_hex }}; flex-shrink: 0;"></div>
@@ -1401,16 +1420,27 @@
                                         {% endif %}
                                     </div>
                                 </div>
-                                {% if can_manage %}
-                                <form method="POST" action="{{ url_for('calendar.delete_event', event_id=e.id) }}"
-                                      onsubmit="return confirm('{{ _('Удалить событие?') }}');" class="flex-shrink-0">
-                                    <button type="submit" class="btn btn-outline-secondary btn-sm"
-                                            style="width: 32px; height: 32px; padding: 0;"
-                                            title="{{ _('Удалить событие') }}">
-                                        <i class="bi bi-trash-fill text-danger"></i>
+                                <div class="d-flex gap-1 flex-shrink-0">
+                                    {% if e.id in can_edit_event_ids %}
+                                    <button type="button"
+                                            class="btn-event-edit"
+                                            data-event-id="{{ e.id }}"
+                                            style="width: 36px; height: 36px; display: inline-flex; justify-content: center; align-items: center; background: #5b5bd6; border: none; border-radius: 8px; box-shadow: 0 2px 6px rgba(91,91,214,0.3); cursor: pointer;"
+                                            title="{{ _('Редактировать событие') }}">
+                                        <i class="bi bi-pencil" style="color: #fff; font-size: 16px; line-height: 1;"></i>
                                     </button>
-                                </form>
-                                {% endif %}
+                                    {% endif %}
+                                    {% if can_manage %}
+                                    <form method="POST" action="{{ url_for('calendar.delete_event', event_id=e.id) }}"
+                                          onsubmit="return confirm('{{ _('Удалить событие?') }}');" class="m-0">
+                                        <button type="submit"
+                                                style="width: 36px; height: 36px; display: inline-flex; justify-content: center; align-items: center; background: #fee2e2; border: none; border-radius: 8px; cursor: pointer;"
+                                                title="{{ _('Удалить событие') }}">
+                                            <i class="bi bi-trash-fill" style="color: #dc2626; font-size: 16px; line-height: 1;"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
                         {% endfor %}
@@ -2130,10 +2160,145 @@
 </div>
 {% endfor %}
 
+<!-- МОДАЛКА ДЕТАЛЕЙ СОБЫТИЯ (из календаря) -->
+<div class="modal fade" id="eventDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-calendar-event"></i> Событие</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body"></div>
+        </div>
+    </div>
+</div>
+
+<!-- МОДАЛКИ РЕДАКТИРОВАНИЯ СОБЫТИЙ -->
+{% for e in events %}
+<div class="modal fade" id="editEventModal{{ e.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('calendar.edit_event_post', event_id=e.id) }}">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-pencil"></i> Редактировать событие</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Название *</label>
+                        <input type="text" name="title" class="form-control" value="{{ e.title }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Описание</label>
+                        <textarea name="description" class="form-control" rows="2">{{ e.description or '' }}</textarea>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="all_day" id="allDayEdit{{ e.id }}"
+                               {% if e.all_day %}checked{% endif %}>
+                        <label class="form-check-label" for="allDayEdit{{ e.id }}">Весь день</label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Дата и время начала *</label>
+                        {% if e.all_day %}
+                        <input type="date" name="start_time" class="form-control" value="{{ e.start_time.strftime('%Y-%m-%d') }}" required>
+                        {% else %}
+                        <input type="datetime-local" name="start_time" class="form-control"
+                               value="{{ e.start_time.strftime('%Y-%m-%dT%H:%M') }}" required>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Цвет</label>
+                        <div class="d-flex gap-2">
+                            {% for color, hex in [('blue', '#5b5bd6'), ('green', '#16a34a'), ('red', '#dc2626'), ('orange', '#f59e0b'), ('purple', '#8b5cf6'), ('teal', '#0891b2')] %}
+                            <label style="cursor: pointer;">
+                                <input type="radio" name="color" value="{{ color }}"
+                                       {% if e.color == color %}checked{% endif %} style="display: none;">
+                                <span class="color-dot {% if e.color == color %}selected{% endif %}" style="background: {{ hex }};"></span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- ============================================================ -->
+<!-- ДИНАМИЧЕСКАЯ МОДАЛКА РЕДАКТИРОВАНИЯ СОБЫТИЯ (из FullCalendar) -->
+<!-- ============================================================ -->
+<div class="modal fade" id="editEventModalDynamic" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="editEventFormDynamic">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="bi bi-pencil-square"></i> Редактировать событие</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Название *</label>
+                        <input type="text" id="editEventTitleDynamic" name="title" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Описание</label>
+                        <textarea id="editEventDescDynamic" name="description" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="editEventAllDayDynamic"
+                               onchange="toggleEditTimeFieldsProject()">
+                        <label class="form-check-label" for="editEventAllDayDynamic">Весь день</label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Дата и время начала *</label>
+                        <input type="datetime-local" id="editEventTimeFieldDynamic" name="start_time"
+                               class="form-control" style="display: none;">
+                        <input type="date" id="editEventDateFieldDynamic" name="start_time"
+                               class="form-control" style="display: none;">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Цвет</label>
+                        <div class="d-flex gap-2">
+                            {% for color, hex in [('blue', '#5b5bd6'), ('green', '#16a34a'), ('red', '#dc2626'), ('orange', '#f59e0b'), ('purple', '#8b5cf6'), ('teal', '#0891b2')] %}
+                            <label style="cursor: pointer;">
+                                <input type="radio" name="color" value="{{ color }}"
+                                       {% if loop.first %}checked{% endif %} style="display: none;"
+                                       onchange="updateEditColorSelectionProject(this)">
+                                <span class="color-dot {% if loop.first %}selected{% endif %}" style="background: {{ hex }};"></span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-info"><i class="bi bi-check-circle"></i> Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- ============================================================ -->
 <!-- SCRIPTS -->
 <!-- ============================================================ -->
 <script>
+// ============================================================
+//  ДЕЛЕГИРОВАНИЕ КЛИКОВ НА КНОПКИ ✏️ — вешаем СРАЗУ
+// ============================================================
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.btn-event-edit');
+    if (btn) {
+        const eventId = btn.dataset.eventId;
+        if (typeof tryEditEvent === 'function') tryEditEvent(eventId);
+    }
+});
+
 let calendarInitialized = false;
 let currentCalendar = null;
 let selectedDateStr = null;
@@ -2143,7 +2308,17 @@ const LEGEND_FILTER_KEY_PROJECT = 'calendarLegendFilters_project_{{ project.id }
 const ALL_TYPES_PROJECT = ['personal', 'project_event', 'task-new', 'task-progress', 'overdue', 'completed', 'milestone', 'todo'];
 
 function getISOWeek(date) {
-    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    let d;
+    if (date instanceof Date) {
+        d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    } else if (date && date.year && date.month) {
+        d = new Date(Date.UTC(date.year, date.month - 1, date.day));
+    } else if (typeof date === 'string') {
+        d = new Date(date);
+    } else {
+        return 1;
+    }
+    if (isNaN(d.getTime())) return 1;
     const dayNum = d.getUTCDay() || 7;
     d.setUTCDate(d.getUTCDate() + 4 - dayNum);
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
@@ -2255,6 +2430,38 @@ function applyLegendFiltersProject(force) {
     if (countEl) countEl.innerHTML = `{{ _('Показано:') }} <strong>${visible}</strong>`;
 }
 
+function showEventDetailModal(event) {
+    const props = event.extendedProps || {};
+    const color = event.backgroundColor || '#5b5bd6';
+    const eventId = event.extendedProps?.event_id || event.id;
+    const eventType = props.type || 'project_event';
+
+    let html = `
+        <div class="mb-3">
+            <strong style="font-size: 16px;">${event.title}</strong>
+        </div>
+        <div class="mb-2">
+            <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:${color};"></span>
+            ${event.start.toLocaleDateString('{{ get_locale() }}', {weekday:'long', year:'numeric', month:'long', day:'numeric'})}
+            ${event.start.toLocaleTimeString('{{ get_locale() }}', {hour:'2-digit', minute:'2-digit'})}
+        </div>
+        ${props.description ? `<div class="mb-3 text-muted">${props.description}</div>` : ''}
+        ${props.creator ? `<div class="mb-3 text-muted">👤 Создатель: ${props.creator}</div>` : ''}
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary btn-sm" onclick="openEditEventModalProject(${eventId}, '${eventType}')">
+                <i class="bi bi-pencil"></i> Редактировать
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Закрыть</button>
+        </div>
+    `;
+
+    const modalEl = document.getElementById('eventDetailModal');
+    if (modalEl) {
+        modalEl.querySelector('.modal-body').innerHTML = html;
+        new bootstrap.Modal(modalEl).show();
+    }
+}
+
 function initCalendar() {
     if (calendarInitialized) return;
     const calendarEl = document.getElementById('calendar');
@@ -2289,20 +2496,25 @@ function initCalendar() {
             list: '{{ _("Список") }}'
         },
         events: '{{ url_for("calendar.events_json", project_id=project.id) }}',
-        dateClick: function(info) { openDayModal(info.dateStr, info.date); },
-        eventClick: function(info) {
-            info.jsEvent.stopPropagation();
-            if (info.event.url) { window.location.href = info.event.url; info.jsEvent.preventDefault(); return; }
-            const props = info.event.extendedProps;
-            let msg = info.event.title;
-            if (props.description) msg += '\n\n' + props.description;
-            alert(msg);
-        },
+        dateClick: function(info) { openDayModal(info.dateStr, info.date);         },
         eventDidMount: function(info) {
             const props = info.event.extendedProps;
             let tooltip = info.event.title;
             if (props.description) tooltip += '\n' + props.description;
             info.el.title = tooltip;
+        },
+        eventClick: function(info) {
+            info.jsEvent.stopPropagation();
+            if (info.event.url) { window.location.href = info.event.url; info.jsEvent.preventDefault(); return; }
+            const props = info.event.extendedProps;
+            const eventType = props.type;
+            // События проекта и личные — пробуем открыть редактирование
+            if (eventType === 'project_event' || eventType === 'personal_event') {
+                const eventId = props.event_id || info.event.id.replace(/^[a-z]+-/, '');
+                tryEditEvent(eventId);
+                return;
+            }
+            showEventDetailModal(info.event);
         },
         dayCellDidMount: function(arg) {
             arg.el.style.cursor = 'pointer';
@@ -2319,11 +2531,6 @@ function initCalendar() {
         eventsSet: function() {
             restoreLegendFiltersProject();
             applyLegendFiltersProject(true);
-            setTimeout(() => {
-                if (currentCalendar && currentCalendar.view) {
-                    currentCalendar.render();
-                }
-            }, 50);
         }
     });
     currentCalendar.render();
@@ -2530,6 +2737,150 @@ function toggleTimeFields() {
 function updateColorSelection(radio) {
     document.querySelectorAll('.color-dot').forEach(dot => dot.classList.remove('selected'));
     radio.parentElement.querySelector('.color-dot').classList.add('selected');
+}
+
+// ============================================================
+//  ПОПРОБОВАТЬ ОТКРЫТЬ РЕДАКТИРОВАНИЕ (если нет прав — detail modal)
+// ============================================================
+function tryEditEvent(eventId) {
+    fetch('/event/' + eventId + '/edit')
+        .then(r => {
+            if (r.status === 403) {
+                // Нет прав — показываем detail modal
+                const events = currentCalendar ? currentCalendar.getEvents() : [];
+                const ev = events.find(e => {
+                    const eid = e.extendedProps?.event_id || e.id;
+                    return eid == eventId;
+                });
+                if (ev) showEventDetailModal(ev);
+                return;
+            }
+            return r.json();
+        })
+        .then(data => {
+            if (!data || data.error) {
+                return; // уже было обработано
+            }
+            // Есть права — открываем модалку редактирования
+            document.getElementById('editEventFormDynamic').action = '/event/' + eventId + '/edit';
+            document.getElementById('editEventTitleDynamic').value = data.title;
+            document.getElementById('editEventDescDynamic').value = data.description;
+            document.getElementById('editEventAllDayDynamic').checked = data.all_day;
+
+            document.querySelectorAll('#editEventModalDynamic input[name="color"]').forEach(radio => {
+                radio.checked = (radio.value === data.color);
+            });
+            updateEditColorSelectionProjectForColor(data.color);
+
+            const timeField = document.getElementById('editEventTimeFieldDynamic');
+            const dateField = document.getElementById('editEventDateFieldDynamic');
+            if (data.all_day) {
+                timeField.style.display = 'none';
+                timeField.required = false;
+                dateField.style.display = 'block';
+                dateField.required = true;
+                dateField.value = data.start_time;
+            } else {
+                timeField.style.display = 'block';
+                timeField.required = true;
+                dateField.style.display = 'none';
+                dateField.required = false;
+                timeField.value = data.start_time;
+            }
+
+            new bootstrap.Modal(document.getElementById('editEventModalDynamic')).show();
+        })
+        .catch(err => {
+            console.error('Error loading event for edit:', err);
+            alert('Ошибка загрузки события.');
+        });
+}
+
+// ============================================================
+//  РЕДАКТИРОВАНИЕ СОБЫТИЯ (динамическая модалка)
+// ============================================================
+function openEditEventModalProject(eventId, eventType) {
+    // Закрываем модалку деталей
+    const detailModal = bootstrap.Modal.getInstance(document.getElementById('eventDetailModal'));
+    if (detailModal) detailModal.hide();
+
+    fetch('/event/' + eventId + '/edit')
+        .then(r => {
+            if (r.status === 403) {
+                alert('Нет прав на редактирование.');
+                return null;
+            }
+            return r.json();
+        })
+        .then(data => {
+            if (!data || data.error) {
+                alert('Нет прав на редактирование.');
+                return;
+            }
+            document.getElementById('editEventFormDynamic').action = '/event/' + eventId + '/edit';
+            document.getElementById('editEventTitleDynamic').value = data.title;
+            document.getElementById('editEventDescDynamic').value = data.description;
+            document.getElementById('editEventAllDayDynamic').checked = data.all_day;
+
+            // Устанавливаем выбранный цвет
+            document.querySelectorAll('#editEventModalDynamic input[name="color"]').forEach(radio => {
+                radio.checked = (radio.value === data.color);
+            });
+            updateEditColorSelectionProjectForColor(data.color);
+
+            const timeField = document.getElementById('editEventTimeFieldDynamic');
+            const dateField = document.getElementById('editEventDateFieldDynamic');
+            if (data.all_day) {
+                timeField.style.display = 'none';
+                timeField.required = false;
+                dateField.style.display = 'block';
+                dateField.required = true;
+                dateField.value = data.start_time;
+            } else {
+                timeField.style.display = 'block';
+                timeField.required = true;
+                dateField.style.display = 'none';
+                dateField.required = false;
+                timeField.value = data.start_time;
+            }
+
+            new bootstrap.Modal(document.getElementById('editEventModalDynamic')).show();
+        })
+        .catch(err => {
+            console.error('Error loading event:', err);
+            alert('Ошибка загрузки события.');
+        });
+}
+
+function toggleEditTimeFieldsProject() {
+    const checked = document.getElementById('editEventAllDayDynamic').checked;
+    const dateField = document.getElementById('editEventDateFieldDynamic');
+    const timeField = document.getElementById('editEventTimeFieldDynamic');
+    if (checked) {
+        dateField.style.display = 'block';
+        dateField.required = true;
+        timeField.style.display = 'none';
+        timeField.required = false;
+    } else {
+        dateField.style.display = 'none';
+        dateField.required = false;
+        timeField.style.display = 'block';
+        timeField.required = true;
+    }
+}
+
+function updateEditColorSelectionProject(radio) {
+    document.querySelectorAll('#editEventModalDynamic .color-dot').forEach(dot => dot.classList.remove('selected'));
+    radio.parentElement.querySelector('.color-dot').classList.add('selected');
+}
+
+function updateEditColorSelectionProjectForColor(colorValue) {
+    document.querySelectorAll('#editEventModalDynamic .color-dot').forEach(dot => dot.classList.remove('selected'));
+    const radio = document.querySelector('#editEventModalDynamic input[name="color"][value="' + colorValue + '"]');
+    if (radio) {
+        radio.checked = true;
+        radio.parentElement.querySelector('.color-dot').classList.add('selected');
+    }
 }
 
 // ← Показать/скрыть выбор получателей для приватного файла (при загрузке)
@@ -2839,5 +3190,4 @@ function showAttachPreview(input) {
     text-transform: uppercase;
 }
 </style>
-
 {% endblock %}

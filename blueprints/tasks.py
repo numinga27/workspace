@@ -87,12 +87,20 @@ def _build_tasks_context(target_user, current_user, apply_pagination=False):
 
     filter_project = request.args.get('project', '')
     filter_status = request.args.get('status', '')
+    filter_task = request.args.get('task_filter', '')  # active | urgent | overdue
 
     filtered_tasks = all_tasks
     if filter_project:
         filtered_tasks = [t for t in filtered_tasks if str(t.project_id) == filter_project]
     if filter_status:
         filtered_tasks = [t for t in filtered_tasks if t.status == filter_status]
+    if filter_task == 'active':
+        filtered_tasks = [t for t in filtered_tasks if t.status in ('new', 'in_progress')]
+    elif filter_task == 'urgent':
+        now = utcnow()
+        filtered_tasks = [t for t in filtered_tasks if t.due_date and 0 <= (t.due_date - now).days <= 3]
+    elif filter_task == 'overdue':
+        filtered_tasks = [t for t in filtered_tasks if t.is_overdue]
 
     pagination = None
     if apply_pagination:
@@ -126,6 +134,7 @@ def _build_tasks_context(target_user, current_user, apply_pagination=False):
         'projects': projects,
         'filter_project': filter_project,
         'filter_status': filter_status,
+        'filter_task': filter_task,
         'now': now,
         'is_guest_user': is_guest_user,
     }
@@ -155,6 +164,7 @@ def my_tasks():
                            projects=ctx['projects'],
                            filter_project=ctx['filter_project'],
                            filter_status=ctx['filter_status'],
+                           filter_task=ctx['filter_task'],
                            now=ctx['now'],
                            is_guest_user=ctx['is_guest_user'],
                            unread_task_ids=unread_task_ids,
