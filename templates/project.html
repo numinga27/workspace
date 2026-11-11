@@ -206,60 +206,56 @@
             </div>
 
             {% if milestones and total_project_days %}
-            {# ─── ШКАЛА С ВЕХАМИ (в масштабе) ─── #}
-            <div style="position: relative; flex-grow: 1; min-width: 240px; height: 40px; margin: 24px 12px 18px 12px;">
+            {# ─── ПРОГРЕСС-БАР + ШКАЛА ВЕХ ─── #}
+            <div style="flex: 1 1 300px; max-width: 60%; min-width: 200px; margin: 0 8px;">
+                <div style="position: relative; height: 8px; width: 100%;">
+                    <!-- Прогресс-бар + точки в одном контейнере -->
+                    <div style="position: absolute; top: 0; left: 0; right: 0; height: 8px;
+                                background: #d1d5db; border-radius: 4px;">
+                        <div style="height: 100%; width: {{ project.completion_percentage }}%;
+                                    background: linear-gradient(90deg, #22c55e, #16a34a);
+                                    border-radius: 4px; transition: width 0.3s;"></div>
+                    </div>
+                    <!-- Точки вех — по центру прогресс-бара -->
+                    {% for m in milestones %}
+                        {% if m.due_date %}
+                            {% set days_from_start = (m.due_date - project_start).days %}
+                            {% set position = (days_from_start / total_project_days * 100) %}
+                            {% if position < 0 %}{% set position = 0 %}{% endif %}
+                            {% if position > 100 %}{% set position = 100 %}{% endif %}
+                            {% set is_current = project.current_milestone and project.current_milestone.id == m.id %}
 
-                <div style="position: absolute; top: 18px; left: 0; right: 0; height: 8px;
-                            background: #e5e7eb; border-radius: 4px;"></div>
+                            <div class="ms-dot"
+                                 data-position="{{ position }}"
+                                 data-name="{{ m.name|replace('"', '\\"') }}"
+                                 data-due="{{ m.due_date.strftime('%d.%m.%Y') }}"
+                                 data-overdue="{{ m.is_overdue|lower }}"
+                                 data-completed="{{ m.is_completed|lower }}"
+                                 data-current="{{ is_current|lower }}"
+                                 style="position: absolute; top: 50%; left: {{ position }}%;
+                                        transform: translate(-50%, -50%); cursor: pointer; z-index: 10;">
 
-                <div style="position: absolute; top: 18px; left: 0; height: 8px;
-                            width: {{ project.completion_percentage }}%;
-                            background: linear-gradient(90deg, #4f46e5, #6366f1);
-                            border-radius: 4px;"></div>
+                                <div class="tooltip">
+                                    {{ m.name }} · {{ m.due_date.strftime('%d.%m.%Y') }}
+                                    {% if m.is_overdue %} · +{{ m.days_overdue }} дн.{% endif %}
+                                </div>
 
-                {% for m in milestones %}
-                    {% if m.due_date %}
-                        {% set days_from_start = (m.due_date - project_start).days %}
-                        {% set position = (days_from_start / total_project_days * 100) %}
-                        {% if position < 0 %}{% set position = 0 %}{% endif %}
-                        {% if position > 100 %}{% set position = 100 %}{% endif %}
-                        {% set is_current = project.current_milestone and project.current_milestone.id == m.id %}
-
-                        <div style="position: absolute; top: 0; left: {{ position }}%;
-                                    transform: translateX(-50%); text-align: center;">
-
-                            <div style="font-size: 10px; font-weight: 600; white-space: nowrap;
-                                        margin-bottom: 2px; max-width: 120px; overflow: hidden; text-overflow: ellipsis;
-                                        color: {% if m.is_completed %}#16a34a{% elif m.is_overdue %}#dc2626{% elif is_current %}#5b5bd6{% else %}#6b7280{% endif %};
-                                        {% if is_current %}background: #eef0ff; padding: 1px 6px; border-radius: 4px;{% endif %}"
-                                 title="{{ m.name }}{% if m.due_date %} · {{ m.due_date.strftime('%d.%m.%Y') }}{% endif %}{% if m.is_overdue %} · +{{ m.days_overdue }} {{ _('дн.') }}{% endif %}">
-                                {% if is_current %}▶ {{ _('Текущая') }}{% else %}{{ m.name }}{% endif %}
+                                <div style="width: 14px; height: 14px; border-radius: 50%;
+                                            {% if m.is_completed %}
+                                                background: #16a34a; border: 2px solid #16a34a;
+                                            {% elif m.is_overdue %}
+                                                background: #dc2626; border: 2px solid #dc2626;
+                                            {% elif is_current %}
+                                                background: #5b5bd6; border: 2px solid #5b5bd6;
+                                                box-shadow: 0 0 0 4px rgba(91,91,214,0.2);
+                                            {% else %}
+                                                background: white; border: 2px solid #9ca3af;
+                                            {% endif %}">
+                                </div>
                             </div>
-
-                            <div style="width: 18px; height: 18px; border-radius: 50%; display: inline-block;
-                                        line-height: 12px; font-size: 10px; text-align: center; font-weight: 700;
-                                        position: relative; z-index: 2;
-                                        {% if m.is_completed %}
-                                            background: #16a34a; border: 2px solid #16a34a; color: white;
-                                        {% elif m.is_overdue %}
-                                            background: #dc2626; border: 2px solid #dc2626; color: white;
-                                        {% elif is_current %}
-                                            background: #5b5bd6; border: 2px solid #5b5bd6; color: white;
-                                            box-shadow: 0 0 0 3px #eef0ff;
-                                        {% else %}
-                                            background: white; border: 2px solid #d1d5db; color: transparent;
-                                        {% endif %}">
-                                {% if m.is_completed %}✓{% elif m.is_overdue %}!{% elif is_current %}▶{% endif %}
-                            </div>
-
-                            <div style="font-size: 9px; color: {% if m.is_overdue %}#dc2626{% else %}#9ca3af{% endif %};
-                                        {% if m.is_overdue %}font-weight: 700;{% endif %};
-                                        margin-top: 2px; white-space: nowrap;">
-                                {{ m.due_date.strftime('%d.%m') }}
-                            </div>
-                        </div>
-                    {% endif %}
-                {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
             </div>
             {% else %}
             <div class="progress flex-grow-1" style="height: 8px; min-width: 200px;">
@@ -878,7 +874,8 @@
                                     class="{% if task.is_overdue %}table-danger-light{% elif task.status == 'completed' %}table-success-light{% endif %}">
                                     <td>
                                         <a href="{{ url_for('tasks.view_task', task_id=task.id) }}"
-                                           class="text-decoration-none text-dark fw-bold d-block">
+                                           class="text-decoration-none fw-bold d-block"
+                                           style="color: var(--text-primary);">
                                             {{ task.title }}
                                         </a>
                                         {% if task.description %}
@@ -2537,6 +2534,53 @@ function initCalendar() {
     calendarInitialized = true;
 }
 
+// ============================================================
+//  АВТОМАТИЧЕСКОЕ СМЕЩЕНИЕ ВЕХ (чтобы не налезали друг на друга)
+// ============================================================
+function fixMilestoneOverlap() {
+    const container = document.getElementById('milestoneScale');
+    if (!container) return;
+
+    const items = container.querySelectorAll('.ms-item');
+    if (items.length < 2) return;
+
+    // Используем 2 строки: над и под полосой
+    const topItems = [];
+    const bottomItems = [];
+
+    items.forEach((item, idx) => {
+        if (idx % 2 === 0) {
+            topItems.push(item);
+            item.style.top = '0px';
+        } else {
+            bottomItems.push(item);
+            item.style.top = '40px';
+        }
+    });
+
+    // Проверяем наложения в каждой строке
+    [topItems, bottomItems].forEach(row => {
+        for (let i = 0; i < row.length; i++) {
+            for (let j = i + 1; j < row.length; j++) {
+                const diff = Math.abs(parseFloat(row[i].dataset.position) - parseFloat(row[j].dataset.position));
+                if (diff < 10) {
+                    // Сдвигаем одну веху
+                    if (i % 2 === 0) {
+                        row[i].style.top = '40px';
+                    } else {
+                        row[i].style.top = '0px';
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Запускаем после загрузки DOM
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(fixMilestoneOverlap, 100);
+});
+
 function openDayModal(dateStr, dateObj) {
     selectedDateStr = dateStr;
     const months = [
@@ -3154,6 +3198,83 @@ function showAttachPreview(input) {
 </script>
 
 <style>
+/* ─── Тёмная тема — переопределение Bootstrap ─── */
+@media (prefers-color-scheme: dark) {
+    .text-dark {
+        color: #e5e7eb !important;
+    }
+    .table-danger-light {
+        background: rgba(220,38,38,0.1) !important;
+    }
+    .table-success-light {
+        background: rgba(22,163,74,0.1) !important;
+    }
+    .table-danger-light td,
+    .table-success-light td {
+        color: inherit;
+    }
+    /* Задачи — светлый текст на тёмном фоне */
+    .tasks-table td a {
+        color: #e5e7eb !important;
+    }
+    .tasks-table td .small,
+    .tasks-table td .text-muted {
+        color: #9ca3af !important;
+    }
+    .tasks-table td {
+        color: #e5e7eb !important;
+    }
+    /* Прогресс-бар фон */
+    .progress, .progress-bar {
+        background-color: #374151 !important;
+    }
+}
+/* ─── Точки вех с tooltip ─── */
+.ms-dot {
+    transition: transform 0.15s;
+}
+.ms-dot:hover {
+    transform: translateX(-50%) scale(1.2);
+}
+.ms-dot .tooltip {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1f2937;
+    color: #f9fafb;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    margin-bottom: 8px;
+    z-index: 100;
+    pointer-events: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+}
+.ms-dot:hover .tooltip {
+    display: block;
+}
+.ms-dot .tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #1f2937;
+}
+/* Тёмная тема для tooltip */
+@media (prefers-color-scheme: dark) {
+    .ms-dot .tooltip {
+        background: #374151;
+        color: #e5e7eb;
+    }
+    .ms-dot .tooltip::after {
+        border-top-color: #374151;
+    }
+}
 .mention-avatar {
     width: 26px;
     height: 26px;

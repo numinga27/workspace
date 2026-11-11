@@ -63,6 +63,8 @@ def create_app(config_class=Config):
             babel.init_app(app)
 
         # Экспорт get_locale в контекст Jinja
+        # Disable template cache for hot reload
+        app.jinja_env.cache = {}
         app.jinja_env.globals['get_locale'] = get_locale
 
         # ---- ПРИНУДИТЕЛЬНАЯ РЕГИСТРАЦИЯ _ В JINJA ----
@@ -370,8 +372,7 @@ def create_app(config_class=Config):
         user_id = session['user_id']
 
         sub = PushSubscription.query.filter_by(endpoint=endpoint).first()
-        if sub:
-            sub.user_id = user_id
+        if sub and sub.user_id is not None:
             sub.p256dh = p256dh
             sub.auth = auth
             sub.is_active = True

@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from sqlalchemy import or_
 
 from extensions import db
-from models import User, Project, Task, ProjectMember
+from models import User, Project, Task, ProjectMember, EventRecipient, Notification, SupportTicket, SupportMessage, Message, File, Folder, Report, Milestone, Todo, ContactPerson, PushSubscription, Company, Event, TaskRead, TodoRead, Invitation
 from decorators import login_required, privileged_required, admin_required
 from utils import get_user_projects
 
@@ -142,7 +142,7 @@ def users_list():
 #  СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ
 # ============================================================
 
-@bp.route('/users/create', methods=['GET', 'POST'])
+@bp.route('/users/create', methods=['GET', 'POST'], strict_slashes=False)
 @login_required
 @privileged_required
 def users_create():
@@ -224,7 +224,7 @@ def users_create():
 #  РЕДАКТИРОВАНИЕ ПОЛЬЗОВАТЕЛЯ
 # ============================================================
 
-@bp.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
+@bp.route('/users/<int:user_id>/edit', methods=['GET', 'POST'], strict_slashes=False)
 @login_required
 @privileged_required
 def users_edit(user_id):
@@ -315,7 +315,7 @@ def users_edit(user_id):
 #  СМЕНА РОЛИ
 # ============================================================
 
-@bp.route('/users/<int:user_id>/set-role', methods=['POST'])
+@bp.route('/users/<int:user_id>/set-role', methods=['POST'], strict_slashes=False)
 @login_required
 @privileged_required
 def users_set_role(user_id):
@@ -364,7 +364,7 @@ def users_set_role(user_id):
 #  БЛОКИРОВКА / РАЗБЛОКИРОВКА
 # ============================================================
 
-@bp.route('/users/<int:user_id>/toggle-active', methods=['POST'])
+@bp.route('/users/<int:user_id>/toggle-active', methods=['POST'], strict_slashes=False)
 @login_required
 @privileged_required
 def users_toggle_active(user_id):
@@ -398,7 +398,7 @@ def users_toggle_active(user_id):
 #  ДОСТУП К КОНТАКТАМ
 # ============================================================
 
-@bp.route('/users/<int:user_id>/toggle-contacts-access', methods=['POST'])
+@bp.route('/users/<int:user_id>/toggle-contacts-access', methods=['POST'], strict_slashes=False)
 @login_required
 @privileged_required
 def users_toggle_contacts_access(user_id):
@@ -435,7 +435,7 @@ def users_toggle_contacts_access(user_id):
 #  УДАЛЕНИЕ ПОЛЬЗОВАТЕЛЯ
 # ============================================================
 
-@bp.route('/users/<int:user_id>/delete', methods=['POST'])
+@bp.route('/users/<int:user_id>/delete', methods=['POST'], strict_slashes=False)
 @login_required
 @privileged_required
 def users_delete(user_id):
@@ -479,10 +479,31 @@ def users_delete(user_id):
 
     name = target.full_name
 
+    # ← Удаляем все связи пользователя перед удалением
+    ProjectMember.query.filter_by(user_id=target.id).delete()
+    EventRecipient.query.filter_by(user_id=target.id).delete()
+    Notification.query.filter_by(user_id=target.id).delete()
+    SupportTicket.query.filter_by(user_id=target.id).delete()
+    SupportMessage.query.filter_by(author_id=target.id).delete()
+    Message.query.filter_by(user_id=target.id).delete()
+    File.query.filter_by(uploaded_by=target.id).delete()
+    Folder.query.filter_by(created_by=target.id).delete()
+    Report.query.filter_by(author_id=target.id).delete()
+    Milestone.query.filter_by(created_by=target.id).delete()
+    Todo.query.filter_by(created_by=target.id).delete()
+    Todo.query.filter_by(assigned_to=target.id).delete()
+    ContactPerson.query.filter_by(user_id=target.id).delete()
+    PushSubscription.query.filter_by(user_id=target.id).delete()
+    Company.query.filter_by(created_by_id=target.id).delete()
+    Event.query.filter_by(created_by=target.id).delete()
+    Event.query.filter_by(owner_id=target.id).delete()
+    TaskRead.query.filter_by(user_id=target.id).delete()
+    TodoRead.query.filter_by(user_id=target.id).delete()
+    Invitation.query.filter_by(invited_by=target.id).delete()
+
     # ← Логируем удаление ДО физического
     _log('delete_user', target, details=f'Удалён пользователь «{name}»')
 
-    ProjectMember.query.filter_by(user_id=target.id).delete()
     db.session.delete(target)
     db.session.commit()
 
@@ -620,7 +641,7 @@ def users_assign(user_id):
 #  СНЯТЬ ПОЛЬЗОВАТЕЛЯ С ПРОЕКТА
 # ============================================================
 
-@bp.route('/users/<int:user_id>/unassign/<int:project_id>', methods=['POST'])
+@bp.route('/users/<int:user_id>/unassign/<int:project_id>', methods=['POST'], strict_slashes=False)
 @login_required
 @privileged_required
 def users_unassign(user_id, project_id):

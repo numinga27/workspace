@@ -608,7 +608,7 @@ def edit_project(project_id):
 #  УДАЛЕНИЕ ПРОЕКТА
 # ============================================================
 
-@bp.route('/project/<int:project_id>/delete', methods=['POST'])
+@bp.route('/project/<int:project_id>/delete', methods=['POST'], strict_slashes=False)
 @login_required
 def delete_project(project_id):
     import os
@@ -662,7 +662,7 @@ def delete_project(project_id):
 #  СОЗДАНИЕ ЗАДАЧИ
 # ============================================================
 
-@bp.route('/project/<int:project_id>/task/create', methods=['POST'])
+@bp.route('/project/<int:project_id>/task/create', methods=['POST'], strict_slashes=False)
 @login_required
 def create_task(project_id):
     if not check_full_project_access(project_id):
@@ -799,7 +799,7 @@ def create_task(project_id):
 #  ВЕХИ
 # ============================================================
 
-@bp.route('/project/<int:project_id>/milestone/create', methods=['POST'])
+@bp.route('/project/<int:project_id>/milestone/create', methods=['POST'], strict_slashes=False)
 @login_required
 def create_milestone(project_id):
     if not can_manage_project(project_id):
@@ -830,7 +830,7 @@ def create_milestone(project_id):
     return redirect(url_for('projects.view_project', project_id=project_id))
 
 
-@bp.route('/milestone/<int:milestone_id>/toggle', methods=['POST'])
+@bp.route('/milestone/<int:milestone_id>/toggle', methods=['POST'], strict_slashes=False)
 @login_required
 def toggle_milestone(milestone_id):
     m = Milestone.query.get_or_404(milestone_id)
@@ -850,7 +850,7 @@ def toggle_milestone(milestone_id):
     return redirect(url_for('projects.view_project', project_id=m.project_id))
 
 
-@bp.route('/milestone/<int:milestone_id>/delete', methods=['POST'])
+@bp.route('/milestone/<int:milestone_id>/delete', methods=['POST'], strict_slashes=False)
 @login_required
 def delete_milestone(milestone_id):
     m = Milestone.query.get_or_404(milestone_id)
