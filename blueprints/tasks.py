@@ -152,6 +152,58 @@ def my_tasks():
     unread_task_ids = get_unread_task_ids(user.id)
     unread_todo_ids = get_unread_todo_ids(user.id)
 
+    # ← Для супервизоров: таблица сотрудников с пагинацией и поиском
+    emp_table = []
+    if is_privileged(user):
+        # Собираем статистику по всем сотрудникам
+        all_assigned_tasks = Task.query.filter(Task.assigned_to.isnot(None)).all()
+        all_todos = Todo.query.filter(Todo.assigned_to.isnot(None), Todo.is_done == False).all()
+        
+        emp_stats = {}
+        for task in all_assigned_tasks:
+            emp_id = task.assigned_to
+            if emp_id not in emp_stats:
+                emp_stats[emp_id] = {'tasks': 0, 'overdue': 0}
+            emp_stats[emp_id]['tasks'] += 1
+            if task.is_overdue:
+                emp_stats[emp_id]['overdue'] += 1
+        
+        for todo in all_todos:
+            emp_id = todo.assigned_to
+            if emp_id not in emp_stats:
+                emp_stats[emp_id] = {'tasks': 0, 'overdue': 0}
+            emp_stats[emp_id]['todos'] = emp_stats[emp_id].get('todos', 0) + 1
+        
+        # Загружаем пользователей
+        for emp_id, stats in emp_stats.items():
+            emp = db.session.get(User, emp_id)
+            if emp:
+                emp_table.append({
+                    'id': emp.id,
+                    'user': emp,
+                    'tasks_count': stats['tasks'],
+                    'todos_count': stats.get('todos', 0),
+                    'overdue_count': stats['overdue'],
+                })
+        
+        # Поиск по имени
+        search = request.args.get('search', '').strip()
+        if search:
+            search_lower = search.lower()
+            emp_table = [e for e in emp_table if search_lower in f"{e['user'].first_name} {e['user'].last_name}".lower()]
+        
+        # Сортировка: сначала с просроченными, потом по имени
+        emp_table.sort(key=lambda x: (-x['overdue_count'], x['user'].first_name, x['user'].last_name))
+        
+        # Пагинация
+        page = request.args.get('page', 1, type=int)
+        per_page = 20
+        total = len(emp_table)
+        start = (page - 1) * per_page
+        end = start + per_page
+        emp_page = emp_table[start:end]
+        emp_pagination = SimplePagination(emp_page, page, per_page, total)
+
     return render_template('my_tasks.html',
                            user=user,
                            tasks=ctx['tasks'],
@@ -168,7 +220,10 @@ def my_tasks():
                            now=ctx['now'],
                            is_guest_user=ctx['is_guest_user'],
                            unread_task_ids=unread_task_ids,
-                           unread_todo_ids=unread_todo_ids)
+                           unread_todo_ids=unread_todo_ids,
+                           emp_table=emp_table,
+                           emp_pagination=emp_pagination if is_privileged(user) else None,
+                           search=search if is_privileged(user) else '')
 
 
 # ============================================================
@@ -247,22 +302,34 @@ def user_all_tasks(user_id):
         flash('У вас нет прав.', 'danger')
         return redirect(url_for('dashboard.dashboard'))
 
-    ctx = _build_tasks_context(target_user=employee, current_user=current_user, apply_pagination=False)
-
+    # Задачи сотрудника
+    all_tasks = Task.query.filter_by(assigned_to=employee.id).all()
+    active_tasks = [t for t in all_tasks if t.status in ('new', 'in_progress')]
+    overdue_tasks = [t for t in all_tasks if t.is_overdue]
+    completed_tasks = [t for t in all_tasks if t.status == 'completed']
+    
+    # To-Do сотрудника
+    all_todos = Todo.query.filter_by(assigned_to=employee.id, is_done=False).all()
+    overdue_todos = [t for t in all_todos if t.is_overdue]
+    
+    # Проекты сотрудника
+    employee_projects = employee.projects if hasattr(employee, 'projects') else []
+    
+    # Активность: когда был последний вход
+    last_login = employee.last_login_at if hasattr(employee, 'last_login_at') else None
+    
     return render_template('user_all_tasks.html',
                            employee=employee,
-                           tasks=ctx['tasks'],
-                           active=ctx['active'],
-                           overdue=ctx['overdue'],
-                           completed=ctx['completed'],
-                           urgent=ctx['urgent'],
-                           employee_todos=ctx['todos'],
-                           employee_projects=ctx['projects'],
-                           filter_project=ctx['filter_project'],
-                           filter_status=ctx['filter_status'],
-                           now=ctx['now'],
-                           user=current_user,
-                           projects=get_user_projects(current_user))
+                           tasks=all_tasks,
+                           active_tasks=active_tasks,
+                           overdue_tasks=overdue_tasks,
+                           completed_tasks=completed_tasks,
+                           all_todos=all_todos,
+                           overdue_todos=overdue_todos,
+                           employee_projects=employee_projects,
+                           last_login=last_login,
+                           now=utcnow(),
+                           user=current_user)
 
 
 # ============================================================

@@ -1679,3 +1679,34 @@ a:hover {
         padding: 10px 12px !important;
     }
 }
+
+/* ============================================================ */
+/*  МОИ ЗАДАЧИ: ГРУППИРОВКА ПО СОТРУДНИКАМ                      */
+/* ============================================================ */
+.employee-section {
+    border-bottom: 1px solid var(--border-light);
+}
+.employee-section:last-child {
+    border-bottom: none;
+}
+.employee-section a.employee-header {
+    display: block;
+    text-decoration: none;
+    transition: background 0.15s;
+}
+.employee-section a.employee-header:hover {
+    background: var(--bg-tertiary) !important;
+}
+.employee-tasks {
+    padding-left: 24px !important;
+}
+.employee-tasks .task-card {
+    font-size: 13px;
+}
+.employee-tasks .task-card .card-body {
+    padding: 6px 10px;
+}
+.employee-tasks .badge {
+    font-size: 10px;
+    padding: 2px 6px;
+}

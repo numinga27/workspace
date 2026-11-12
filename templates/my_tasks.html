@@ -23,55 +23,67 @@
 </div>
 
 <!-- Статистика -->
-<div class="row g-2 mb-3">
-    <div class="col-md-6 col-lg-3">
-        <a href="{{ url_for('tasks.my_tasks', task_filter='active', project=filter_project, status=filter_status) if filter_task != 'active' else url_for('tasks.my_tasks', project=filter_project, status=filter_status) }}"
-           class="text-decoration-none" style="display:block;">
-            <div class="stat-card {% if filter_task == 'active' %}border-primary{% endif %}">
-                <div class="stat-icon" style="background: #e0e7ff; color: #4f46e5;">
+<div class="d-flex gap-2 mb-3">
+    <a href="{{ url_for('tasks.my_tasks', task_filter='active', project=filter_project, status=filter_status) if filter_task != 'active' else url_for('tasks.my_tasks', project=filter_project, status=filter_status) }}"
+       class="text-decoration-none" style="flex: 0 0 auto; display: inline-block;">
+        <div class="stat-card {% if filter_task == 'active' %}border-primary{% endif %}"
+             style="padding: 8px 12px; display: inline-block;">
+            <div class="d-flex align-items-center gap-2">
+                <div class="stat-icon" style="background: #e0e7ff; color: #4f46e5; width: 32px; height: 32px; font-size: 14px; flex-shrink: 0;">
                     <i class="bi bi-list-task"></i>
                 </div>
-                <div class="stat-number">{{ active|length }}</div>
-                <div class="stat-label">{{ _('Активных') }}</div>
+                <div>
+                    <div class="stat-number" style="font-size: 20px;">{{ active|length }}</div>
+                    <div class="stat-label" style="font-size: 11px;">{{ _('Активных') }}</div>
+                </div>
             </div>
-        </a>
-    </div>
-    <div class="col-md-6 col-lg-3">
-        <a href="{{ url_for('tasks.my_tasks', task_filter='urgent', project=filter_project, status=filter_status) if filter_task != 'urgent' else url_for('tasks.my_tasks', project=filter_project, status=filter_status) }}"
-           class="text-decoration-none" style="display:block;">
-            <div class="stat-card {% if filter_task == 'urgent' %}border-warning{% endif %} {% if urgent %}border-warning{% endif %}">
-                <div class="stat-icon" style="background: #fef3c7; color: #f59e0b;">
+        </div>
+    </a>
+    <a href="{{ url_for('tasks.my_tasks', task_filter='urgent', project=filter_project, status=filter_status) if filter_task != 'urgent' else url_for('tasks.my_tasks', project=filter_project, status=filter_status) }}"
+       class="text-decoration-none" style="flex: 0 0 auto; display: inline-block;">
+        <div class="stat-card {% if filter_task == 'urgent' %}border-warning{% endif %} {% if urgent %}border-warning{% endif %}"
+             style="padding: 8px 12px; display: inline-block;">
+            <div class="d-flex align-items-center gap-2">
+                <div class="stat-icon" style="background: #fef3c7; color: #f59e0b; width: 32px; height: 32px; font-size: 14px; flex-shrink: 0;">
                     <i class="bi bi-clock-history"></i>
                 </div>
-                <div class="stat-number">{{ urgent|length }}</div>
-                <div class="stat-label">{{ _('Срочных') }}</div>
+                <div>
+                    <div class="stat-number" style="font-size: 20px;">{{ urgent|length }}</div>
+                    <div class="stat-label" style="font-size: 11px;">{{ _('Срочных') }}</div>
+                </div>
             </div>
-        </a>
-    </div>
-    <div class="col-md-6 col-lg-3">
-        <a href="{{ url_for('tasks.my_tasks', task_filter='overdue', project=filter_project, status=filter_status) if filter_task != 'overdue' else url_for('tasks.my_tasks', project=filter_project, status=filter_status) }}"
-           class="text-decoration-none" style="display:block;">
-            <div class="stat-card {% if filter_task == 'overdue' %}border-danger{% endif %} {% if overdue %}border-danger{% endif %}">
-                <div class="stat-icon" style="background: #fee2e2; color: #dc2626;">
+        </div>
+    </a>
+    <a href="{{ url_for('tasks.my_tasks', task_filter='overdue', project=filter_project, status=filter_status) if filter_task != 'overdue' else url_for('tasks.my_tasks', project=filter_project, status=filter_status) }}"
+       class="text-decoration-none" style="flex: 0 0 auto; display: inline-block;">
+        <div class="stat-card {% if filter_task == 'overdue' %}border-danger{% endif %} {% if overdue %}border-danger{% endif %}"
+             style="padding: 8px 12px; display: inline-block;">
+            <div class="d-flex align-items-center gap-2">
+                <div class="stat-icon" style="background: #fee2e2; color: #dc2626; width: 32px; height: 32px; font-size: 14px; flex-shrink: 0;">
                     <i class="bi bi-exclamation-triangle-fill"></i>
                 </div>
-                <div class="stat-number text-danger">{{ overdue|length }}</div>
-                <div class="stat-label">{{ _('Просрочено') }}</div>
+                <div>
+                    <div class="stat-number text-danger" style="font-size: 20px;">{{ overdue|length }}</div>
+                    <div class="stat-label" style="font-size: 11px;">{{ _('Просрочено') }}</div>
+                </div>
             </div>
-        </a>
-    </div>
-    <div class="col-md-6 col-lg-3">
-        <a href="{{ url_for('tasks.my_tasks', status='completed', project=filter_project) if filter_status != 'completed' else url_for('tasks.my_tasks', project=filter_project) }}"
-           class="text-decoration-none" style="display:block;">
-            <div class="stat-card {% if filter_status == 'completed' %}border-success{% endif %}">
-                <div class="stat-icon" style="background: #d1fae5; color: #10b981;">
+        </div>
+    </a>
+    <a href="{{ url_for('tasks.my_tasks', status='completed', project=filter_project) if filter_status != 'completed' else url_for('tasks.my_tasks', project=filter_project) }}"
+       class="text-decoration-none" style="flex: 0 0 auto; display: inline-block;">
+        <div class="stat-card {% if filter_status == 'completed' %}border-success{% endif %}"
+             style="padding: 8px 12px; display: inline-block;">
+            <div class="d-flex align-items-center gap-2">
+                <div class="stat-icon" style="background: #d1fae5; color: #10b981; width: 32px; height: 32px; font-size: 14px; flex-shrink: 0;">
                     <i class="bi bi-check-circle-fill"></i>
                 </div>
-                <div class="stat-number">{{ completed|length }}</div>
-                <div class="stat-label">{{ _('Завершено') }}</div>
+                <div>
+                    <div class="stat-number" style="font-size: 20px;">{{ completed|length }}</div>
+                    <div class="stat-label" style="font-size: 11px;">{{ _('Завершено') }}</div>
+                </div>
             </div>
-        </a>
-    </div>
+        </div>
+    </a>
 </div>
 
 <!-- Уведомления -->
@@ -140,6 +152,114 @@
         </form>
     </div>
 </div>
+
+{# ============================================================ #}
+{# ДЛЯ СУПЕРВИЗОРОВ: ТАБЛИЦА СОТРУДНИКОВ                       #}
+{# ============================================================ #}
+{% if emp_table %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2"
+         style="background: #f3f4f6; border-bottom: 2px solid #e5e7eb;">
+        <h6 class="mb-0 fw-bold" style="color: #111827;">
+            👥 {{ _('Сотрудники и их задачи') }}
+            <span class="badge bg-primary ms-2">{{ emp_pagination.total }}</span>
+        </h6>
+        <form method="GET" class="d-flex gap-2">
+            <input type="text" name="search" class="form-control form-control-sm"
+                   placeholder="{{ _('Поиск по имени...') }}" value="{{ search }}">
+            <button type="submit" class="btn btn-sm btn-primary">{{ _('Найти') }}</button>
+            {% if search %}
+            <a href="{{ url_for('tasks.my_tasks') }}" class="btn btn-sm btn-outline-secondary">✕</a>
+            {% endif %}
+        </form>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                    <th style="width: 40%; padding: 12px 16px; font-weight: 600; color: #374151;">{{ _('Сотрудник') }}</th>
+                    <th style="width: 20%; text-align: center; padding: 12px 16px; font-weight: 600; color: #374151;">{{ _('Задачи') }}</th>
+                    <th style="width: 20%; text-align: center; padding: 12px 16px; font-weight: 600; color: #374151;">{{ _('To-Do') }}</th>
+                    <th style="width: 20%; text-align: center; padding: 12px 16px; font-weight: 600; color: #374151;">{{ _('Просрочено') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for emp in emp_pagination.items %}
+                {% set row_class = 'table-danger' if emp.overdue_count > 0 else '' %}
+                <tr class="{{ row_class }}"
+                    style="cursor: pointer; transition: background 0.15s;"
+                    onmouseover="this.style.background='{% if emp.overdue_count > 0 %}#fca5a5{% else %}#f3f4f6{% endif %}'"
+                    onmouseout="this.style.background='{% if emp.overdue_count > 0 %}#fee2e2{% elif emp.todos_count > 0 and emp.overdue_count == 0 %}#fef3c7{% else %}transparent{% endif %}'"
+                    onclick="window.location.href='{{ url_for('tasks.user_all_tasks', user_id=emp.id) }}'">
+                    <td style="padding: 12px 16px;">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-person-circle fs-5 {% if emp.overdue_count > 0 %}text-danger{% else %}text-muted{% endif %}"></i>
+                            <div>
+                                <strong style="color: {% if emp.overdue_count > 0 %}#991b1b{% else %}#111827{% endif %};">{{ emp.user.first_name }} {{ emp.user.last_name }}</strong>
+                                {% if emp.user.role != 'user' %}
+                                <span class="badge bg-secondary ms-1" style="font-size: 10px;">{{ emp.user.role }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: 12px 16px; text-align: center;">
+                        {% if emp.tasks_count > 0 %}
+                        <span class="badge bg-info">{{ emp.tasks_count }}</span>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px 16px; text-align: center;">
+                        {% if emp.todos_count > 0 %}
+                        <span class="badge bg-success">{{ emp.todos_count }}</span>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px 16px; text-align: center;">
+                        {% if emp.overdue_count > 0 %}
+                        <span class="badge bg-danger fw-bold">{{ emp.overdue_count }}</span>
+                        {% else %}
+                        <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{# Пагинация для сотрудников #}
+{% if emp_pagination and emp_pagination.pages > 1 %}
+<nav aria-label="Pagination employees" class="mb-4">
+    <ul class="pagination justify-content-center flex-wrap">
+        <li class="page-item {% if not emp_pagination.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('tasks.my_tasks', page=emp_pagination.prev_num, search=search) if emp_pagination.has_prev else '#' }}">
+                <i class="bi bi-chevron-left"></i> {{ _('Назад') }}
+            </a>
+        </li>
+        {% for p in range(1, emp_pagination.pages + 1) %}
+            {% if p == 1 or p == emp_pagination.pages or (p >= emp_pagination.page - 1 and p <= emp_pagination.page + 1) %}
+            <li class="page-item {% if p == emp_pagination.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('tasks.my_tasks', page=p, search=search) }}">{{ p }}</a>
+            </li>
+            {% elif p == emp_pagination.page - 2 or p == emp_pagination.page + 2 %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+        {% endfor %}
+        <li class="page-item {% if not emp_pagination.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('tasks.my_tasks', page=emp_pagination.next_num, search=search) if emp_pagination.has_next else '#' }}">
+                {{ _('Вперёд') }} <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+    </ul>
+    <p class="text-center text-muted small mb-0">
+        {{ _('Показано') }} {{ emp_pagination.items|length }} {{ _('из') }} {{ emp_pagination.total }} {{ _('сотрудников') }}
+    </p>
+</nav>
+{% endif %}
+{% endif %}
 
 <!-- Задачи -->
 <h5 class="mb-3">
@@ -347,4 +467,106 @@
     </div>
 </div>
 {% endif %}
+
+<style>
+/* ─── Тёмная тема для my_tasks ─── */
+@media (prefers-color-scheme: dark) {
+    /* Задачи — светлый текст */
+    .task-card .text-dark,
+    .task-card a.text-dark {
+        color: #e5e7eb !important;
+    }
+    /* Бейджи — тёмный фон, светлый текст */
+    .task-card .badge.bg-light {
+        background: #374151 !important;
+        color: #e5e7eb !important;
+    }
+    .task-card .badge.bg-info {
+        color: #fff !important;
+    }
+    .task-card .badge.bg-warning {
+        color: #000 !important;
+    }
+    /* To-Do секция */
+    .d-flex.align-items-center.justify-content-between.p-2.border-bottom {
+        color: #e5e7eb;
+    }
+    .d-flex.align-items-center.justify-content-between.p-2.border-bottom small.text-muted {
+        color: #9ca3af !important;
+    }
+    /* Таблица сотрудников — красная подсветка ТОЛЬКО для просроченных */
+    .table > tbody > tr.table-danger {
+        background-color: #fee2e2 !important;
+    }
+    .table > tbody > tr.table-danger td {
+        background-color: #fee2e2 !important;
+        color: #991b1b !important;
+    }
+    .table > tbody > tr.table-danger td strong {
+        color: #991b1b !important;
+    }
+    /* Жёлтая подсветка для просроченных to-do */
+    .table > tbody > tr.table-warning {
+        background-color: #fef3c7 !important;
+    }
+    .table > tbody > tr.table-warning td {
+        background-color: #fef3c7 !important;
+        color: #92400e !important;
+    }
+    .table > tbody > tr.table-warning td strong {
+        color: #92400e !important;
+    }
+    /* БЕЗ просрочки — светлый текст на тёмном фоне */
+    .table > tbody > tr:not(.table-danger):not(.table-warning) {
+        background-color: #1f2937 !important;
+    }
+    .table > tbody > tr:not(.table-danger):not(.table-warning) td {
+        background-color: #1f2937 !important;
+        color: #e5e7eb !important;
+    }
+    .table > tbody > tr:not(.table-danger):not(.table-warning) td strong {
+        color: #e5e7eb !important;
+    }
+    .table > tbody > tr:not(.table-danger):not(.table-warning) td .text-muted {
+        color: #9ca3af !important;
+    }
+    /* Заголовки карточек — тёмный фон, светлый текст */
+    .card-header[style*="background: #f3f4f6"] {
+        background: #374151 !important;
+        border-bottom-color: #4b5563 !important;
+    }
+    .card-header[style*="background: #f3f4f6"] h6 {
+        color: #e5e7eb !important;
+    }
+    .card-header[style*="background: #f3f4f6"] .badge.bg-primary {
+        background: #4f46e5 !important;
+        color: #fff !important;
+    }
+    .card-header[style*="background: #f3f4f6"] input,
+    .card-header[style*="background: #f3f4f6"] button {
+        color: #e5e7eb !important;
+    }
+    .card-header[style*="background: #f3f4f6"] input.form-control {
+        background: #1f2937 !important;
+        border-color: #4b5563 !important;
+        color: #e5e7eb !important;
+    }
+    /* Статистика — уменьшенные боксы */
+    .stat-card {
+        padding: 8px 12px !important;
+    }
+    .stat-card .stat-icon {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 14px !important;
+    }
+    .stat-card .stat-number {
+        font-size: 20px !important;
+    }
+    .stat-card .stat-label {
+        font-size: 11px !important;
+        color: #d1d5db !important;
+    }
+}
+</style>
 {% endblock %}
