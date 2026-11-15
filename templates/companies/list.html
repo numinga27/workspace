@@ -16,40 +16,50 @@
 </div>
 
 <!-- Статистика -->
-<div class="row g-3 mb-4">
-    <div class="col-md-4 col-6">
-        <div class="stat-card">
-            <div class="stat-icon" style="background: #e0e7ff; color: #4f46e5;">
+<div class="d-flex gap-2 mb-3 flex-wrap">
+    <div class="stat-card" style="padding: 8px 12px; flex: 0 0 auto; display: inline-block;">
+        <div class="d-flex align-items-center gap-2">
+            <div class="stat-icon" style="background: #e0e7ff; color: #4f46e5; width: 32px; height: 32px; font-size: 14px; flex-shrink: 0;">
                 <i class="bi bi-building"></i>
             </div>
-            <div class="stat-number">{{ stats.total }}</div>
-            <div class="stat-label">{{ _('Всего филиалов') }}</div>
+            <div>
+                <div class="stat-number" style="font-size: 20px;">{{ stats.total }}</div>
+                <div class="stat-label" style="font-size: 11px;">{{ _('Всего филиалов') }}</div>
+            </div>
         </div>
     </div>
-    <div class="col-md-4 col-6">
-        <div class="stat-card">
-            <div class="stat-icon" style="background: #f0fdf4; color: #16a34a;">
+    <div class="stat-card" style="padding: 8px 12px; flex: 0 0 auto; display: inline-block;">
+        <div class="d-flex align-items-center gap-2">
+            <div class="stat-icon" style="background: #d1fae5; color: #10b981; width: 32px; height: 32px; font-size: 14px; flex-shrink: 0;">
                 <i class="bi bi-check-circle-fill"></i>
             </div>
-            <div class="stat-number">{{ stats.active }}</div>
-            <div class="stat-label">{{ _('Активных') }}</div>
+            <div>
+                <div class="stat-number" style="font-size: 20px;">{{ stats.active }}</div>
+                <div class="stat-label" style="font-size: 11px;">{{ _('Активных') }}</div>
+            </div>
         </div>
     </div>
-    <div class="col-md-4 col-6">
-        <div class="stat-card">
-            <div class="stat-icon" style="background: #fef3c7; color: #d97706;">
+    <div class="stat-card" style="padding: 8px 12px; flex: 0 0 auto; display: inline-block;">
+        <div class="d-flex align-items-center gap-2">
+            <div class="stat-icon" style="background: #fef3c7; color: #f59e0b; width: 32px; height: 32px; font-size: 14px; flex-shrink: 0;">
                 <i class="bi bi-pause-circle-fill"></i>
             </div>
-            <div class="stat-number">{{ stats.inactive }}</div>
-            <div class="stat-label">{{ _('Деактивированных') }}</div>
+            <div>
+                <div class="stat-number" style="font-size: 20px;">{{ stats.inactive }}</div>
+                <div class="stat-label" style="font-size: 11px;">{{ _('Деактивированных') }}</div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Фильтры -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" class="row g-2 align-items-end">
+<!-- Фильтры (скрыты под кнопкой) -->
+<button class="btn btn-outline-secondary btn-sm mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#companiesFilters" aria-expanded="false">
+    <i class="bi bi-funnel"></i> Фильтры
+</button>
+<div class="collapse mb-4" id="companiesFilters">
+    <div class="card">
+        <div class="card-body">
+            <form method="GET" class="row g-2 align-items-end">
             <div class="col-md-5">
                 <label class="form-label small">{{ _('Поиск') }}</label>
                 <input type="text" name="q" class="form-control"
@@ -83,6 +93,7 @@
                 {% endif %}
             </div>
         </form>
+        </div>
     </div>
 </div>
 

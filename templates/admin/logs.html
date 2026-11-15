@@ -14,11 +14,14 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- ФИЛЬТРЫ -->
-<!-- ============================================================ -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" class="row g-2 align-items-end">
+<!-- Фильтры (скрыты под кнопкой) -->
+<button class="btn btn-outline-secondary btn-sm mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#logsFilters" aria-expanded="false">
+    <i class="bi bi-funnel"></i> Фильтры
+</button>
+<div class="collapse mb-4" id="logsFilters">
+    <div class="card">
+        <div class="card-body">
+            <form method="GET" class="row g-2 align-items-end">
 
             <div class="col-md-3">
                 <label class="form-label small">Пользователь</label>
@@ -71,10 +74,10 @@
             </div>
 
         </form>
+        </div>
     </div>
 </div>
 
-<!-- ============================================================ -->
 <!-- ТАБЛИЦА -->
 <!-- ============================================================ -->
 {% if logs %}

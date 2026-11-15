@@ -6,7 +6,7 @@ from flask import (
 from sqlalchemy import func
 
 from extensions import db
-from models import Message, MessageMention, User, ProjectMember, Project, Notification
+from models import Message, MessageMention, MessageReadReceipt, User, ProjectMember, Project, Notification
 from decorators import login_required
 from utils import (
     check_project_access, mark_project_as_read,
@@ -99,6 +99,7 @@ def send_message(project_id):
                 related_id=message.id,
             ).first()
             if not existing:
+                user = db.session.get(User, user_id)
                 author_name = f'{user.first_name} {user.last_name}'
                 n = Notification(
                     user_id=m.user_id,
@@ -233,6 +234,71 @@ def mark_read(project_id):
     mark_project_as_read(session['user_id'], project_id)
     mark_mentions_as_read(session['user_id'], project_id)
     return jsonify({'success': True})
+
+
+# ============================================================
+#  ГАЛОЧКИ ПРОЧТЕНИЯ
+# ============================================================
+
+@bp.route('/project/<int:project_id>/message/<int:msg_id>/mark_read', methods=['POST'])
+@login_required
+def mark_message_read(project_id, msg_id):
+    """Отметить сообщение прочитанным текущим пользователем."""
+    if not check_project_access(project_id):
+        return jsonify({'success': False}), 403
+
+    msg = Message.query.get_or_404(msg_id)
+    if msg.project_id != project_id:
+        return jsonify({'success': False}), 403
+
+    user_id = session['user_id']
+
+    # Upsert: создать или обновить запись
+    receipt = MessageReadReceipt.query.filter_by(
+        message_id=msg_id, user_id=user_id
+    ).first()
+    if not receipt:
+        receipt = MessageReadReceipt(
+            message_id=msg_id,
+            user_id=user_id,
+        )
+        db.session.add(receipt)
+    else:
+        receipt.read_at = utcnow()
+    db.session.commit()
+
+    # Вернуть сколько человек прочитало
+    read_count = MessageReadReceipt.query.filter_by(
+        message_id=msg_id
+    ).count()
+
+    return jsonify({
+        'success': True,
+        'read_count': read_count,
+    })
+
+
+@bp.route('/project/<int:project_id>/message/<int:msg_id>/readers')
+@login_required
+def get_message_readers(project_id, msg_id):
+    """Получить список прочитавших сообщение."""
+    if not check_project_access(project_id):
+        return jsonify({'readers': []})
+
+    msg = Message.query.get_or_404(msg_id)
+    if msg.project_id != project_id:
+        return jsonify({'readers': []})
+
+    receipts = MessageReadReceipt.query.filter_by(message_id=msg_id).all()
+    readers = []
+    for r in receipts:
+        readers.append({
+            'id': r.user_id,
+            'name': f'{r.user.first_name} {r.user.last_name}',
+            'read_at': r.read_at.isoformat() if r.read_at else None,
+        })
+
+    return jsonify({'readers': readers})
 
 
 # ============================================================

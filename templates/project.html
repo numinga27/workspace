@@ -1661,6 +1661,14 @@
 
                                 <span class="message-text" data-raw="{{ msg.text }}">{{ msg.text }}</span>
 
+                                <!-- Галочки прочтения -->
+                                <span class="read-receipts" data-msg-id="{{ msg.id }}">
+                                    <i class="bi bi-check read-dot"></i>
+                                    {% if msg.read_receipts|length > 0 %}
+                                        <i class="bi bi-check-check read-dot read-done"></i>
+                                    {% endif %}
+                                </span>
+
                                 {% if msg.attachments %}
                                 <div class="mt-1 d-flex flex-wrap gap-1">
                                     {% for att in msg.attachments %}
@@ -1687,7 +1695,7 @@
                                 {% endif %}
 
                                 <button type="button" class="btn btn-sm btn-link p-0 small reply-btn"
-                                        onclick="startReply({{ msg.id }}, '{{ (msg.author.first_name ~ ': ' ~ msg.text[:60])|e }}')"
+                                        onclick="startReply({{ msg.id }}, '{{ (msg.author.first_name ~ ' ' ~ msg.author.last_name)|e }}', '{{ (msg.author.first_name ~ ': ' ~ msg.text[:60])|e }}')"
                                         style="color: {% if is_own %}rgba(255,255,255,0.8){% else %}var(--accent){% endif %};">
                                     ↩ {{ _('Ответить') }}
                                 </button>
@@ -3154,6 +3162,60 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatBox = document.getElementById('chatBox');
     if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
 
+    // ─── Отметка сообщений прочитанными при скролле ────────────────────
+    let readMarkTimer = null;
+    if (chatBox) {
+        chatBox.addEventListener('scroll', function() {
+            if (readMarkTimer) return;
+            readMarkTimer = setTimeout(function() {
+                readMarkTimer = null;
+                // Находим все сообщения в видимой области
+                const messages = chatBox.querySelectorAll('.message');
+                const project_id = {{ project.id }};
+                messages.forEach(function(msgEl) {
+                    const msgId = msgEl.id.replace('msg-', '');
+                    const rect = msgEl.getBoundingClientRect();
+                    const boxRect = chatBox.getBoundingClientRect();
+                    // Если сообщение полностью в видимой области
+                    if (rect.top >= boxRect.top && rect.bottom <= boxRect.bottom) {
+                        markMessageAsRead(project_id, parseInt(msgId));
+                    }
+                });
+            }, 300);
+        });
+    }
+
+    function markMessageAsRead(project_id, msg_id) {
+        fetch(`/project/${project_id}/message/${msg_id}/mark_read`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                updateReadReceipts(msg_id, data.read_count);
+            }
+        })
+        .catch(err => console.error('Mark read error:', err));
+    }
+
+    function updateReadReceipts(msgId, readCount) {
+        const container = document.querySelector(`.read-receipts[data-msg-id="${msgId}"]`);
+        if (!container) return;
+
+        const dots = container.querySelectorAll('.read-dot');
+        // Первая галочка — всегда есть (отправлено)
+        if (dots.length === 0) {
+            container.innerHTML = '<i class="bi bi-check read-dot"></i>';
+        } else if (readCount > 1) {
+            // Две галочки — прочитано
+            container.innerHTML = '<i class="bi bi-check read-dot"></i><i class="bi bi-check-check read-dot read-done"></i>';
+        } else {
+            // Одна галочка — отправлено
+            container.innerHTML = '<i class="bi bi-check read-dot"></i>';
+        }
+    }
+
     const createdTaskId = params.get('created');
     const createdTodoId = params.get('created_todo');
     let targetEl = null;
@@ -3175,11 +3237,18 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ─── Reply / Attach preview ──────────────────────────────────────────
-function startReply(id, text) {
+function startReply(id, fullName, previewText) {
     document.getElementById('replyToId').value = id;
-    document.getElementById('replyPreviewText').textContent = text;
+    document.getElementById('replyPreviewText').textContent = previewText;
     document.getElementById('replyPreview').classList.remove('d-none');
-    document.getElementById('chatMessageInput').focus();
+    // Автоматически добавляем @Имя Фамилия в начало поля ввода
+    const input = document.getElementById('chatMessageInput');
+    const mention = '@' + fullName + ' ';
+    input.value = mention + input.value;
+    input.focus();
+    // Позиция курсора после @Имя Фамилия
+    const cursorPos = input.value.length;
+    input.setSelectionRange(cursorPos, cursorPos);
 }
 function clearReply() {
     document.getElementById('replyToId').value = '';
@@ -3309,6 +3378,92 @@ function showAttachPreview(input) {
     font-size: 11px;
     letter-spacing: 0.5px;
     text-transform: uppercase;
+}
+
+/* ─── Галочки прочтения ─── */
+.read-receipts {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: 6px;
+    font-size: 14px;
+    vertical-align: middle;
+}
+.read-dot {
+    color: #adb5bd; /* серые — не прочитано */
+    font-size: 13px;
+    line-height: 1;
+}
+.read-done {
+    color: #0d6efd; /* синие — прочитано */
+}
+/* Свои сообщения — галчки по умолчанию синие */
+.message.own .read-dot {
+    color: #adb5bd;
+}
+.message.own .read-dot.read-done {
+    color: #0d6efd;
+}
+/* При наведении — тултип */
+.read-receipts:hover::after {
+    content: 'Прочитано';
+    position: absolute;
+    background: #1f2937;
+    color: #f9fafb;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    top: -30px;
+    right: 0;
+    z-index: 100;
+    pointer-events: none;
+}
+
+/* ─── Тёмная тема — чат (явные цвета, поверх CSS-переменных) ─── */
+@media (prefers-color-scheme: dark) {
+    .chat-box .message.other {
+        background: #1a1a24 !important;
+        color: #e5e7eb !important;
+        border-color: #2d2d3a !important;
+    }
+    .chat-box .message.other .author {
+        color: #818cf8 !important;
+    }
+    .chat-box .message.other .time {
+        color: #6b7280 !important;
+    }
+    .chat-box .message.other .mention {
+        background: rgba(129,140,248,0.2) !important;
+        color: #c7d2fe !important;
+    }
+    .chat-box .message.other .mention:hover {
+        background: rgba(129,140,248,0.35) !important;
+    }
+    .chat-box .message.own .read-dot {
+        color: #6b7280 !important;
+    }
+    .chat-box .message.own .read-dot.read-done {
+        color: #e5e7eb !important;
+    }
+    .read-dot {
+        color: #6b7280 !important;
+    }
+    .read-done {
+        color: #e5e7eb !important;
+    }
+    .unread-divider span {
+        background: #0f0f14 !important;
+        color: #6b7280 !important;
+    }
+    .unread-divider hr {
+        border-color: #2d2d3a !important;
+    }
+    .reply-quote {
+        background: rgba(129,140,248,0.08) !important;
+        border-color: #2d2d3a !important;
+        color: #9ca3af !important;
+    }
 }
 </style>
 {% endblock %}

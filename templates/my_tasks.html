@@ -23,11 +23,9 @@
 </div>
 
 <!-- Статистика -->
-<div class="d-flex gap-2 mb-3">
-    <a href="{{ url_for('tasks.my_tasks', task_filter='active', project=filter_project, status=filter_status) if filter_task != 'active' else url_for('tasks.my_tasks', project=filter_project, status=filter_status) }}"
-       class="text-decoration-none" style="flex: 0 0 auto; display: inline-block;">
-        <div class="stat-card {% if filter_task == 'active' %}border-primary{% endif %}"
-             style="padding: 8px 12px; display: inline-block;">
+<div class="d-flex gap-2 mb-3 flex-wrap">
+    <a href="#" class="text-decoration-none" data-bs-toggle="collapse" data-bs-target="#activeTasks">
+        <div class="stat-card" style="padding: 8px 12px; flex: 0 0 auto; display: inline-block; cursor: pointer;">
             <div class="d-flex align-items-center gap-2">
                 <div class="stat-icon" style="background: #e0e7ff; color: #4f46e5; width: 32px; height: 32px; font-size: 14px; flex-shrink: 0;">
                     <i class="bi bi-list-task"></i>
@@ -39,10 +37,8 @@
             </div>
         </div>
     </a>
-    <a href="{{ url_for('tasks.my_tasks', task_filter='urgent', project=filter_project, status=filter_status) if filter_task != 'urgent' else url_for('tasks.my_tasks', project=filter_project, status=filter_status) }}"
-       class="text-decoration-none" style="flex: 0 0 auto; display: inline-block;">
-        <div class="stat-card {% if filter_task == 'urgent' %}border-warning{% endif %} {% if urgent %}border-warning{% endif %}"
-             style="padding: 8px 12px; display: inline-block;">
+    <a href="#" class="text-decoration-none" data-bs-toggle="collapse" data-bs-target="#urgentTasks">
+        <div class="stat-card" style="padding: 8px 12px; flex: 0 0 auto; display: inline-block; cursor: pointer;">
             <div class="d-flex align-items-center gap-2">
                 <div class="stat-icon" style="background: #fef3c7; color: #f59e0b; width: 32px; height: 32px; font-size: 14px; flex-shrink: 0;">
                     <i class="bi bi-clock-history"></i>
@@ -54,10 +50,8 @@
             </div>
         </div>
     </a>
-    <a href="{{ url_for('tasks.my_tasks', task_filter='overdue', project=filter_project, status=filter_status) if filter_task != 'overdue' else url_for('tasks.my_tasks', project=filter_project, status=filter_status) }}"
-       class="text-decoration-none" style="flex: 0 0 auto; display: inline-block;">
-        <div class="stat-card {% if filter_task == 'overdue' %}border-danger{% endif %} {% if overdue %}border-danger{% endif %}"
-             style="padding: 8px 12px; display: inline-block;">
+    <a href="#" class="text-decoration-none" data-bs-toggle="collapse" data-bs-target="#overdueTasks">
+        <div class="stat-card" style="padding: 8px 12px; flex: 0 0 auto; display: inline-block; cursor: pointer;">
             <div class="d-flex align-items-center gap-2">
                 <div class="stat-icon" style="background: #fee2e2; color: #dc2626; width: 32px; height: 32px; font-size: 14px; flex-shrink: 0;">
                     <i class="bi bi-exclamation-triangle-fill"></i>
@@ -69,10 +63,8 @@
             </div>
         </div>
     </a>
-    <a href="{{ url_for('tasks.my_tasks', status='completed', project=filter_project) if filter_status != 'completed' else url_for('tasks.my_tasks', project=filter_project) }}"
-       class="text-decoration-none" style="flex: 0 0 auto; display: inline-block;">
-        <div class="stat-card {% if filter_status == 'completed' %}border-success{% endif %}"
-             style="padding: 8px 12px; display: inline-block;">
+    <a href="#" class="text-decoration-none" data-bs-toggle="collapse" data-bs-target="#completedTasks">
+        <div class="stat-card" style="padding: 8px 12px; flex: 0 0 auto; display: inline-block; cursor: pointer;">
             <div class="d-flex align-items-center gap-2">
                 <div class="stat-icon" style="background: #d1fae5; color: #10b981; width: 32px; height: 32px; font-size: 14px; flex-shrink: 0;">
                     <i class="bi bi-check-circle-fill"></i>
@@ -84,6 +76,112 @@
             </div>
         </div>
     </a>
+</div>
+
+<!-- Collapse: Активные задачи -->
+<div class="collapse mb-3" id="activeTasks">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-list-task text-primary"></i> {{ _('Активные') }} ({{ active|length }})</span>
+            <button class="btn btn-sm btn-close" data-bs-dismiss="collapse" aria-label="Закрыть"></button>
+        </div>
+        <div class="card-body p-0">
+            {% for t in active %}
+            <div class="d-flex align-items-center justify-content-between p-2 border-bottom">
+                <div>
+                    <a href="{{ url_for('tasks.view_task', task_id=t.id) }}" class="text-decoration-none fw-bold">{{ t.title }}</a>
+                    <br><small class="text-muted"><i class="bi bi-folder"></i> {{ t.project.name }}</small>
+                </div>
+                <div class="text-end">
+                    {% if t.due_date %}
+                    <small class="{% if t.is_overdue %}text-danger fw-bold{% else %}text-muted{% endif %}">
+                        {{ t.due_date.strftime('%d.%m.%Y') }}
+                    </small>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="p-3 text-muted text-center">{{ _('Нет активных задач') }}</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Collapse: Срочные задачи -->
+<div class="collapse mb-3" id="urgentTasks">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-clock-history text-warning"></i> {{ _('Срочные') }} ({{ urgent|length }})</span>
+            <button class="btn btn-sm btn-close" data-bs-dismiss="collapse" aria-label="Закрыть"></button>
+        </div>
+        <div class="card-body p-0">
+            {% for t in urgent %}
+            <div class="d-flex align-items-center justify-content-between p-2 border-bottom">
+                <div>
+                    <a href="{{ url_for('tasks.view_task', task_id=t.id) }}" class="text-decoration-none fw-bold">{{ t.title }}</a>
+                    <br><small class="text-muted"><i class="bi bi-folder"></i> {{ t.project.name }}</small>
+                </div>
+                <div class="text-end">
+                    {% if t.due_date %}
+                    <small class="text-warning fw-bold">{{ t.due_date.strftime('%d.%m.%Y') }}</small>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="p-3 text-muted text-center">{{ _('Нет срочных задач') }}</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Collapse: Просроченные задачи -->
+<div class="collapse mb-3" id="overdueTasks">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-exclamation-triangle-fill text-danger"></i> {{ _('Просроченные') }} ({{ overdue|length }})</span>
+            <button class="btn btn-sm btn-close" data-bs-dismiss="collapse" aria-label="Закрыть"></button>
+        </div>
+        <div class="card-body p-0">
+            {% for t in overdue %}
+            <div class="d-flex align-items-center justify-content-between p-2 border-bottom" style="background: #fef2f2;">
+                <div>
+                    <a href="{{ url_for('tasks.view_task', task_id=t.id) }}" class="text-decoration-none fw-bold">{{ t.title }}</a>
+                    <br><small class="text-muted"><i class="bi bi-folder"></i> {{ t.project.name }} · просрочено на {{ t.days_overdue }} дн.</small>
+                </div>
+                <div class="text-end">
+                    <small class="text-danger fw-bold">+{{ t.days_overdue }} {{ _('дн.') }}</small>
+                </div>
+            </div>
+            {% else %}
+            <div class="p-3 text-muted text-center">{{ _('Нет просроченных задач') }}</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Collapse: Завершённые задачи -->
+<div class="collapse mb-3" id="completedTasks">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-check-circle-fill text-success"></i> {{ _('Завершённые') }} ({{ completed|length }})</span>
+            <button class="btn btn-sm btn-close" data-bs-dismiss="collapse" aria-label="Закрыть"></button>
+        </div>
+        <div class="card-body p-0">
+            {% for t in completed %}
+            <div class="d-flex align-items-center justify-content-between p-2 border-bottom">
+                <div>
+                    <a href="{{ url_for('tasks.view_task', task_id=t.id) }}" class="text-decoration-none text-muted">{{ t.title }}</a>
+                    <br><small class="text-muted"><i class="bi bi-folder"></i> {{ t.project.name }}</small>
+                </div>
+                <div class="text-end">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                </div>
+            </div>
+            {% else %}
+            <div class="p-3 text-muted text-center">{{ _('Нет завершённых задач') }}</div>
+            {% endfor %}
+        </div>
+    </div>
 </div>
 
 <!-- Уведомления -->
@@ -121,35 +219,40 @@
 {% endif %}
 
 <!-- Фильтры -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" class="row g-2 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label small">{{ _('Проект') }}</label>
-                <select name="project" class="form-select">
-                    <option value="">{{ _('Все проекты') }}</option>
-                    {% for p in projects %}
-                    <option value="{{ p.id }}" {% if filter_project == p.id|string %}selected{% endif %}>
-                        {{ p.name }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label small">{{ _('Статус') }}</label>
-                <select name="status" class="form-select">
-                    <option value="">{{ _('Все статусы') }}</option>
-                    <option value="new" {% if filter_status == 'new' %}selected{% endif %}>🆕 {{ _('Новая') }}</option>
-                    <option value="in_progress" {% if filter_status == 'in_progress' %}selected{% endif %}>🔄 {{ _('В работе') }}</option>
-                    <option value="completed" {% if filter_status == 'completed' %}selected{% endif %}>✅ {{ _('Завершена') }}</option>
-                </select>
-            </div>
-            <div class="col-md-4">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-filter"></i> {{ _('Применить') }}
-                </button>
-            </div>
-        </form>
+<button class="btn btn-outline-secondary btn-sm mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#taskFilters" aria-expanded="false">
+    <i class="bi bi-funnel"></i> {{ _('Фильтры') }}
+</button>
+<div class="collapse mb-4" id="taskFilters">
+    <div class="card">
+        <div class="card-body">
+            <form method="GET" class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small">{{ _('Проект') }}</label>
+                    <select name="project" class="form-select">
+                        <option value="">{{ _('Все проекты') }}</option>
+                        {% for p in projects %}
+                        <option value="{{ p.id }}" {% if filter_project == p.id|string %}selected{% endif %}>
+                            {{ p.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small">{{ _('Статус') }}</label>
+                    <select name="status" class="form-select">
+                        <option value="">{{ _('Все статусы') }}</option>
+                        <option value="new" {% if filter_status == 'new' %}selected{% endif %}>🆕 {{ _('Новая') }}</option>
+                        <option value="in_progress" {% if filter_status == 'in_progress' %}selected{% endif %}>🔄 {{ _('В работе') }}</option>
+                        <option value="completed" {% if filter_status == 'completed' %}selected{% endif %}>✅ {{ _('Завершена') }}</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-filter"></i> {{ _('Применить') }}
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 

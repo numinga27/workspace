@@ -188,7 +188,11 @@ def create_app(config_class=Config):
     # ============================================================
 
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+        except Exception as e:
+            print(f'⚠️ db.create_all skipped: {e}')
+            db.session.rollback()
 
         from models import ProjectMember
         old_rows = ProjectMember.query.filter_by(role_in_project='am_stanko').all()
