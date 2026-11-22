@@ -1375,3 +1375,39 @@ class EventRecipient(db.Model):
 
     def __repr__(self):
         return f'<EventRecipient event={self.event_id} user={self.user_id}>'
+
+
+# ============================================================
+#  ВИДЕОКОНФЕРЕНЦИИ
+# ============================================================
+class ConferenceInvite(db.Model):
+    """Приглашения на видеоконференцию."""
+    __tablename__ = 'conference_invite'
+
+    id = db.Column(db.Integer, primary_key=True)
+    from_user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    to_user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    room_id = db.Column(db.String(50), nullable=False, index=True)
+    status = db.Column(db.String(20), nullable=False, default='pending')
+    # 'pending', 'accepted', 'expired', 'cancelled'
+    created_at = db.Column(db.DateTime, default=_utcnow, index=True)
+
+    from_user = db.relationship('User', foreign_keys=[from_user_id])
+    to_user = db.relationship('User', foreign_keys=[to_user_id])
+
+    __table_args__ = (
+        db.UniqueConstraint('room_id', 'to_user_id', name='unique_room_user'),
+    )
+
+    def __repr__(self):
+        return f'<ConferenceInvite {self.id} room={self.room_id} from={self.from_user_id} to={self.to_user_id}>'

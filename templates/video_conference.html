@@ -1,0 +1,352 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- Отключаем Service Worker и кэширование для видеоконференции -->
+<meta name="service-worker-disabled" content="true">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<script>
+// Полностью отключаем Service Worker и кэш
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        registrations.forEach(function(reg) { reg.unregister(); });
+    });
+}
+if ('caches' in window) {
+    caches.keys().then(function(keys) {
+        keys.forEach(function(key) { caches.delete(key); });
+    });
+}
+</script>
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <a href="{{ url_for('tasks.my_tasks') }}" class="btn btn-outline-secondary btn-sm mb-2">
+            <i class="bi bi-arrow-left"></i> Назад
+        </a>
+        <h2 class="mb-1">📹 Видеоконференция</h2>
+        <p class="text-muted mb-0">Jitsi Meet — работает везде, без настроек</p>
+    </div>
+</div>
+
+<!-- Пошаговая инструкция -->
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <div class="row g-2 text-center">
+            <div class="col-4">
+                <span class="badge bg-primary">1</span> Создать комнату
+            </div>
+            <div class="col-4">
+                <span class="badge bg-primary">2</span> Выбрать пользователя
+            </div>
+            <div class="col-4">
+                <span class="badge bg-primary">3</span> Начать звонок
+            </div>
+        </div>
+        <div class="text-center mt-2">
+            <small class="text-muted">
+                ⚠️ После получения уведомления о приглашении — <strong>обновите страницу (F5)</strong>, чтобы увидеть кнопку принятия
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Кнопка создания комнаты -->
+{% if not room_id %}
+<div class="text-center mb-4">
+    <a href="/video/create-room" class="btn btn-success btn-lg px-5">
+        <i class="bi bi-camera-video"></i> Создать комнату
+    </a>
+</div>
+{% else %}
+<div class="alert alert-success mb-3 py-2">
+    <i class="bi bi-check-circle"></i> Комната: <strong>{{ room_id }}</strong>
+</div>
+
+<!-- Кнопка приглашения (collapse) -->
+<button class="btn btn-primary w-100 mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#inviteSection">
+    <i class="bi bi-person-plus"></i> Пригласить пользователя
+</button>
+
+<div class="collapse mb-4" id="inviteSection">
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="list-group list-group-flush">
+                {% for u in users_list %}
+                <form method="POST" action="/video/invite" style="display: contents;">
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-2 px-3" style="cursor: pointer;" onclick="this.closest('form').submit()">
+                        <div>
+                            <strong class="small">{{ u.first_name }} {{ u.last_name }}</strong>
+                            {% if u.username %}<br><small class="text-muted">@{{ u.username }}</small>{% endif %}
+                        </div>
+                        <input type="hidden" name="username" value="{{ u.first_name }} {{ u.last_name }}">
+                        <button type="submit" class="btn btn-sm btn-primary px-3" onclick="event.stopPropagation()">
+                            <i class="bi bi-camera-video"></i> Пригласить
+                        </button>
+                    </div>
+                </form>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Непрочитанные приглашения -->
+{% if pending_invites %}
+<div class="card mb-4 border-warning" id="pendingInvitesCard">
+    <div class="card-header bg-warning-subtle">
+        <i class="bi bi-bell-fill text-warning"></i> У вас есть приглашение на видеозвонок!
+    </div>
+    <div class="card-body">
+        {% for inv in pending_invites %}
+        <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+            <div>
+                <strong>{{ inv.from_user.first_name }} {{ inv.from_user.last_name }}</strong> приглашает вас на видеозвонок
+                <br><small class="text-muted">Комната: <code>{{ inv.room_id }}</code></small>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('video.accept_invite', invite_id=inv.id) }}" class="btn btn-sm btn-success">
+                    <i class="bi bi-check-lg"></i> Принять
+                </a>
+                <button class="btn btn-sm btn-outline-danger" onclick="declineInvite({{ inv.id }})">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Jitsi Meet видео-конференция -->
+{% if room_id %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center" style="position: sticky; top: 0; z-index: 1000; background: #fff; padding: 12px 16px;">
+        <span><i class="bi bi-camera-video-fill"></i> Видеозвонок</span>
+        <div>
+            <button class="btn btn-sm btn-danger" onclick="leaveConference()" style="z-index: 9999; position: relative;">
+                <i class="bi bi-x-circle"></i> Закрыть и выйти
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div id="jitsiContainer" style="width: 100%; height: 70vh; min-height: 500px;"></div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.user-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; }
+.user-item:hover { background: #f8f9fa; }
+.user-item:last-child { border-bottom: none; }
+</style>
+
+<script src="https://meet.jit.si/external_api.js"></script>
+<script>
+// Сохраняем room_id в localStorage для восстановления после выхода
+const SERVER_ROOM_ID = {{ room_id | tojson }};
+const STORAGE_KEY = 'spacescape_video_room';
+
+let ROOM_ID = SERVER_ROOM_ID;
+
+// Если сервер не вернул room_id, проверяем localStorage
+if (!ROOM_ID) {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+        ROOM_ID = saved;
+        console.log('🔄 Восстановлена комната из localStorage:', ROOM_ID);
+    }
+}
+
+const USER_ID = {{ user.id | tojson }};
+const USER_NAME = {{ (user.first_name ~ ' ' ~ user.last_name) | tojson }};
+let selectedUserId = null;
+let selectedUserName = '';
+let jitsi = null;
+
+// ============================================================
+//  JITSI MEET ИНИЦИАЛИЗАЦИЯ
+// ============================================================
+function initJitsi() {
+    if (!ROOM_ID) return;
+    
+    const domain = 'meet.jit.si';
+    const options = {
+        roomName: ROOM_ID,
+        width: '100%',
+        height: '100%',
+        parentNode: document.getElementById('jitsiContainer'),
+        configOverwrite: {
+            startWithAudioMuted: false,
+            startWithVideoMuted: false,
+            disableDeepLinking: true,
+            // Отключаем lobby и waiting room
+            enableLobby: false,
+            disableLobby: true,
+            enableWelcomePage: false,
+            enableClosePage: false,
+            enableLocalStorage: true,
+            // Полностью отключаем аутентификацию (Google, Facebook, JWT)
+            disableGoogleLogin: true,
+            disableFacebookLogin: true,
+            disableJitsiTrackAccess: false,
+            requireDisplayName: false,
+            disableProfile: true,
+            enableEmailInStats: false,
+            // Настройки аудио/видео
+            enableNoisyMicDetection: true,
+            enableTalkWhileMuted: true,
+            // Настройки конференции — старт без модератора
+            enableWelcomeTitle: false,
+            enableWelcomeSubtitle: false,
+            enableLobbyButton: false,
+            // Автоматический старт конференции
+            startAudioMuted: false,
+            startVideoMuted: false,
+            // Разрешить всем быть модераторами
+            enableWelcomePage: false,
+            prejoinPageEnabled: false,
+            // Настройки lobby
+            lobbyAutoAccept: true,
+            // Отключаем lobby полностью
+            enableNoLobby: true,
+            // Отключаем Watermark
+            enableWatermark: false,
+            // Отключаем branding
+            brandingRoomName: '',
+            // Отключаем JWT
+            jwtToken: '',
+            // Отключаем E2EE
+            enableE2EPing: false,
+            // Отключаем recording
+            enableRecordingService: false,
+            // Отключаем livestreaming
+            enableLivestreaming: false,
+            // Скрываем элементы профиля и аутентификации
+            hideDisplayName: true,
+            hideJoinSounds: true,
+        },
+        interfaceConfigOverwrite: {
+            TOOLBAR_BUTTONS: [
+                'microphone', 'camera', 'closedcaptions', 'desktop',
+                'fullscreen', 'fodeviceselection', 'hangup', 'profile',
+                'chat', 'recording', 'livestreaming', 'etherpad',
+                'sharedvideo', 'settings', 'raisehand', 'videoquality',
+                'filmstrip', 'feedback', 'stats', 'shortcuts', 'tileview',
+                'download', 'help', 'mute-everyone', 'security'
+            ],
+            SHOW_JITSI_WATERMARK: false,
+            SHOW_WATERMARK_FOR_GUESTS: false,
+            DEFAULT_BACKGROUND: '#1a1a2e',
+            DEFAULT_LOCAL_DISPLAY_NAME: 'Вы',
+            DEFAULT_REMOTE_DISPLAY_NAME: 'Участник',
+            // Скрываем некоторые элементы
+            MOBILE_APP_PROMO: false,
+            SHOW_BRAND_WATERMARK: false,
+        },
+        userInfo: {
+            displayName: USER_NAME,
+            email: ''
+        },
+        lang: 'ru'
+    };
+    
+    jitsi = new JitsiMeetExternalAPI(domain, options);
+    
+    // События Jitsi
+    jitsi.addEventListener('videoConferenceJoined', function() {
+        console.log('✅ Конференция присоединена');
+        // Сохраняем room_id в localStorage для восстановления после выхода
+        if (ROOM_ID) {
+            localStorage.setItem(STORAGE_KEY, ROOM_ID);
+            console.log('💾 Room ID сохранён:', ROOM_ID);
+        }
+    });
+    
+    jitsi.addEventListener('videoConferenceLeft', function() {
+        console.log('👋 Конференция завершена');
+    });
+    
+    jitsi.addEventListener('participantJoined', function(data) {
+        console.log('👤 Участник присоединился:', data.id);
+    });
+    
+    jitsi.addEventListener('participantLeft', function(data) {
+        console.log('👋 Участник вышел:', data.id);
+    });
+    
+    jitsi.addEventListener('ready', function() {
+        console.log('✅ Jitsi готов');
+    });
+    
+    jitsi.addEventListener('errorOccurred', function(error) {
+        console.error('❌ Ошибка Jitsi:', error);
+    });
+}
+
+// Инициализация при загрузке
+document.addEventListener('DOMContentLoaded', function() {
+    if (ROOM_ID) {
+        initJitsi();
+    }
+});
+
+// ============================================================
+//  УПРАВЛЕНИЕ КОМНАТОЙ
+// ============================================================
+function leaveConference() {
+    // 1. Корректно завершаем Jitsi конференцию
+    if (jitsi) {
+        jitsi.executeCommand('hangup');
+        setTimeout(() => {
+            jitsi.dispose();
+            jitsi = null;
+        }, 500);
+    }
+    
+    // 2. Очищаем localStorage
+    localStorage.removeItem(STORAGE_KEY);
+    console.log('🧹 Очищена комната из localStorage');
+    
+    // 3. Отправляем запрос на сервер для сброса комнаты
+    fetch('/video/leave-all', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            console.log('✅ Комната сброшена на сервере');
+            // 4. Перенаправляем на страницу конференций
+            window.location.href = '{{ url_for("video.conference") }}';
+        })
+        .catch(err => {
+            console.error('❌ Ошибка при выходе:', err);
+            // В случае ошибки всё равно перенаправляем
+            window.location.href = '{{ url_for("video.conference") }}';
+        });
+}
+
+function leaveRoom() {
+    if (!confirm('Выйти из комнаты?')) return;
+    leaveConference();
+}
+
+function endConference() {
+    if (!confirm('Завершить конференцию?')) return;
+    leaveConference();
+}
+
+// ============================================================
+//  ПРИГЛАШЕНИЯ
+// ============================================================
+function declineInvite(inviteId) {
+    fetch(`/video/decline/${inviteId}`, { method: 'POST' })
+        .then(() => location.reload());
+}
+
+// Закрытие по Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && ROOM_ID) {
+        leaveConference();
+    }
+});
+</script>
+{% endblock %}

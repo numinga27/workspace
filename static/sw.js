@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 const CACHE_NAME = `workspace-${CACHE_VERSION}`;
 
 // ← Кэшируем ТОЛЬКО статику, НЕ HTML-страницы
@@ -8,6 +8,7 @@ const PRECACHE_URLS = [
   '/static/icons/icon-512.png',
   '/static/icons/icon-maskable-512.png',
   '/static/manifest.json',
+  '/static/js/video_conference.js?v=20261121',
 ];
 
 // ============================================================

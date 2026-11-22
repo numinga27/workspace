@@ -369,3 +369,23 @@ def notify_new_event(event, recipient_ids, author):
         })
 
     return result
+
+
+def notify_new_video_invite(to_user, from_user, room_id):
+    """Возвращает dict для отправки Push о новом приглашении на видеозвонок.
+    
+    Параметры:
+        to_user: User — кому приглашают
+        from_user: User — кто приглашает
+        room_id: str — ID комнаты
+    """
+    if not to_user or not from_user:
+        return None
+
+    return {
+        'user_id': to_user.id,
+        'title': f'📹 Видеозвонок от {from_user.first_name} {from_user.last_name}',
+        'body': 'Приглашение на видеоконференцию. Нажмите чтобы принять.',
+        'url': '/video/conference',
+        'tag': f'video-invite-{room_id}',
+    }

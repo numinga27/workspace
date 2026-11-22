@@ -1,11 +1,13 @@
 from flask import Flask
 from datetime import datetime, timezone
 import click
+from flask_socketio import SocketIO
 
 from config import Config
 from extensions import db, mail, FLASK_MAIL_AVAILABLE, cache, babel, celery_init_app
 from models import User
 from blueprints import register_blueprints
+from blueprints.video_ws import init_video_socketio
 
 
 # ============================================================
@@ -36,6 +38,10 @@ def create_app(config_class=Config):
 
     if FLASK_MAIL_AVAILABLE and mail is not None:
         mail.init_app(app)
+
+    # --- Инициализация SocketIO (видеозвонки) ---
+    socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+    init_video_socketio(socketio)
 
     # --- Инициализация Babel (мультиязычность) ---
     if babel:
@@ -183,6 +189,23 @@ def create_app(config_class=Config):
             if user:
                 return {'projects': get_user_projects(user)}
         return {'projects': []}
+    
+    @app.context_processor
+    def inject_unread_video_invites():
+        """Непрочитанные приглашения на видеозвонок."""
+        from flask import session
+        if 'user_id' in session:
+            try:
+                from models import ConferenceInvite
+                count = db.session.query(ConferenceInvite).filter(
+                    ConferenceInvite.to_user_id == session['user_id'],
+                    ConferenceInvite.status == 'pending'
+                ).count()
+                return {'unread_invite_count': count}
+            except Exception as e:
+                # Таблица ещё не создана — игнорируем
+                pass
+        return {'unread_invite_count': 0}
     # ============================================================
     #  СОЗДАНИЕ ТАБЛИЦ И SEED ГЛАВНОГО АДМИНА
     # ============================================================
@@ -567,6 +590,11 @@ def create_app(config_class=Config):
 
     return app
 
+
+# ============================================================
+#  ДЛЯ GUNICORN / SYSTEMD
+# ============================================================
+application = create_app()
 
 
 # ============================================================

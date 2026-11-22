@@ -173,6 +173,15 @@
                 <span>{{ _('Мой календарь') }}</span>
             </a>
 
+            <a href="{{ url_for('video.conference') }}"
+               class="nav-item {% if request.endpoint and request.endpoint.startswith('video.') %}active{% endif %}">
+                <i class="bi bi-camera-video"></i>
+                <span>{{ _('Видеоконференция') }}</span>
+                {% if unread_invite_count and unread_invite_count > 0 %}
+                    <span class="nav-badge-new">{{ unread_invite_count }}</span>
+                {% endif %}
+            </a>
+
             <a href="#"
                class="nav-item"
                id="enablePushLink"
@@ -627,9 +636,12 @@
         });
       });
 
-      function showNotificationBanner() {
+       function showNotificationBanner() {
         if (document.getElementById('notificationBanner')) return;
         if (localStorage.getItem('notif_banner_dismissed') === '1') return;
+        
+        // Не показывать на странице видеоконференции
+        if (window.location.pathname.startsWith('/video/conference')) return;
 
         const banner = document.createElement('div');
         banner.id = 'notificationBanner';

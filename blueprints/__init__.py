@@ -18,6 +18,8 @@ from . import pdf
 from . import admin
 from . import users_admin 
 from . import companies  
+from . import video            # ← НОВОЕ
+from . import video_ws          # ← Сигнальный сервер
 
 
 ALL_BLUEPRINTS = [
@@ -40,6 +42,8 @@ ALL_BLUEPRINTS = [
     companies.bp,
     support.bp,
     admin_logs.bp,
+    video.bp,                    # ← НОВОЕ
+    video_ws.bp,                 # ← Сигнальный сервер
 ]
 
 
