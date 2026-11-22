@@ -102,11 +102,11 @@ def conference():
         print(f'   Invite id={inv.id}, from={inv.from_user_id}, room={inv.room_id}')
     
     # Ищем активное приглашение (accepted)
-    current_invite = ConferenceInvite.query.filter_by(
+    current_invite = ConferenceInvite.query.filter(
         ConferenceInvite.status == 'accepted',
         db.or_(
-            db.and_(ConferenceInvite.from_user_id == user.id),
-            db.and_(ConferenceInvite.to_user_id == user.id)
+            ConferenceInvite.from_user_id == user.id,
+            ConferenceInvite.to_user_id == user.id
         )
     ).order_by(ConferenceInvite.created_at.desc()).first()
     
