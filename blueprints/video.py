@@ -125,23 +125,6 @@ def conference():
         unread_invite_count=len(pending_invites),
         users_list=users_list
     )
-    ).order_by(ConferenceInvite.created_at.desc()).first()
-    
-    room_id = current_invite.room_id if current_invite else None
-    
-    users_list = User.query.filter(
-        User.id != user.id,
-        User.is_active == True
-    ).order_by(User.first_name, User.last_name).all()
-    
-    return render_template(
-        'video_conference.html',
-        user=user,
-        pending_invites=pending_invites,
-        room_id=room_id,
-        unread_invite_count=len(pending_invites),
-        users_list=users_list
-    )
 
 
 # ============================================================
