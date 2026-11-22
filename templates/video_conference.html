@@ -144,21 +144,7 @@ if ('caches' in window) {
 
 <script src="https://meet.jit.si/external_api.js"></script>
 <script>
-// Сохраняем room_id в localStorage для восстановления после выхода
-const SERVER_ROOM_ID = {{ room_id | tojson }};
-const STORAGE_KEY = 'spacescape_video_room';
-
-let ROOM_ID = SERVER_ROOM_ID;
-
-// Если сервер не вернул room_id, проверяем localStorage
-if (!ROOM_ID) {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-        ROOM_ID = saved;
-        console.log('🔄 Восстановлена комната из localStorage:', ROOM_ID);
-    }
-}
-
+const ROOM_ID = {{ room_id | tojson }};
 const USER_ID = {{ user.id | tojson }};
 const USER_NAME = {{ (user.first_name ~ ' ' ~ user.last_name) | tojson }};
 let selectedUserId = null;
@@ -257,11 +243,6 @@ function initJitsi() {
     // События Jitsi
     jitsi.addEventListener('videoConferenceJoined', function() {
         console.log('✅ Конференция присоединена');
-        // Сохраняем room_id в localStorage для восстановления после выхода
-        if (ROOM_ID) {
-            localStorage.setItem(STORAGE_KEY, ROOM_ID);
-            console.log('💾 Room ID сохранён:', ROOM_ID);
-        }
     });
     
     jitsi.addEventListener('videoConferenceLeft', function() {
@@ -305,11 +286,7 @@ function leaveConference() {
         }, 500);
     }
     
-    // 2. Очищаем localStorage
-    localStorage.removeItem(STORAGE_KEY);
-    console.log('🧹 Очищена комната из localStorage');
-    
-    // 3. Отправляем запрос на сервер для сброса комнаты
+    // 2. Отправляем запрос на сервер для сброса комнаты
     fetch('/video/leave-all', { method: 'POST' })
         .then(r => r.json())
         .then(data => {

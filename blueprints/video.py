@@ -112,12 +112,6 @@ def conference():
     
     room_id = current_invite.room_id if current_invite else None
     
-    # Если нет активного приглашения, проверяем session — восстанавливаем комнату
-    if not room_id and 'last_room_id' in session:
-        last_room_id = session['last_room_id']
-        print(f'🔄 Восстановлена комната из session: {last_room_id}')
-        room_id = last_room_id
-    
     users_list = User.query.filter(
         User.id != user.id,
         User.is_active == True
@@ -167,10 +161,6 @@ def create_room():
     )
     db.session.add(invite)
     db.session.commit()
-    
-    # Сохраняем room_id в session для восстановления после выхода
-    session['last_room_id'] = room_id
-    print(f'💾 Room ID сохранён в session: {room_id}')
     
     if request.method == 'POST':
         return jsonify({'room_id': room_id})
@@ -305,10 +295,6 @@ def accept_invite(invite_id):
     if original_invite:
         original_invite.status = 'accepted'
     
-    # Сохраняем room_id в session для восстановления после выхода
-    session['last_room_id'] = invite.room_id
-    print(f'💾 Room ID сохранён в session (accept): {invite.room_id}')
-    
     notification = Notification(
         user_id=invite.from_user_id,
         type='video_invite',
@@ -348,10 +334,6 @@ def join_room(invite_id):
     ).first()
     if original_invite:
         original_invite.status = 'accepted'
-    
-    # Сохраняем room_id в session для восстановления после выхода
-    session['last_room_id'] = invite.room_id
-    print(f'💾 Room ID сохранён в session (join): {invite.room_id}')
     
     notification = Notification(
         user_id=invite.from_user_id,
@@ -493,7 +475,6 @@ def end_room(room_id):
     
     db.session.commit()
     
-    # НЕ удаляем last_room_id из session — позволяем восстановить комнату
     return jsonify({'success': True})
 
 
@@ -544,9 +525,5 @@ def leave_all():
         inv.status = 'left'
     
     db.session.commit()
-    
-    # Очищаем last_room_id из session
-    if 'last_room_id' in session:
-        del session['last_room_id']
     
     return jsonify({'success': True})
