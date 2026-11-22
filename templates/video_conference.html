@@ -145,9 +145,18 @@ if ('caches' in window) {
 .user-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; }
 .user-item:hover { background: #f8f9fa; }
 .user-item:last-child { border-bottom: none; }
-.invite-item { cursor: pointer; transition: background 0.2s; }
+.invite-item { cursor: pointer; transition: background 0.2s; color: #212529; }
 .invite-item:hover { background: #e7f1ff; }
-.invite-item.selected { background: #cce5ff; }
+.invite-item.selected { background: #cce5ff; color: #212529; }
+.invite-checkbox { width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; }
+
+/* Тёмная тема */
+@media (prefers-color-scheme: dark) {
+    .invite-item { color: #f8f9fa; }
+    .invite-item:hover { background: #1a3a5c; }
+    .invite-item.selected { background: #1a3a5c; color: #f8f9fa; }
+    .invite-item .text-primary { color: #6ea8fe !important; }
+}
 </style>
 
 <script src="https://meet.jit.si/external_api.js"></script>
