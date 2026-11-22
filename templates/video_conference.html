@@ -74,15 +74,13 @@ if ('caches' in window) {
             <div class="list-group list-group-flush">
                 {% for u in users_list %}
                 <form method="POST" action="/video/invite" style="display: contents;">
-                    <div class="list-group-item d-flex justify-content-between align-items-center py-2 px-3" style="cursor: pointer;" onclick="this.closest('form').submit()">
+                    <div class="list-group-item user-invite-item d-flex justify-content-between align-items-center py-3 px-3" onclick="this.closest('form').submit()">
                         <div>
                             <strong class="small">{{ u.first_name }} {{ u.last_name }}</strong>
                             {% if u.username %}<br><small class="text-muted">@{{ u.username }}</small>{% endif %}
                         </div>
                         <input type="hidden" name="username" value="{{ u.first_name }} {{ u.last_name }}">
-                        <button type="submit" class="btn btn-sm btn-primary px-3" onclick="event.stopPropagation()">
-                            <i class="bi bi-camera-video"></i> Пригласить
-                        </button>
+                        <i class="bi bi-camera-video-fill text-primary"></i>
                     </div>
                 </form>
                 {% endfor %}
@@ -140,6 +138,9 @@ if ('caches' in window) {
 .user-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; }
 .user-item:hover { background: #f8f9fa; }
 .user-item:last-child { border-bottom: none; }
+.user-invite-item { cursor: pointer; transition: background 0.2s; }
+.user-invite-item:hover { background: #e7f1ff; }
+.user-invite-item:active { background: #cce5ff; }
 </style>
 
 <script src="https://meet.jit.si/external_api.js"></script>
