@@ -255,6 +255,118 @@ def send_invite():
 
 
 # ============================================================
+#  МАССОВОЕ ПРИГЛАШЕНИЕ (несколько человек)
+# ============================================================
+@bp.route('/video/invite-batch', methods=['POST'])
+@login_required
+def invite_batch():
+    data = request.get_json()
+    usernames = data.get('usernames', [])
+    
+    if not usernames:
+        return jsonify({'success': False, 'error': 'Нет пользователей'})
+    
+    current_user = User.query.get(session['user_id'])
+    
+    # Находим room_id текущего пользователя
+    current_invite = ConferenceInvite.query.filter(
+        ConferenceInvite.status == 'accepted',
+        ConferenceInvite.from_user_id == current_user.id
+    ).order_by(ConferenceInvite.created_at.desc()).first()
+    
+    if current_invite:
+        room_id = current_invite.room_id
+    else:
+        room_id = 'room-' + secrets.token_hex(6)
+    
+    invited_count = 0
+    errors = []
+    
+    for username in usernames:
+        # Ищем пользователя
+        parts = username.split()
+        if len(parts) >= 2:
+            target = User.query.filter(
+                db.and_(
+                    User.first_name.ilike(f'{parts[0]}%'),
+                    User.last_name.ilike(f'{parts[1]}%')
+                ),
+                User.id != current_user.id,
+                User.is_active == True
+            ).first()
+        else:
+            target = User.query.filter(
+                User.first_name.ilike(f'%{username}%'),
+                User.id != current_user.id,
+                User.is_active == True
+            ).first()
+        
+        if not target:
+            errors.append(username)
+            continue
+        
+        # Проверка существующих pending приглашений
+        existing = ConferenceInvite.query.filter_by(
+            to_user_id=target.id,
+            status='pending'
+        ).first()
+        
+        if existing:
+            errors.append(f'{username} (уже есть приглашение)')
+            continue
+        
+        invite = ConferenceInvite(
+            from_user_id=current_user.id,
+            to_user_id=target.id,
+            room_id=room_id,
+            status='pending'
+        )
+        db.session.add(invite)
+        
+        notification = Notification(
+            user_id=target.id,
+            type='video_invite',
+            title=f'📹 Видеозвонок от {current_user.first_name} {current_user.last_name}',
+            body='Нажмите чтобы принять приглашение',
+            url='/video/conference',
+            from_user_id=current_user.id,
+            is_read=False
+        )
+        db.session.add(notification)
+        
+        invited_count += 1
+    
+    db.session.commit()
+    
+    # Push уведомления
+    if invited_count > 0:
+        try:
+            from services.push import notify_new_video_invite
+            from services.tasks import send_push_async
+            for username in usernames[:invited_count]:
+                parts = username.split()
+                target = User.query.filter(
+                    db.and_(
+                        User.first_name.ilike(f'{parts[0]}%'),
+                        User.last_name.ilike(f'{parts[1]}%')
+                    ),
+                    User.id != current_user.id
+                ).first()
+                if target:
+                    push_data = notify_new_video_invite(target, current_user, room_id)
+                    if push_data:
+                        send_push_async.delay(**push_data)
+        except Exception as e:
+            print(f'⚠️ Ошибка push batch: {e}')
+    
+    return jsonify({
+        'success': True,
+        'invited': invited_count,
+        'errors': errors
+    })
+
+
+# ============================================================
 #  ПРИНЯТЬ ПРИГЛАШЕНИЕ
 # ============================================================
 @bp.route('/video/accept/<int:invite_id>')

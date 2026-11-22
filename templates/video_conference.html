@@ -65,25 +65,32 @@ if ('caches' in window) {
 
 <!-- Кнопка приглашения (collapse) -->
 <button class="btn btn-primary w-100 mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#inviteSection">
-    <i class="bi bi-person-plus"></i> Пригласить пользователя
+    <i class="bi bi-person-plus"></i> Пригласить пользователей
 </button>
 
 <div class="collapse mb-4" id="inviteSection">
     <div class="card">
         <div class="card-body p-0">
-            <div class="list-group list-group-flush">
+            <div class="list-group list-group-flush" id="usersList">
                 {% for u in users_list %}
-                <form method="POST" action="/video/invite" style="display: contents;">
-                    <div class="list-group-item user-invite-item d-flex justify-content-between align-items-center py-3 px-3" onclick="this.closest('form').submit()">
+                <div class="list-group-item invite-item d-flex justify-content-between align-items-center py-3 px-3" onclick="toggleUser(this)">
+                    <div class="d-flex align-items-center gap-3">
+                        <input type="checkbox" class="form-check-input invite-checkbox" 
+                               value="{{ u.first_name }} {{ u.last_name }}"
+                               onclick="event.stopPropagation()">
                         <div>
                             <strong class="small">{{ u.first_name }} {{ u.last_name }}</strong>
                             {% if u.username %}<br><small class="text-muted">@{{ u.username }}</small>{% endif %}
                         </div>
-                        <input type="hidden" name="username" value="{{ u.first_name }} {{ u.last_name }}">
-                        <i class="bi bi-camera-video-fill text-primary"></i>
                     </div>
-                </form>
+                    <i class="bi bi-camera-video-fill text-primary"></i>
+                </div>
                 {% endfor %}
+            </div>
+            <div class="p-3 border-top">
+                <button class="btn btn-success w-100" onclick="inviteSelected()">
+                    <i class="bi bi-camera-video"></i> Пригласить выбранных
+                </button>
             </div>
         </div>
     </div>
@@ -138,9 +145,9 @@ if ('caches' in window) {
 .user-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; }
 .user-item:hover { background: #f8f9fa; }
 .user-item:last-child { border-bottom: none; }
-.user-invite-item { cursor: pointer; transition: background 0.2s; }
-.user-invite-item:hover { background: #e7f1ff; }
-.user-invite-item:active { background: #cce5ff; }
+.invite-item { cursor: pointer; transition: background 0.2s; }
+.invite-item:hover { background: #e7f1ff; }
+.invite-item.selected { background: #cce5ff; }
 </style>
 
 <script src="https://meet.jit.si/external_api.js"></script>
@@ -315,6 +322,44 @@ function endConference() {
 // ============================================================
 //  ПРИГЛАШЕНИЯ
 // ============================================================
+function toggleUser(el) {
+    const checkbox = el.querySelector('.invite-checkbox');
+    el.classList.toggle('selected', checkbox.checked);
+}
+
+function inviteSelected() {
+    const checkboxes = document.querySelectorAll('.invite-checkbox:checked');
+    if (checkboxes.length === 0) {
+        alert('Выберите хотя бы одного пользователя');
+        return;
+    }
+    
+    const usernames = Array.from(checkboxes).map(cb => cb.value);
+    
+    if (!confirm(`Пригласить ${usernames.length} пользователей?\n\n${usernames.join(', ')}`)) {
+        return;
+    }
+    
+    // Отправляем всех выбранных
+    fetch('/video/invite-batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usernames: usernames })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert(`✅ Приглашения отправлены ${usernames.length} пользователям`);
+            location.reload();
+        } else {
+            alert('❌ Ошибка: ' + data.error);
+        }
+    })
+    .catch(err => {
+        alert('❌ Ошибка сети: ' + err);
+    });
+}
+
 function declineInvite(inviteId) {
     fetch(`/video/decline/${inviteId}`, { method: 'POST' })
         .then(() => location.reload());
